@@ -27,18 +27,26 @@ class Node {public int M,Parent,Kind;public double Sin,Cos;public Pose[] Transfo
 class Frame {public V Eye,Target;public double Fov,Height,Plan,U,Theta,Bunch,PodZ,Feed,HookZ,RackZ,Liquid,Dock;
     public int Lift,Pod,Level,Stored,Ports,Online,Fixings;public bool End;public string Phase,LoadPhase;}
 class Row {public string Left,Right;}
+class Caption {public int First,Last;public string Text;}
 class Data {
     public Mesh[] Meshes;public Node[] Nodes;public Frame[] Frames;public int Fps;
     public float Outer,OuterInside,InnerOutside,Inner,Height,Lift;
     public int Count,LastPour,Closed,RevealEnd;
-    public int BuildEnd,Ghost,FirstPod,Full,Fast,Pick1,Pick2,PickDuration,VentBegin,VentEnd;
+    public int BuildEnd,Ghost,FirstPod,Full,Fast,Pick1,Pick2,PickDuration,VentBegin,VentEnd,LidBegin,LidEnd;
     public int SealBegin,SealEnd,OrbitBegin,OrbitEnd;
     public int Crew,Repair,Fault,FaultLevel,FaultBay;
     public int Levels,Bays,Total,CrewCount;
     public float Pitch,BaseZ,CoreLength,FrameWidth,FrameHeight,OpeningWidth,OpeningHeight,FastRate,RootRadius,PowerWidth,PowerHeight,PowerLength,StackX;
+    public float ShaftRadius,PowerBase0,PowerBase1,VentTop,LidZ,PortZ,PowerYaw,Entry;
     public float[] Lengths; public string UnitName,Title; public int[] WorkLevels;
     // Dry cooler frames: installation clock, geometry and the order in which they are placed.
-    public int CoolerStart,CoolerEnd,GhostAgain,StoreFillBegin,StoreFillEnd,Terminal,CoolerFrames,CoolerRows,CoolerFans;
+    public int StoreStart,StoreFillBegin,StoreFillEnd,Terminal,CoolerStart,CoolerFirst,CoolerEnd,CoolerFrames,CoolerRows,CoolerFans;
+    // Cooler service during the pod exchange, and the closing scenes.
+    public int ServiceFrame,ServiceRow,ServiceArrive,ServiceRigged,ServiceDown,ServiceOut,ServiceIn,ServiceReleased,ServiceDone;
+    public int Fuel,Tanks,TankStep,FuelEnd,Plan,PlanFrames,Section,SectionFrames,Fade,TankCount;
+    public int[] Line=new int[10];
+    public float FuelBearing,FarmRadius,TankLength,TankDiameter,TankPitch,RiserRadius,GasTop,DropRadius,DropEnd;
+    public Row[] FuelRows,PlanRows,SectionRows;public Caption[] Captions;
     public float CoolerFrameWidth,CoolerFrameHeight,CoolerFrameDepth,CoolLength,PumpLength,CoolerBack,CoolerMW;
     public int[] FrameOrder;public int[,] FrameTimes;public float[] FrameBase,FrameBearing;
     public float Crown,LiquidTop;
@@ -68,13 +76,14 @@ class Data {
     }
     public Data(string file){
         using(var r=new BinaryReader(File.OpenRead(file))){
-            if (System.Text.Encoding.ASCII.GetString(r.ReadBytes(8))!="GSILO01\0") throw new InvalidDataException("Unknown scene");
+            if (System.Text.Encoding.ASCII.GetString(r.ReadBytes(8))!="GSILO02\0") throw new InvalidDataException("Unknown scene");
             int nm=r.ReadInt32(),nn=r.ReadInt32(),nf=r.ReadInt32(); Fps=r.ReadInt32();
             Outer=r.ReadSingle();OuterInside=r.ReadSingle();InnerOutside=r.ReadSingle();Inner=r.ReadSingle();
             Height=r.ReadSingle();Lift=r.ReadSingle();
             Count=r.ReadInt32();LastPour=r.ReadInt32();Closed=r.ReadInt32();RevealEnd=r.ReadInt32();
             BuildEnd=r.ReadInt32();Ghost=r.ReadInt32();FirstPod=r.ReadInt32();Full=r.ReadInt32();Fast=r.ReadInt32();
             Pick1=r.ReadInt32();Pick2=r.ReadInt32();PickDuration=r.ReadInt32();VentBegin=r.ReadInt32();VentEnd=r.ReadInt32();
+            LidBegin=r.ReadInt32();LidEnd=r.ReadInt32();
             SealBegin=r.ReadInt32();SealEnd=r.ReadInt32();OrbitBegin=r.ReadInt32();OrbitEnd=r.ReadInt32();
             Crown=r.ReadSingle();LiquidTop=r.ReadSingle();
             Crew=r.ReadInt32();Repair=r.ReadInt32();
@@ -84,10 +93,13 @@ class Data {
             OpeningWidth=r.ReadSingle(); OpeningHeight=r.ReadSingle(); FastRate=r.ReadSingle();
             Lengths=new float[Total]; for(int j=0;j<Total;j++)Lengths[j]=r.ReadSingle();
             UnitName=Str(r); RootRadius=r.ReadSingle(); PowerWidth=r.ReadSingle(); PowerHeight=r.ReadSingle();
-            PowerLength=r.ReadSingle(); StackX=r.ReadSingle(); CrewCount=r.ReadInt32();
+            PowerLength=r.ReadSingle(); StackX=r.ReadSingle();
+            ShaftRadius=r.ReadSingle();PowerBase0=r.ReadSingle();PowerBase1=r.ReadSingle();VentTop=r.ReadSingle();
+            LidZ=r.ReadSingle();PortZ=r.ReadSingle();PowerYaw=r.ReadSingle();Entry=r.ReadSingle(); CrewCount=r.ReadInt32();
             WorkLevels=new int[Bays]; for(int j=0;j<Bays;j++)WorkLevels[j]=r.ReadInt32();
-            CoolerStart=r.ReadInt32();CoolerEnd=r.ReadInt32();GhostAgain=r.ReadInt32();StoreFillBegin=r.ReadInt32();StoreFillEnd=r.ReadInt32();
-            Terminal=r.ReadInt32();CoolerFrames=r.ReadInt32();CoolerRows=r.ReadInt32();CoolerFans=r.ReadInt32();
+            StoreStart=r.ReadInt32();StoreFillBegin=r.ReadInt32();StoreFillEnd=r.ReadInt32();Terminal=r.ReadInt32();
+            CoolerStart=r.ReadInt32();CoolerFirst=r.ReadInt32();CoolerEnd=r.ReadInt32();
+            CoolerFrames=r.ReadInt32();CoolerRows=r.ReadInt32();CoolerFans=r.ReadInt32();
             CoolerFrameWidth=r.ReadSingle();CoolerFrameHeight=r.ReadSingle();CoolerFrameDepth=r.ReadSingle();
             CoolLength=r.ReadSingle();PumpLength=r.ReadSingle();CoolerBack=r.ReadSingle();CoolerMW=r.ReadSingle();
             FrameOrder=new int[CoolerFrames];FrameTimes=new int[CoolerFrames,8];FrameBase=new float[CoolerFrames];FrameBearing=new float[CoolerFrames];
@@ -95,7 +107,17 @@ class Data {
                 FrameOrder[i]=r.ReadInt32();for(int k=0;k<8;k++)FrameTimes[i,k]=r.ReadInt32();
                 FrameBase[i]=r.ReadSingle();FrameBearing[i]=r.ReadSingle();
             }
+            ServiceFrame=r.ReadInt32();ServiceRow=r.ReadInt32();ServiceArrive=r.ReadInt32();ServiceRigged=r.ReadInt32();ServiceDown=r.ReadInt32();
+            ServiceOut=r.ReadInt32();ServiceIn=r.ReadInt32();ServiceReleased=r.ReadInt32();ServiceDone=r.ReadInt32();
+            Fuel=r.ReadInt32();Tanks=r.ReadInt32();TankStep=r.ReadInt32();for(int k=0;k<10;k++)Line[k]=r.ReadInt32();
+            FuelEnd=r.ReadInt32();Plan=r.ReadInt32();PlanFrames=r.ReadInt32();Section=r.ReadInt32();SectionFrames=r.ReadInt32();
+            Fade=r.ReadInt32();TankCount=r.ReadInt32();
+            FuelBearing=r.ReadSingle();FarmRadius=r.ReadSingle();TankLength=r.ReadSingle();TankDiameter=r.ReadSingle();TankPitch=r.ReadSingle();
+            RiserRadius=r.ReadSingle();GasTop=r.ReadSingle();DropRadius=r.ReadSingle();DropEnd=r.ReadSingle();
             Title=Str(r);Strip=Rows(r);Summary=Rows(r);StoreRows=Rows(r);FrameRows=Rows(r);
+            FuelRows=Rows(r);PlanRows=Rows(r);SectionRows=Rows(r);
+            Captions=new Caption[r.ReadInt32()];
+            for(int i=0;i<Captions.Length;i++){Captions[i]=new Caption();Captions[i].First=r.ReadInt32();Captions[i].Last=r.ReadInt32();Captions[i].Text=Str(r);}
             Meshes=new Mesh[nm];Nodes=new Node[nn];Frames=new Frame[nf];
             for(int i=0;i<nm;i++){
                 Mesh m=Meshes[i]=new Mesh();m.Ts=new Tri[r.ReadInt32()]; m.Land=r.ReadInt32()!=0;m.Mat=r.ReadInt32();
@@ -508,23 +530,21 @@ partial class Shot {
         bool active=extension>.995;
         Text(g,cast?"CAST-IN POD SERVICE SLEEVE":"POD SERVICE COUPLING",section,muted,bx+14,by+12);
         if(!cast)g.DrawString(active?"LATCHED":"",section,waterBrush,new PointF(bx+bw-15,by+12),rightText);
-        float cy=by+90;float inner=bx+130,outer=bx+223;
+        float cy=by+90;float inner=bx+130,outer=bx+262,stub=inner+14+34;
         using(var liquid=new SolidBrush(f.Liquid>0?Color.FromArgb(179,217,210):Color.FromArgb(232,231,218)))
             g.FillRectangle(liquid,inner+14,by+40,outer-inner-14,85);
         using(var concrete=new SolidBrush(Color.FromArgb(169,179,168))){
             g.FillRectangle(concrete,inner,by+40,14,85);g.FillRectangle(concrete,outer,by+40,14,85);
         }
-        g.DrawString(f.Liquid>0?"Water-glycol":"Dry gap",monoSmall,muted,new PointF((inner+outer+12)/2,by+45),middleText);
-        using(var outerWall=new Pen(Color.FromArgb(135,117,89),16))
-            g.DrawLine(outerWall,inner,cy,bx+268,cy);
-        Rule(g,inner,cy-4,bx+269,cy-4,teal,3);
-        Rule(g,inner,cy,bx+269,cy,Color.FromArgb(80,130,156),2.7f);
-        Rule(g,inner,cy+4,bx+269,cy+4,cAccent,2.5f);
-        Rule(g,inner+41,cy-4,inner+41,cy-18,teal,3);
-        Rule(g,inner+66,cy,inner+66,cy+21,Color.FromArgb(80,130,156),3);
-        using(var cap=new SolidBrush(Color.FromArgb(101,131,120)))g.FillRectangle(cap,bx+263,cy-12,7,24);
-        Rule(g,bx+269,cy-11,bx+282,by+57,cInk,.9f);
-        Text(g,cast?"Cap":"Power",monoSmall,ink,bx+275,by+41);
+        g.DrawString(f.Liquid>0?"Water-glycol store":"Dry gap",monoSmall,muted,new PointF((stub+outer)/2+8,by+45),middleText);
+        // The sleeve passes through the inner wall only and opens into the store.
+        using(var sleeve=new Pen(Color.FromArgb(135,117,89),16))g.DrawLine(sleeve,inner,cy,stub,cy);
+        Rule(g,inner,cy-4,stub+2,cy-4,teal,3);
+        Rule(g,inner,cy+4,stub+2,cy+4,Color.FromArgb(80,130,156),2.7f);
+        Rule(g,stub+2,cy-4,stub+2,cy-20,teal,3);
+        Rule(g,stub+2,cy+4,stub+2,cy+22,Color.FromArgb(80,130,156),3);
+        g.DrawString("inner",monoSmall,muted,new PointF(inner+7,by+127),middleText);
+        g.DrawString("outer",monoSmall,muted,new PointF(outer+7,by+127),middleText);
         float podFace=bx+81;
         if(!cast){
             using(var br=new SolidBrush(Color.FromArgb(155,165,162)))g.FillRectangle(br,bx+15,cy-24,66,48);
@@ -533,12 +553,11 @@ partial class Shot {
                 g.FillRectangle(slide,podFace,cy-4,(float)((inner-podFace)*extension),8);
             if(active){using(var br=new SolidBrush(Color.FromArgb(126,202,154)))g.FillEllipse(br,podFace-10,cy-17,5,5);}
         }else Text(g,"Bore",monoSmall,ink,bx+35,cy-8);
-        Text(g,"CDU supply / return to the store",monoSmall,ink,bx+15,by+142);
-        Rule(g,bx+17,by+162,bx+29,by+162,cAccent,2.5f);
-        Text(g,"Dry power and data duct",monoSmall,muted,bx+35,by+155);
+        Text(g,"CDU supply and return open into the store",monoSmall,ink,bx+15,by+142);
+        Text(g,"Power and data arrive down the shaft",monoSmall,muted,bx+15,by+155);
     }
     void StorageOverlay(Graphics g,int frame){
-        Frame f=d.Frames[frame];bool installing=frame<d.CoolerStart,full=frame>=d.Full;
+        Frame f=d.Frames[frame];bool installing=frame<d.StoreStart,full=frame>=d.Full;
         float x=24,xr=UiLeft-24;int stage=frame-d.BuildEnd;
         using(var sw=new SolidBrush(cAccent))g.FillRectangle(sw,x,33,25,3);
         Text(g,installing?"STEEL INSTALLATION":"STORAGE SEQUENCE",section,muted,x,46);
@@ -668,7 +687,7 @@ partial class Shot {
         Text(g,"UNITS DOCKED",section,muted,x,182);
         g.DrawString(count+" / 2",numbers,ink,new PointF(xr,169),rightText);
         for(int i=0;i<2;i++){g.FillRectangle(i<count?ink:light,x+101*i,212,97,5);}
-        string phase=done?"Exhausts at rim":vents?"Extend exhaust risers":
+        string phase=t>=d.LidEnd?"Silo closed":t>=d.LidBegin+8?"Lower the lid":done?"Rig the lid":vents?"Extend exhaust vents":
             count==2?"Release the rigging":t>=firstSeat && !second?"Hook the upper unit":
             elapsed<5?"Rig the module":elapsed<55?"Hoist above rim":elapsed<91?"Slew over bore":
             second?"Dock at 90 degrees":"Dock on shaft";
@@ -683,8 +702,10 @@ partial class Shot {
         Rule(g,x,605,xr,605,cLine,1);
         Text(g,"Cooler frames",title2,muted,x,629);
         g.DrawString(d.CoolerFrames+" connected",mono,ink,new PointF(xr,628),rightText);
-        Text(g,"Exhaust outlets",title2,muted,x,661);
-        g.DrawString(done?"4 at "+d.Height.ToString("0.##")+" m":"4 risers",mono,ink,new PointF(xr,660),rightText);
+        Text(g,"Exhaust vents",title2,muted,x,661);
+        g.DrawString(done?"4 at "+d.VentTop.ToString("0.#")+" m":"4 risers",mono,ink,new PointF(xr,660),rightText);
+        Text(g,"Lid",title2,muted,x,693);
+        g.DrawString(t>=d.LidEnd?"Closed":"Open",mono,ink,new PointF(xr,692),rightText);
     }
     void EmbedPanel(Graphics g,int frame){
         const int bx=916,by=35,w=336,h=185;
@@ -866,12 +887,13 @@ partial class Shot {
             if(frame>=d.BuildEnd){
                 int t=frame-d.Full;
                 if(Ghosted(frame) && t<d.SealBegin)ShellEdges(g);
-                if(t>=d.SealBegin)DesignOverlay(g,frame);
-                else if(t>=d.Repair)SwapOverlay(g,frame);
+                if(t>=d.Fuel)FuelOverlay(g,frame);
+                else if(t>=d.SealBegin)DesignOverlay(g,frame);
+                else if(t>=d.Repair){SwapOverlay(g,frame);ServicePanel(g,frame);}
                 else if(t>=d.Crew)CrewOverlay(g,frame);
                 else if(frame>=d.Full)PowerOverlay(g,frame);
-                else if(frame>=d.CoolerEnd && frame<d.Terminal)StoreOverlay(g,frame);
-                else if(frame>=d.CoolerStart && frame<d.CoolerEnd)CoolerFrameOverlay(g,frame);
+                else if(frame>=d.FrameTimes[0,0] && frame<d.FrameTimes[0,7])CoolerFrameOverlay(g,frame);
+                else if(frame>=d.StoreStart && frame<d.Terminal)StoreOverlay(g,frame);
                 else StorageOverlay(g,frame);
                 DesignStrip(g,frame);
                 return;
@@ -950,9 +972,25 @@ partial class Shot {
         }
         g.Restore(sectionClip);
     }
-    // The concrete is drawn as glass while the cage and the pods are loaded, and solid while the cooler frames are hung.
+    // In a cutaway the concrete is removed altogether. Its outline is drawn by ShellEdges.
     bool Ghosted(int frame){
-        return frame>=d.Ghost+17 && !(frame>=d.CoolerStart && frame<d.GhostAgain) && frame-d.Full<d.SealEnd;
+        return frame>=d.Ghost+17 && frame-d.Full<d.SealEnd;
+    }
+    // The lid is shown while it is placed, cleared for the cutaways and solid again for the closing scenes.
+    int LidAlpha(int frame){
+        int t=frame-d.Full;
+        if(t<d.Crew)return 255;
+        if(t<d.Crew+30)return (int)(255*(1-(t-d.Crew)/30.0));
+        return t<d.SealEnd?0:255;
+    }
+    // A cooler frame facing the camera is ghosted only once it is connected and on its seats.
+    bool Seated(Node n,int frame){
+        double radius=Math.Sqrt(n.WorldPose.T.X*n.WorldPose.T.X+n.WorldPose.T.Y*n.WorldPose.T.Y);
+        if(radius>d.CoolerBack+2.2)return false;
+        double bearing=Math.Atan2(n.Sin,n.Cos);
+        for(int i=0;i<d.CoolerFrames;i++)
+            if(Math.Cos(bearing-d.FrameBearing[i])>.9995)return frame>=d.FrameTimes[i,6];
+        return true;
     }
     void WorldFrame(int poseFrame,int wallMode=0){
         UpdateWorld(poseFrame);alpha=255;
@@ -988,7 +1026,8 @@ partial class Shot {
             int mat=d.Meshes[n.M].Mat;
             bool powerDetail=n.Kind==13 && t>=d.Crew+384 && t<d.Crew+545;
             if(access && softShadow && powerDetail){nearEquipment.Add(n);continue;}
-            if((n.Kind==4 || n.Kind==5) && (poseFrame>=d.FirstPod && poseFrame<d.Full+d.VentEnd || access && softShadow) && n.WorldPose.S.X>.999){
+            if(n.Kind==16)continue;
+            if((n.Kind==4 || n.Kind==5) && (poseFrame>=d.FirstPod && poseFrame<d.Full+d.VentEnd || access && softShadow) && n.WorldPose.S.X>.999 && Seated(n,poseFrame)){
                 V az=new V(n.Cos,n.Sin,0);
                 if(az.Dot(new V(eye.X,eye.Y,0).Unit())>(access?-.12:.48) ){
                     nearEquipment.Add(n);continue;
@@ -1000,27 +1039,34 @@ partial class Shot {
             if(n.M<0)continue;int mat=d.Meshes[n.M].Mat;
             if(mat==4 || mat==5){alpha=mat==4?(access?17:42):(access?55:159);DrawNode(n,poseFrame);}
         }
-        alpha=255;
-        if(softShadow){
-            // Opaque steel and pods have already written depth. Blend wall
-            // faces against those depths without obscuring the visible cargo.
-            foreach(Node n in d.Nodes){
-                if(n.M<0)continue;int mat=d.Meshes[n.M].Mat;
-                if(wallMode==2 && (mat==1 || mat==2))n.WorldPose.S=new V(1,1,1);
-                if(mat==1 || mat==2){alpha=mat==1?(access?13:26):(access?54:101);DrawNode(n,poseFrame);}
-            }
-            alpha=255;
+        alpha=wallMode==1?255:wallMode==2?0:LidAlpha(poseFrame);
+        if(alpha>0)foreach(Node n in d.Nodes)if(n.Kind==16 && n.M>=0){
+            if(poseFrame>=d.Full+d.LidEnd)n.WorldPose.S=new V(1,1,1);
+            DrawNode(n,poseFrame);
         }
+        alpha=255;
         if(nearEquipment.Count>0){
             // Blend the complete front bank once, retaining the opacity of the unit in transit.
             Array.Copy(pixels,underEquipment,pixels.Length);
             foreach(Node n in nearEquipment)DrawNode(n,poseFrame);
             for(int y=0;y<H;y++)for(int x=Left;x<W;x++){
-                int i=y*W+x;if(underEquipment[i]!=pixels[i])pixels[i]=MixColor(underEquipment[i],pixels[i],access?.075:.18);
+                int i=y*W+x;if(underEquipment[i]!=pixels[i])pixels[i]=MixColor(underEquipment[i],pixels[i],access?.075:poseFrame<d.Full?.55:.18);
             }
         }
     }
+    // The closing schematics replace the 3-D view. Each one fades in over the picture before it.
     public Bitmap Render(int frame){
+        int t=frame-d.Full;
+        if(t<d.Plan)return Render3D(frame);
+        bool section=t>=d.Section;
+        int since=t-(section?d.Section:d.Plan);
+        if(since<d.Fade){
+            if(section)Schematic(d.Full+d.Section-1,false,1);else Render3D(d.Full+d.Plan-1);
+            Schematic(frame,section,(since+1f)/(d.Fade+1));
+        }else Schematic(frame,section,1);
+        return bmp;
+    }
+    Bitmap Render3D(int frame){
         Frame f=d.Frames[frame];
         eye=f.Eye;forward=(f.Target-f.Eye).Unit();right=forward.Cross(new V(0,0,1)).Unit();up=right.Cross(forward);
         double solid=Sat((frame-d.Full-d.SealBegin)/(double)(d.SealEnd-d.SealBegin));
@@ -1035,11 +1081,6 @@ partial class Shot {
         } else if(frame>=d.Ghost && frame<d.Ghost+34){
             WorldFrame(frame,1);Array.Copy(pixels,alternate,pixels.Length);WorldFrame(frame,2);
             double t=(frame-d.Ghost)/34.0;t=t*t*(3-2*t);
-            for(int i=0;i<pixels.Length;i++)pixels[i]=MixColor(alternate[i],pixels[i],t);
-            UpdateWorld(frame);
-        } else if(frame>=d.GhostAgain-20 && frame<d.GhostAgain+20){
-            WorldFrame(frame,1);Array.Copy(pixels,alternate,pixels.Length);WorldFrame(frame,2);
-            double t=(frame-d.GhostAgain+20)/40.0;t=t*t*(3-2*t);
             for(int i=0;i<pixels.Length;i++)pixels[i]=MixColor(alternate[i],pixels[i],t);
             UpdateWorld(frame);
         } else if(frame>=d.Full+d.SealBegin && frame<d.Full+d.SealEnd){

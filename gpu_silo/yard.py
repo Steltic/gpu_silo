@@ -4,12 +4,12 @@ from . import design as cfg
 import math
 
 from . import cargo
-from . import cooler_frames as frames
+from . import clock
 from . import services
 from . import silo_model as s
 
-INSERT_AT=frames.STORE_END
-DELIVERY_FRAMES=336
+INSERT_AT=clock.DELIVERY_AT
+DELIVERY_FRAMES=clock.DELIVERY_FRAMES
 RAIL_OFFSET=22.
 LOAD_OFFSETS=tuple(RAIL_OFFSET+sum(cfg.length(i)+.85 for i in range(1,j+1)) for j in range(3))
 TRUCK_Y=6.1

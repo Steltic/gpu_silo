@@ -1,4 +1,5 @@
-"""Check the dry cooler frames, their cast-in fixings, the crawler pick and the boom lift in the GLB."""
+"""Check the dry cooler frames, their screens and cast-in fixings, the crawler picks, the boom lift
+and the cooler exchange in the GLB."""
 import math
 import re
 import sys
@@ -8,6 +9,7 @@ import numpy as np
 from .. import calcs
 from .. import cooler_frames as fr
 from .. import pod_scene as p
+from .. import service
 from .verify_motion import open_glb
 
 
@@ -47,8 +49,13 @@ def check(path):
         label=f"Cooler frame {k+1:02}"
         root=ids[label+f" | {fr.ROWS} dry coolers, {fr.ROWS} pumps and steel"]
         i=fr.ORDER.index(k);a,b,c,dd,e,r,g,end=fr.times(i)
-        bearing=yaw(root,0)
-        assert abs(math.sin(bearing-fr.BEARINGS[k]))<1e-5
+        bearing=yaw(root,p.FRAMES-1)
+        assert abs(math.sin(bearing-fr.BEARINGS[k]))<1e-5 and abs(math.sin(yaw(root,e)-fr.BEARINGS[k]))<1e-5
+        # Frames are hung while the pods are being loaded, anticlockwise from the first frame.
+        assert p.FIRST_POD<a and end<=p.FILLED and fr.THETA[i]>=fr.THETA[0]
+        screen=points(ids[label+" | mesh screen"])
+        assert parents[ids[label+" | mesh screen"]]==root and screen[:,0].max()>=fr.DEPTH and np.ptp(screen[:,1])>=fr.WIDTH-.2
+        assert screen[:,2].min()<.3 and screen[:,2].max()>fr.HEIGHT-.3
         final=zup(at(root,"translation",p.FRAMES-1))
         assert np.allclose(final,[fr.BACK*math.cos(fr.BEARINGS[k]),fr.BACK*math.sin(fr.BEARINGS[k]),fr.base(k)],atol=.0003)
         assert fr.base(k)>p.s.OPENING_HEIGHT+2 and fr.base(k)+fr.HEIGHT<=p.s.WALL_HEIGHT+1e-6
@@ -97,11 +104,14 @@ def check(path):
         for f in range(b,r+1):
             foot=zup(at(car,"translation",f));load=zup(at(root,"translation",f));block=zup(at(hook,"translation",f))
             assert abs(math.hypot(foot[0],foot[1])-fr.TRACK_R)<.001
-            centre=load[:2]+fr.DEPTH/2*np.array([math.cos(fr.BEARINGS[k]),math.sin(fr.BEARINGS[k])])
-            assert np.linalg.norm(block[:2]-centre)<.002 and abs(block[2]-load[2]-fr.HEIGHT-fr.SLING)<.002
+            facing=yaw(root,f)
+            centre=load[:2]+fr.DEPTH/2*np.array([math.cos(facing),math.sin(facing)])
+            assert np.linalg.norm(block[:2]-centre)<.002 and abs(block[2]-load[2]-fr.HEIGHT-fr.SLING)<.002,(k,f,block,centre,load)
             reach=np.linalg.norm(block[:2]-foot[:2])
             assert 8<reach<fr.BOOM_LENGTH*.6 and block[2]<2.45+math.sqrt(fr.BOOM_LENGTH**2-reach**2)-2
-    assert at(car,"scale",p.yard.INSERT_AT)[0]<.001 and at(car,"scale",fr.END)[0]>.999
+    # One crawler is retained from the steel cage to the cooler exchange, then leaves.
+    assert at(car,"scale",fr.START)[0]>.999 and at(car,"scale",p.FILLED+p.care.REPAIR+service.DONE)[0]>.999
+    assert at(car,"scale",p.FRAMES-1)[0]<.001
     # The boom lift is beside each frame end, with its crew at the working rows while the spools are made up.
     basket=ids["Boom lift | work basket"];chassis=ids["Boom lift | chassis"]
     assert sum(1 for n in ids if re.fullmatch(r"Boom lift \| fitter \d",n))==p.cfg.SITE["workers_per_basket"]
@@ -110,10 +120,31 @@ def check(path):
         for f in (e+3,(e+g)//2,g-2):
             pos=zup(at(basket,"translation",f));theta=fr.BEARINGS[k]
             local=np.array([pos[0]*math.cos(theta)+pos[1]*math.sin(theta),-pos[0]*math.sin(theta)+pos[1]*math.cos(theta)])
-            assert fr.BACK<local[0]<fr.BACK+fr.DEPTH and fr.WIDTH/2+.3<local[1]<fr.WIDTH/2+2
+            assert fr.BACK<local[0]<fr.BACK+fr.DEPTH and fr.WIDTH/2+.3<fr.SIDE*local[1]<fr.WIDTH/2+2
             assert fr.base(k)<pos[2]<fr.base(k)+fr.HEIGHT
         ground=zup(at(chassis,"translation",(e+g)//2))
         assert abs(math.hypot(ground[0],ground[1])-fr.LIFT_R)<.001 and abs(ground[2])<1e-6
+    # Cooler exchange: the frame comes down outside the wall, one cooler is changed, and the frame goes back to its seat.
+    k=service.K;label=f"Cooler frame {k+1:02}";begin=p.FILLED+p.care.REPAIR
+    root=ids[label+f" | {fr.ROWS} dry coolers, {fr.ROWS} pumps and steel"]
+    seat=zup(at(root,"translation",begin+service.LIFT[0]-1))
+    down=zup(at(root,"translation",begin+service.DOWN[1]))
+    assert abs(math.hypot(down[0],down[1])-fr.LAY_R)<.01 and abs(down[2]-fr.GROUND)<.01
+    for f in range(begin+service.LIFT[0],begin+service.SEAT[1]+1):
+        pos=zup(at(root,"translation",f));radius=math.hypot(pos[0],pos[1])
+        assert radius>=fr.BACK-1e-4 and pos[2]>=fr.GROUND-1e-4
+        if radius<fr.BACK+fr.OVER-.01:assert pos[2]>=fr.base(k)-1e-4
+    assert np.allclose(zup(at(root,"translation",begin+service.SEAT[1])),seat,atol=.0003)
+    old=ids[label+f" | cooler {service.ROW+1}"];new=ids[label+f" | cooler {service.ROW+1} | replacement in its bay"]
+    assert parents[new]==root and np.allclose(points(new),points(old))
+    assert at(old,"scale",begin+service.SLIDE[0])[0]>.999 and at(old,"scale",p.FRAMES-1)[0]<.001
+    assert at(new,"scale",begin+service.INSERT[1]-1)[0]<.001 and at(new,"scale",p.FRAMES-1)[0]>.999
+    assert np.allclose(at(new,"translation",p.FRAMES-1),at(old,"translation",0),atol=.0003)
+    assert at(ids[label+" | pipe spools"],"scale",begin+service.DOWN[0])[0]<.01 and at(ids[label+" | pipe spools"],"scale",p.FRAMES-1)[0]>1
+    for f in range(begin+service.OUT[0],begin+service.IN[1]+1,4):
+        foot=zup(at(car,"translation",f));block=zup(at(hook,"translation",f));reach=np.linalg.norm(block[:2]-foot[:2])
+        assert 10<reach<fr.BOOM_LENGTH*.6 and block[2]<2.45+math.sqrt(fr.BOOM_LENGTH**2-reach**2)-2,(f,reach)
+    print(f"Frame {k+1:02} comes down for a cooler change during the pod exchange and returns to its seat.")
     print(f"{fr.N} cooler frames carry {p.cfg.COOLERS} dry coolers and pumps on {len(fr.TIERS)} tiers, to RL {max(fr.TIERS)+fr.HEIGHT:g} m.")
     print(f"{extras['castInFrameAnchors']} anchors and {extras['castInCoolerConduits']} conduits are cast before their pours. "
           "The crawler and boom lift reach every frame.")

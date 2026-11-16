@@ -11,39 +11,52 @@ from . import silo_model as silo
 from . import design as cfg
 from . import cooler_frames as frames
 from . import calcs
+from . import clock
+from . import closing
+from . import service
+
+NARRATION = Path(__file__).resolve().parents[1] / "audio" / "plan_view.flac"
 
 MOVIE = "GPU_Silo.mp4"
 MODEL = "GPU_Silo.glb"
-SOURCES = ("SiloRender.cs", "CoolerFrameRender.cs", "DesignRender.cs")
+SOURCES = ("SiloRender.cs", "CoolerFrameRender.cs", "DesignRender.cs", "FlowRender.cs")
 
 
 def chapters():
     care, plant, yard = p.care, p.plant, p.yard
     first = frames.times(0)
-    return [(0,"Position the pod service conduits"),(12,"Cast the cooler-frame anchors and conduits"),
+    full, repair = p.FILLED, p.FILLED+care.REPAIR
+    marks = [(0,"Cast the pod service sleeves into the inner wall"),(12,"Cast the cooler-frame anchors and conduits"),
             (123,"Seal the ground opening"),
             (p.C,"Begin the water-glycol fill and install the steel pod cage"),
-            (frames.START,f"Retained crawler tracks round the silo with {frames.N} dry cooler frames"),
-            (first[3],"Seat the first frame on its cast-in anchors"),
-            (first[4],"Boom-lift crew connects the coolers and pumps"),
-            (frames.times(1)[0],f"Place the remaining {frames.N-1} frames"),
-            (frames.END,"Fill the water-glycol store to the rim"),
+            (clock.STORE_FILL[0],"Fill the water-glycol store to the top"),
             (yard.INSERT_AT,"Flatbed unloads three framed pods at the rail terminal"),
             (p.FIRST_POD,"Lift the first pod into the store"),
-            (p.FIRST_POD+round(.91*p.motion_ticks(0)),"Dock the liquid, power and data connection"),
+            (p.FIRST_POD+round(.91*p.motion_ticks(0)),"Dock the pod and connect it to the store"),
+            (first[0],f"Crawler hangs the first of {frames.N} screened cooler frames while pods load"),
+            (first[4],"Boom-lift crew connects the coolers and pumps"),
+            (frames.times(1)[0],f"The other {frames.N-1} frames follow round the silo"),
             (p.SPEED_FRAME,f"Lower {p.LEVELS-2} levels of pods at {p.FAST_RATE:g}x"),
-            (p.FILLED,f"{p.TOTAL} pods installed | lower power module through the open top"),
-            (p.FILLED+plant.PICK_STARTS[1],"Upper power module at 90 degrees"),
-            (p.FILLED+plant.VENT_START,"Extend four exhausts to the rim"),
-            (p.FILLED+care.CREW,f"Board the {p.BAYS} wedge work platforms"),
-            (p.FILLED+care.CREW+248,"Service the pods on their assigned levels"),
-            (p.FILLED+care.CREW+420,"Service the underside of the lower power unit"),
-            (p.FILLED+care.REPAIR,f"Fault in pod {care.BAD+1:03} on Level {care.LEVEL}"),
-            (p.FILLED+care.REPAIR+65,"Disconnect and clear the vertical bay"),
-            (p.FILLED+care.REPAIR+434,f"Lower pod {care.BAD+1:03} and transfer it out through the door"),
-            (p.FILLED+care.REPAIR+649,f"Feed replacement {p.TOTAL+1:03} and hoist it to Level {care.LEVEL}"),
-            (p.FILLED+care.REPAIR+1151,f"Reconnect the {p.TOTAL} service positions"),
-            (p.FILLED+care.SOLID_BEGIN,"Finished silo | design basis and 360-degree exterior sweep")]
+            (full,f"{p.TOTAL} pods installed | lower power module through the open top"),
+            (full+plant.PICK_STARTS[1],"Upper power module at 90 degrees"),
+            (full+plant.VENT_START,"Extend four exhaust vents above the rim"),
+            (full+care.LID[0],"Lower the lid over the store and the vents"),
+            (full+care.CREW,f"Board the {p.BAYS} wedge work platforms"),
+            (full+care.CREW+248,"Service the pods on their assigned levels"),
+            (full+care.CREW+420,"Service the underside of the lower power unit"),
+            (repair,f"Fault in pod {care.BAD+1:03} on Level {care.LEVEL}"),
+            (repair+65,"Disconnect and clear the vertical bay"),
+            (repair+service.RIG[0],f"Wide shot | crawler lowers cooler frame {service.K+1:02} while the pod comes out"),
+            (repair+service.SLIDE[0],"Withdraw one 1 MW cooler and fit its replacement"),
+            (repair+649,f"Feed replacement pod {p.TOTAL+1:03} | hang the cooler frame back"),
+            (repair+1151,f"Reconnect the {p.TOTAL} service positions"),
+            (full+care.SOLID_BEGIN,"Finished silo | design basis and 360-degree exterior sweep"),
+            (full+closing.FUEL,f"Place {cfg.PROJECT['fuel']['tanks']} propane tanks and run the gas line to the power modules"),
+            (full+closing.PLAN,"Plan view | hot and cold water-glycol entering the store (narrated)"),
+            (full+closing.SECTION,"Section | power, cooling and gas")]
+    if any(a[0]>=b[0] for a,b in zip(marks,marks[1:])):
+        raise ValueError("Chapters are out of order: "+str([f for f,_ in marks]))
+    return marks
 
 
 def ffmeta(path):
@@ -99,9 +112,14 @@ def render(renderer,scene,out,work,jobs):
     for part,a,b in zip(parts,cuts,cuts[1:]):lines+=["file "+quote(part),f"duration {(b-a)/p.FPS:.9f}"]
     playlist.write_text("\n".join(lines)+"\n",encoding="utf-8")
     ffmeta(metadata)
+    # The narration is placed at the start of the plan view and padded with silence to the film's length.
+    start=round(1000*((p.FILLED+closing.PLAN)/p.FPS+closing.VOICE_LEAD))
+    sound=["-i",str(NARRATION),"-filter_complex",
+           f"[2:a]aresample=48000,adelay={start}:all=1,apad=whole_dur={p.FRAMES/p.FPS:.6f},pan=stereo|c0=c0|c1=c0[voice]",
+           "-map","[voice]","-c:a","aac","-b:a","128k"] if NARRATION.is_file() else []
     subprocess.run(["ffmpeg","-hide_banner","-loglevel","error","-y","-f","concat","-safe","0","-i",str(playlist),
-        "-f","ffmetadata","-i",str(metadata),"-map","0:v:0","-map_metadata","1","-map_chapters","1",
-        "-c:v","copy","-video_track_timescale","12288","-movflags","+faststart",str(out)],check=True)
+        "-f","ffmetadata","-i",str(metadata),*sound[:2],"-map","0:v:0",*sound[2:],"-map_metadata","1","-map_chapters","1",
+        "-c:v","copy","-video_track_timescale","12288","-t",f"{p.FRAMES/p.FPS:.6f}","-movflags","+faststart",str(out)],check=True)
 
 
 def stills(output,ticks,scene_data=None):

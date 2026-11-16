@@ -36,7 +36,7 @@ The movie also needs FFmpeg with libx264 on PATH and a C# compiler:
 ```shell
 python -m gpu_silo build
 python -m gpu_silo.validation.verify_movie renders/GPU_Silo.mp4
-python -m gpu_silo stills 1100 2300 6300
+python -m gpu_silo stills 1700 4700 6400 7200
 ```
 
 The outputs are `renders/GPU_Silo.mp4` and `renders/GPU_Silo.glb`. `build --jobs N` sets the number of parallel render processes. `stills` writes single frames to `renders/stills` so you can look at a shot without rendering the film. Open the MP4 in a player with chapters, or import the GLB into Blender and play its animation. Generated files stay out of Git and are distributed with releases.
@@ -45,10 +45,23 @@ The panel text uses the first installed typeface from a short list (Georgia or L
 
 ### Try a one-value change
 
-In `pod`, change `"cdu_pump_section_m": 0.5` to `0.4`. Every 4SU becomes 5.4 m long, with 0.4 m of light grey beyond the 5 m bronze housing. The gantry pick, footprint, service plug and installed copy follow. Run `python -m gpu_silo calcs` and look at section 5 of the calculations: the clearance to the bore grows by 100 mm. Then run the checks and inspect the terminal at 1:19.
+In `pod`, change `"cdu_pump_section_m": 0.5` to `0.4`. Every 4SU becomes 5.4 m long, with 0.4 m of light grey beyond the 5 m bronze housing. The gantry pick, footprint, service plug and installed copy follow. Run `python -m gpu_silo calcs` and look at section 5 of the calculations: the clearance to the bore grows by 100 mm. Then run the checks and inspect the terminal at 0:47.
 
 To change one unit only, add it to `cdu_pump_section_m_by_unit`, for example `{"1": 0.25}`. A pod too long for the bore is rejected with a message that says so.
 
+### Narration
+
+The plan view at 4:23 is narrated. The script is `plan_view` in [design/narration.json](design/narration.json): each line has the words to `say` and the caption to `show`. The recording and its caption timings are committed in [audio/](audio), so building the movie does not need the speech model. The scene is as long as the recording.
+
+After editing the script, record it again and commit the two files in `audio/`:
+
+```shell
+python -m pip install kokoro-onnx soundfile
+python -m gpu_silo narrate --models DIRECTORY
+```
+
+`DIRECTORY` holds `kokoro-v1.0.onnx` and `voices-v1.0.bin` from the [kokoro-onnx model release](https://github.com/thewh1teagle/kokoro-onnx/releases/tag/model-files-v1.0). The voice is `am_eric`, the same Eric offered in the [Kokoro demo](https://huggingface.co/spaces/hexgrad/Kokoro-TTS). Spell abbreviations out in `say` (`four S U`, `C D U`) and keep the written form in `show`.
+
 ### What the checks cover
 
-The checks read the exported animation, not the source. They cover pod dimensions and the colour of the CDU section, traffic through the doorway, clearance while the store rotates, docking strokes, the pod exchange and the crew decks. For the dry coolers they cover the size and count of the frames, their seats on the two tiers, clearance between neighbours, that every cast-in anchor and conduit is in the forms before its concrete is poured, that a frame never passes through the wall on its way to its seat, the crawler's reach and the boom lift's position at each frame. A failing check names the assertion to inspect when a change affects another part of the design.
+The checks read the exported animation, not the source. They cover pod dimensions and the colour of the CDU section, traffic through the doorway, clearance while the store rotates, docking strokes, the pod exchange and the crew decks. They check that every pod sleeve ends inside the store, that the inner wall is bored at each sleeve and that the outer wall is left solid. For the dry coolers they cover the size and count of the frames and screens, their seats on the two tiers, clearance between neighbours, that every cast-in anchor and conduit is in the forms before its concrete is poured, that a frame never passes through the wall on its way to its seat, the crawler's reach and the boom lift's position at each frame. They follow the cooler service from the wall to the ground and back to the same seat. They check that the lid seats on the rim below the vent tops, that the eight tanks land on their pad and that every leg of the gas line reaches full length. The movie check confirms the narration is present in the plan view and silent elsewhere. A failing check names the assertion to inspect when a change affects another part of the design.

@@ -1,0 +1,41 @@
+"""Frame clock for the closing scenes: propane storage, the plan-view cooling loop and the section.
+
+Times are frames after the pod store is full. The plan-view scene is as long as its narration.
+"""
+import json
+import math
+from pathlib import Path
+
+from . import design as cfg
+from . import maintenance as care
+
+FPS=24
+FUEL=care.ORBIT_DONE+24
+TANKS=FUEL+56
+TANK_STEP=16
+LINE=TANKS+cfg.PROJECT["fuel"]["tanks"]*TANK_STEP+8
+HEADER=(LINE,LINE+20)
+RUN=(LINE+20,LINE+62)
+RISER=(LINE+62,LINE+104)
+ROOF=(LINE+104,LINE+128)
+DROP=(LINE+128,LINE+150)
+FUEL_END=DROP[1]+64
+FADE=18
+
+NARRATION=Path(__file__).resolve().parents[1]/"audio"/"plan_view.json"
+VOICE_LEAD,VOICE_TAIL=1.2,2.0
+if NARRATION.is_file():
+    VOICE=json.loads(NARRATION.read_text(encoding="utf-8"))
+else:
+    VOICE={"duration":26.0,"lines":[]}
+PLAN=FUEL_END
+PLAN_FRAMES=math.ceil((VOICE_LEAD+VOICE["duration"]+VOICE_TAIL)*FPS)
+SECTION=PLAN+PLAN_FRAMES
+SECTION_FRAMES=528
+END=SECTION+SECTION_FRAMES
+
+
+def captions():
+    """Narration lines as (first frame, last frame, text), in frames after the store is full."""
+    start=PLAN+round(VOICE_LEAD*FPS)
+    return [(start+round(line["start"]*FPS),start+round(line["end"]*FPS),line["text"]) for line in VOICE["lines"]]

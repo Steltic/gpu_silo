@@ -12,6 +12,11 @@ from . import services
 from . import plant
 from . import cooler_frames as frames
 from . import calcs
+from . import clock
+from . import closing
+from . import crane
+from . import fuel
+from . import service
 from . import crew
 from . import cargo
 from . import yard
@@ -77,7 +82,10 @@ SWITCH_SOURCE=SOURCE_STARTS[2*BAYS]
 STARTS=[playback_frame(v) for v in SOURCE_STARTS]
 SPEED_FRAME=STARTS[2*BAYS]
 FILLED=STARTS[-1]
-FRAMES=FILLED+plant.END
+FRAMES=FILLED+closing.END
+RESTORE=FILLED+(care.SOLID_BEGIN+care.SOLID_END)//2
+if frames.END>FILLED-8:
+    raise ValueError("The cooler frames finish after the pods. Shorten installation.repeat_cycle_frames.")
 SOURCE_END=SOURCE_STARTS[-1]
 
 
@@ -168,63 +176,64 @@ def rack_pose(frame):
 
 
 def liquid_level(frame):
-    """Water-glycol rises behind the installation and reaches the rim once every frame is connected."""
-    rising=.70*smooth(frame,C,frames.END)+.30*smooth(frame,*frames.STORE_FILL)
+    """Water-glycol rises behind the cage lift and reaches the rim before the pods arrive."""
+    rising=.55*smooth(frame,C,clock.CAGE_END)+.45*smooth(frame,*clock.STORE_FILL)
     return cfg.LIQUID_TOP*rising
 
 
-def frames_camera(frame,cam,blend):
-    """Follow the crawler round the silo, look closely at the first seat, then rise over the liquid."""
-    bearing=math.degrees(frames.crane_bearing(frame))
-    follow=cam((0,0,17.0),bearing+54,16,122)
+def camera(center,az,el,d):
+    a,b=map(math.radians,(az,el))
+    v=(math.cos(a)*math.cos(b),math.sin(a)*math.cos(b),math.sin(b))
+    return {"target":center,"eye":s.plus(center,s.times(v,d)),"fov":33.}
+
+
+def blend(a,b,x):
+    return {k:tuple(mix(p,q,x) for p,q in zip(a[k],b[k])) for k in ("eye","target")}|{"fov":33.}
+
+
+def frames_camera(frame):
+    """Follow the crawler round the silo while the pods load, with a close look at the first seat."""
+    bearing=math.degrees(frames.crane_bearing(min(frame,frames.END)))
+    follow=camera((0,0,15.5),bearing+54*frames.SIDE,18,112)
     a,b,c,d,e,r,g,end=frames.times(0)
     k=frames.ORDER[0];theta=frames.THETA[0]
-    seat=cam(s.polar(frames.BACK+1.0,theta+.16,frames.base(k)+4.2),math.degrees(theta)+42,5,62)
+    seat=camera(s.polar(frames.BACK+1.0,theta+.16*frames.SIDE,frames.base(k)+4.2),math.degrees(theta)+42*frames.SIDE,5,62)
     near=smooth(frame,d-22,e+2)*(1-smooth(frame,g-4,end+14))
-    view=blend(follow,seat,near)
-    store=cam((0,0,25.0),bearing+54,31,60)
-    return blend(view,store,smooth(frame,frames.END+2,frames.END+66))
+    return blend(follow,seat,near)
 
 
 def construction_camera(frame):
     if frame<C: return s.camera_at(frame)
     t=frame-C
+    cam=camera
+    if frame>=FILLED+closing.FUEL:
+        orbit_end=plant.camera_power(sys.modules[__name__],FILLED+care.ORBIT_DONE,None,cam,blend)
+        return fuel.camera(min(frame-FILLED,closing.FUEL_END),orbit_end,cam,blend)
     # Wide view includes both picks, their hooks and the entire receiving shell.
-    def cam(center,az,el,d):
-        a,b=map(math.radians,(az,el))
-        v=(math.cos(a)*math.cos(b),math.sin(a)*math.cos(b),math.sin(b))
-        return {"target":center,"eye":s.plus(center,s.times(v,d)),"fov":33.}
-    def blend(a,b,x):
-        return {k:tuple(mix(p,q,x) for p,q in zip(a[k],b[k])) for k in ("eye","target")}|{"fov":33.}
     w=cam((-10,0,26.0),-65,11.8,130)
     if t<58: return blend(s.camera_at(C-1),w,smooth(t,0,54))
     if t<188: return w
     install=cam((-.8,0,17),-59,19,85)
-    if frame<frames.START: return blend(w,install,smooth(t,185,307))
+    if frame<clock.CAGE_END: return blend(w,install,smooth(t,185,307))
+    store=cam((0,0,24.5),-59,31,60)
+    if frame<yard.INSERT_AT: return blend(install,store,smooth(frame,clock.CAGE_END,clock.CAGE_END+64))
     close=cam((3.4,-2.1,3.5),-110,16,36)
-    if frames.START<=frame<yard.INSERT_AT:
-        return frames_camera(frame,cam,blend)
-    if yard.INSERT_AT<=frame<yard.INSERT_AT+yard.DELIVERY_FRAMES:
+    if frame<yard.INSERT_AT+yard.DELIVERY_FRAMES:
         return yard.delivery_camera(frame,sys.modules[__name__])
     if frame<FIRST_POD:
-        if frame>=yard.INSERT_AT+yard.DELIVERY_FRAMES:
-            return yard.delivery_camera(yard.INSERT_AT+yard.DELIVERY_FRAMES-1,sys.modules[__name__])
-        return blend(install,close,smooth(t,298,350))
+        return yard.delivery_camera(yard.INSERT_AT+yard.DELIVERY_FRAMES-1,sys.modules[__name__])
     elapsed=frame-FIRST_POD
     if elapsed<40:
         terminal=yard.delivery_camera(yard.INSERT_AT+yard.DELIVERY_FRAMES-1,sys.modules[__name__])
         return blend(terminal,close,smooth(elapsed,0,28))
+    middle=cam((0,0,14.3),-55,24,62)
     if elapsed<151:
-        v=smooth(elapsed,44,106)
-        return blend(close,cam((0,0,14.3),-55,24,62),v)
-    progress=s.clamp((frame-STARTS[1])/(FILLED-STARTS[1]))
-    az=-55+13*math.sin(progress*math.pi*1.3)
-    ev=24+4*math.sin(progress*math.pi)
-    wide=cam((.1,-.2,12.2),az,ev,64)
-    if elapsed<195: return blend(cam((0,0,14.3),-55,24,62),wide,smooth(elapsed,151,194))
+        return blend(close,middle,smooth(elapsed,44,106))
+    follow=frames_camera(frame)
     if frame>=FILLED:
-        return plant.camera_power(sys.modules[__name__],frame,wide,cam,blend)
-    return wide
+        return plant.camera_power(sys.modules[__name__],frame,follow,cam,blend)
+    # Pull back to take in the crawler and the cooler frames while the pods keep loading.
+    return blend(middle,follow,smooth(elapsed,151,188))
 
 
 def annulus(m,ri,ro,z0,z1,color,start=0,end=TAU,n=36):
@@ -432,16 +441,13 @@ def build():
         return [(scene.motion_frames[i],v) for i,v in sorted(compact.items())]
     scene.project_info.update(servicesPerTier=BAYS,totalServiceConduits=TOTAL,
         lowestStationCentre_m=services.PORT_Z,highestStationCentre_m=services.port_height(LEVELS),
-        cappedOutletRadius_m=services.EXT_END,liquidGap_m=s.CLEAR_GAP,
+        podSleeveTankEnd_m=services.TANK_END,liquidGap_m=s.CLEAR_GAP,
         liquidTarget_m=cfg.LIQUID_TOP,speedChange_s=SPEED_FRAME/FPS,lowerTierPlaybackRate=FAST_RATE,
-        serviceConcept="Each pod's CDU pump draws from and returns to the water-glycol store through a self-sealing wall coupling. Power and data enter through a dry duct in the same sleeve.")
+        serviceConcept="Each pod's CDU pump draws from and returns to the water-glycol store through a self-sealing coupling in the inner wall. Power and data reach each pod through the steel shaft and its root lock.")
     for item in scene.nodes:
         if "concrete wall" in item['group']:
             tr=item['tracks']['scale']
-            restore=FILLED+(care.SOLID_BEGIN+care.SOLID_END)//2
-            # Solid concrete returns while the cooler frames are hung on it.
-            tr.extend([(PORTAL_VIEW+16,tr[-1][1]),(PORTAL_VIEW+17,OFF),(frames.START-.01,OFF),(frames.START,ON),
-                       (frames.GHOST_AGAIN-.01,ON),(frames.GHOST_AGAIN,OFF),(restore-.01,OFF),(restore,ON)])
+            tr.extend([(PORTAL_VIEW+16,tr[-1][1]),(PORTAL_VIEW+17,OFF),(RESTORE-.01,OFF),(RESTORE,ON)])
     def mesh(m): return scene.mesh(m)
     def node(name,mid,group,parent=-1,ang=0,t=(0,0,0),tracks=None):
         scene.node(name,mid,group,ang,t,tracks)
@@ -454,9 +460,7 @@ def build():
     for lite in (False,True):
         m=casing(lite)
         if not lite:m=services.bore_rows(m,0,[services.port_height(l) for l in range(1,LEVELS+1)])
-        restore=FILLED+(care.SOLID_BEGIN+care.SOLID_END)//2
-        node(m.name,mesh(m),"Translucent silo",tracks={'scale':show(PORTAL_VIEW+17)+[(frames.START-.01,ON),(frames.START,OFF),
-            (frames.GHOST_AGAIN-.01,OFF),(frames.GHOST_AGAIN,ON),(restore-.01,ON),(restore,OFF)]})
+        node(m.name,mesh(m),"Translucent silo",tracks={'scale':show(PORTAL_VIEW+17)+[(RESTORE-.01,ON),(RESTORE,OFF)]})
     dock=loading_dock()
     node(dock.name,mesh(dock),"Intake",ang=ENTRY,tracks={'scale':show(PORTAL_VIEW+17)})
     # This single parent carries the entire empty module during both crane picks.
@@ -470,17 +474,20 @@ def build():
         hx=[v[0]-6*j for v,j in zip(tr,jog)]
         hy=[sign*(3.65+7.0*j) for j in jog]
         hook=[CROWN+4+v[2]+29*j for v,j in zip(tr,jog)]
-        foot=[base]*FRAMES;heading=[0.]*FRAMES
+        foot=[base]*FRAMES;heading=[0.]*FRAMES;leaves=C+349
         if sign<0:
-            # The south crawler stays. It tracks round the silo and places every cooler frame.
-            for f in range(frames.START,FRAMES):
-                foot[f],(hx[f],hy[f],hook[f]),_,heading[f]=frames.crane(f)
+            # The south crawler stays for every later lift: cooler frames, power modules, lid and cooler service.
+            path,leaves=crane.poses(sys.modules[__name__])
+            for f,(place,(x,y,z),facing) in path.items():
+                foot[f]=place;hx[f],hy[f],hook[f]=x,y,z;heading[f]=facing
         a=[math.atan2(y-b[1],x-b[0])-h for x,y,b,h in zip(hx,hy,foot,heading)]
+        for f in range(1,FRAMES):
+            a[f]-=TAU*round((a[f]-a[f-1])/TAU)
         dist=[math.hypot(x-b[0],y-b[1]) for x,y,b in zip(hx,hy,foot)]
         tip=[2.45+math.sqrt(BOOM_LENGTH**2-d*d) for d in dist]
         side="North" if sign>0 else "South"
         lower=crane_lower()
-        seen=interval(STEEL_START,yard.INSERT_AT if sign<0 else C+349)
+        seen=interval(STEEL_START,leaves)
         tracks={'scale':seen}
         if sign<0:tracks.update(translation=flat_keys(foot),yaw=flat_keys([(h,) for h in heading]))
         car=node(side+" crawler",mesh(lower),"Tandem crane lift",t=base,tracks=tracks)
@@ -573,6 +580,8 @@ def build():
     plant.add(scene,node,sys.modules[__name__])
     crew.install(scene,node,sys.modules[__name__],FILLED+care.CREW)
     care.install(scene,node,sys.modules[__name__])
+    service.install(scene,node,sys.modules[__name__])
+    fuel.install(scene,node,sys.modules[__name__])
     scene.storage_inspection=(FIRST_POD,FILLED+plant.VENT_END)
     yard.install_terminal(scene,node,sys.modules[__name__])
     return scene
@@ -584,12 +593,12 @@ def render_data(scene,path):
         def floats(*v): file.write(struct.pack("<"+"f"*len(v),*v))
         def string(txt):
             b=txt.encode("utf8");ints(len(b));file.write(b)
-        file.write(b"GSILO01\0")
+        file.write(b"GSILO02\0")
         ints(len(scene.meshes),len(scene.nodes),FRAMES,FPS)
         floats(s.RO,s.RI_OUTER,s.RO_INNER,s.RI,s.WALL_HEIGHT,s.LIFT)
         ints(s.COUNT,s.LAST_POUR,s.LAST_POUR+s.REVEAL//2,s.LAST_POUR+s.REVEAL,
              C,PORTAL_VIEW,FIRST_POD,FILLED,SPEED_FRAME)
-        ints(*plant.PICK_STARTS,plant.PICK_LENGTH,plant.VENT_START,plant.VENT_END)
+        ints(*plant.PICK_STARTS,plant.PICK_LENGTH,plant.VENT_START,plant.VENT_END,*plant.LID)
         ints(care.SOLID_BEGIN,care.SOLID_END,care.ORBIT,care.ORBIT_DONE)
         floats(CROWN,cfg.LIQUID_TOP)
         ints(care.CREW,care.REPAIR,care.BAD,care.LEVEL,care.BAY)
@@ -597,17 +606,28 @@ def render_data(scene,path):
         floats(PITCH,BASE,cfg.BODY_LENGTH,cargo.FRAME_WIDTH,cargo.FRAME_HEIGHT,s.OPENING_WIDTH,s.OPENING_HEIGHT,FAST_RATE)
         floats(*[cfg.length(i) for i in range(1,TOTAL+1)])
         string(cfg.NAME)
-        floats(INNER,plant.WIDTH,plant.HEIGHT,plant.LENGTH,plant.STACK_X);ints(sum(crew.SIZES))
+        floats(INNER,plant.WIDTH,plant.HEIGHT,plant.LENGTH,plant.STACK_X,SHAFT,plant.power_base(CROWN,0),plant.power_base(CROWN,1),
+               s.WALL_HEIGHT+plant.VENT_RISE,plant.LID_Z,services.PORT_Z,plant.POWER_YAW,s.ENTRY);ints(sum(crew.SIZES))
         ints(*crew.LEVELS)
-        ints(frames.START,frames.END,frames.GHOST_AGAIN,*frames.STORE_FILL,yard.INSERT_AT,frames.N,frames.ROWS,frames.FANS)
+        ints(clock.CAGE_END,*clock.STORE_FILL,yard.INSERT_AT,frames.START,frames.FIRST,frames.END,frames.N,frames.ROWS,frames.FANS)
         floats(frames.WIDTH,frames.HEIGHT,frames.DEPTH,frames.COOL_L,frames.PUMP_L,frames.BACK,frames.D["cooler_capacity_mw"])
         for i in range(frames.N):
             ints(frames.ORDER[i],*frames.times(i))
             floats(frames.base(frames.ORDER[i]),frames.BEARINGS[frames.ORDER[i]])
+        # Cooler service, in frames after the pod exchange starts.
+        ints(service.K,service.ROW,service.ARRIVE,service.RIG[1],service.DOWN[1],service.DROP,service.INSERT[1],service.RELEASE,service.DONE)
+        # Closing scenes, in frames after the store is full.
+        ints(closing.FUEL,closing.TANKS,closing.TANK_STEP,*closing.HEADER,*closing.RUN,*closing.RISER,*closing.ROOF,*closing.DROP,
+             closing.FUEL_END,closing.PLAN,closing.PLAN_FRAMES,closing.SECTION,closing.SECTION_FRAMES,closing.FADE,fuel.COUNT)
+        floats(fuel.BEARING,fuel.FARM_R,fuel.LENGTH,fuel.DIA,fuel.PITCH,fuel.RISER_R,fuel.TOP,fuel.DROP_R,fuel.drop_end(CROWN))
         string(cfg.TITLE)
-        for rows in (calcs.strip(),calcs.summary(),calcs.panel()["store"],calcs.panel()["frames"]):
+        panels=calcs.panel()
+        for rows in (calcs.strip(),calcs.summary(),panels["store"],panels["frames"],panels["fuel"],panels["plan"],panels["section"]):
             ints(len(rows))
             for left,right in rows:string(left);string(right)
+        lines=closing.captions()
+        ints(len(lines))
+        for first,last,text in lines:ints(FILLED+first,FILLED+last);string(text)
         for m in scene.meshes:
             ints(len(m.tris),int(m.terrain),getattr(m,"material",0))
             for a,b,c,col in m.tris:
@@ -619,6 +639,7 @@ def render_data(scene,path):
             if node['group'] in s.FRAME_EQUIPMENT:typ=5
             if node['group']=="Crew decks":typ=6
             if node['group']=="Replacement pod":typ=7
+            if node['group']=="Silo lid":typ=16
             if node['group']=="Crew poses":typ=9
             if node['group']=="Structure":typ=13
             if node['group']=="Hoist":typ=10+int(node['name']=="Twin self-releasing pickup heads")

@@ -17,7 +17,14 @@ def main():
     still = commands.add_parser("stills", help="render review frames as PNG")
     still.add_argument("frames", nargs="+", type=int)
     still.add_argument("--output", type=Path, default=Path("renders/stills"))
+    voice = commands.add_parser("narrate", help="record the narration again after editing design/narration.json")
+    voice.add_argument("--models", type=Path, required=True, help="folder holding the Kokoro model and voices files")
     args = parser.parse_args()
+    if args.command == "narrate":
+        from . import narrate
+        path, seconds = narrate.record(args.models)
+        print(f"{path} ({seconds:.1f} s)")
+        return
     if args.command == "calcs":
         from . import calcs
         if args.check:

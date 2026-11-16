@@ -27,7 +27,7 @@ REVEAL = 19
 HOLD = 85
 TAU = 2 * math.pi
 ENTRY = math.radians(-37)
-FRAME_EQUIPMENT = ("Cooler frames","Pump units","Frame anchors","Frame pipework")
+FRAME_EQUIPMENT = ("Cooler frames","Cooler screens","Pump units","Frame anchors","Frame pipework")
 SITE_CLEARING = 46.
 OPENING_WIDTH = cfg.DOOR_WIDTH
 OPENING_HEIGHT = cfg.DOOR_HEIGHT
@@ -591,7 +591,8 @@ def glb_file(scene,path):
     doc["extras"].update(getattr(scene,"project_info",{}))
     doc["materials"].append({"name":"Matte site palette","doubleSided":True,
         "pbrMetallicRoughness":{"baseColorFactor":[1,1,1,1],"metallicFactor":0,"roughnessFactor":.94}})
-    for name,alpha in [("Concrete shell | translucent view",.085),("Shell rim and portal edges",.48)]:
+    # Cutaway views remove the concrete altogether. Only its rim and joint lines remain as a faint guide.
+    for name,alpha in [("Concrete shell | cutaway view",0.),("Shell rim and portal edges",.30)]:
         doc["materials"].append({"name":name,"doubleSided":False,"alphaMode":"BLEND",
             "pbrMetallicRoughness":{"baseColorFactor":[.71,.90,.94,alpha],"metallicFactor":0,"roughnessFactor":.9}})
     doc["materials"].append({"name":"Painted structural steel","doubleSided":True,

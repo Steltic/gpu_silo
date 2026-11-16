@@ -1,11 +1,12 @@
-"""Wall-mounted dry cooler frames, their cast-in anchors and conduits, the
-travelling crawler pick and the boom-lift crew that connects each frame.
+"""Wall-mounted dry cooler frames, their mesh screens, cast-in anchors and conduits,
+the travelling crawler pick and the boom-lift crew that connects each frame.
 
 Frame coordinates are metres. Local X points away from the silo from the back
 plane of the frame, local Y follows the wall and Z is up from the frame base.
 """
 import math
 
+from . import clock
 from . import design as cfg
 from . import crew
 from . import services
@@ -32,25 +33,31 @@ CONDUIT_R=.15
 LAY_R=SITE["laydown_radius_m"]
 TRACK_R=SITE["crane_track_radius_m"]
 LIFT_R=SITE["boom_lift_track_radius_m"]
-LIFT_SIDE=9.5
+LIFT_SIDE=12.5
 LIFT_ANGLE=math.asin(LIFT_SIDE/LIFT_R)
+LIFT_PARK=math.radians(50)
+LIFT_AWAY=72.
 BASKET_REST=3.1
 GROUND=.25
 SLING=3.4
 OVER=.60
 BOOM_LENGTH=62.
-START=s.FRAMES+352
-FIRST=START+20
-ORDER=[(SITE["first_frame"]-i)%N for i in range(N)]
-THETA=[BEARINGS[SITE["first_frame"]]-i*s.TAU/N for i in range(N)]
+SCREEN="c6c8c3"
+# The frames stand in laydown from the pod delivery and are hung while the pods are loaded.
+START=clock.DELIVERY_AT
+FIRST=clock.FRAMES_FIRST
+DIR=1 if SITE["direction"]=="anticlockwise" else -1
+# The boom lift works at the end of each frame that faces the frames already hung.
+SIDE=-DIR
+ORDER=[(SITE["first_frame"]+DIR*i)%N for i in range(N)]
+THETA=[BEARINGS[SITE["first_frame"]]+DIR*i*s.TAU/N for i in range(N)]
+LAY_SHIFT={int(k)-1:math.radians(v) for k,v in SITE["laydown_offset_degrees_by_frame"].items()}
 ends=[FIRST]
 for i in range(N):
     ends.append(ends[-1]+(SITE["first_cycle_frames"] if i==0 else SITE["repeat_cycle_frames"]))
 STARTS=ends[:-1]
 END=ends[-1]
-GHOST_AGAIN=END+20
-STORE_FILL=(END+16,END+126)
-STORE_END=END+168
+LIFT_GONE=END+70
 OFF,ON=(0,0,0),(1,1,1)
 STRUCT,SILVER,COIL,FIN,DARK,AMBER="4c6266","c4c9be","416c73","93a9a0","32484e","db9955"
 BRACE="678078"
@@ -73,6 +80,17 @@ def times(i):
     return [a+round(q*d) for q in cuts]
 
 
+def lay_bearing(i):
+    """Bearing at which frame i of the installation order stands before it is picked."""
+    return THETA[i]+LAY_SHIFT.get(ORDER[i],0)
+
+
+def frame_bearing(i,f):
+    """A frame stood clear of the terminal is carried round to its own bearing as it moves in."""
+    c,d=times(i)[2:4];lay=lay_bearing(i)
+    return lay+(THETA[i]-lay)*s.step(c,d,f)
+
+
 def pose(i,f):
     """Polar radius of the frame's back plane and the elevation of its base."""
     a,b,c,d,e,r,g,end=times(i)
@@ -87,16 +105,15 @@ def cycle(f):
 
 
 def crane_bearing(f):
-    """The crawler tracks clockwise around the silo between picks."""
-    if f<=STARTS[0]:return THETA[0]
-    i=cycle(f)
-    release=times(i)[5]
-    if i==N-1 or f<=release:
-        if i==0:return THETA[0]
-        before=times(i-1)[5];rigged=times(i)[1]
-        return THETA[i-1]+(THETA[i]-THETA[i-1])*s.step(before,rigged,f)
-    rigged=times(i+1)[1]
-    return THETA[i]+(THETA[i+1]-THETA[i])*s.step(release,rigged,f)
+    """The crawler tracks round the silo between picks and carries each frame on its own radial line."""
+    if f<=STARTS[0]:return lay_bearing(0)
+    i=cycle(f);a,b,c,d,e,r,g,end=times(i)
+    if f<b:
+        if i==0:return lay_bearing(0)
+        return THETA[i-1]+(lay_bearing(i)-THETA[i-1])*s.step(times(i-1)[5],b,f)
+    if f<=r:return frame_bearing(i,f)
+    if i==N-1:return THETA[i]
+    return THETA[i]+(lay_bearing(i+1)-THETA[i])*s.step(r,times(i+1)[1],f)
 
 
 def hook(f):
@@ -105,7 +122,7 @@ def hook(f):
     i=cycle(f);a,b,c,d,e,r,g,end=times(i)
     bearing=crane_bearing(f)
     if f<b:
-        if i==0:return LAY_R+DEPTH/2,bearing,lug+6*(1-s.step(START,b-4,f))
+        if i==0:return LAY_R+DEPTH/2,bearing,lug+6*(1-s.step(STARTS[0],b-4,f))
         prev=times(i-1);seat=base(ORDER[i-1])+HEIGHT+SLING
         out=s.step(prev[5],prev[6],f)
         radius=BACK+DEPTH/2+(LAY_R-BACK)*out
@@ -129,15 +146,25 @@ def crane(f):
     foot=s.polar(TRACK_R,bearing,0)
     reach=TRACK_R-radius
     tip=2.45+math.sqrt(BOOM_LENGTH**2-reach**2)
-    return foot,s.polar(radius,bearing,z),tip,bearing-math.pi/2
+    return foot,s.polar(radius,bearing,z),tip,bearing+math.pi/2
 
 
 def lift_bearing(f):
     """Bearing of the boom lift. It drives to the next frame while the crane hoists."""
     i=cycle(f)
-    if i==0:return THETA[0]+LIFT_ANGLE
+    here=THETA[i]+SIDE*LIFT_ANGLE
+    before=THETA[i-1]+SIDE*LIFT_ANGLE if i else here+SIDE*LIFT_PARK
     begin=times(i)[0];ready=times(i)[3]-2
-    return THETA[i-1]+LIFT_ANGLE+(THETA[i]-THETA[i-1])*s.step(begin,ready,f)
+    return before+(here-before)*s.step(begin,ready,f)
+
+
+def lift_radius(f):
+    """The boom lift leaves the silo once the last frame is connected."""
+    return LIFT_R+(LIFT_AWAY-LIFT_R)*s.step(stow_end(N-1)+4,LIFT_GONE,f)
+
+
+def drive(f):
+    return s.polar(lift_radius(f),lift_bearing(f),0)
 
 
 def stow_end(i):
@@ -156,16 +183,16 @@ def basket(f):
     i=cycle(f);a,b,c,d,e,r,g,end=times(i)
     lifted=reach(f)
     k=ORDER[i];bearing=lift_bearing(f)
-    cx,cy,_=s.polar(LIFT_R,bearing,0)
-    heading=bearing-math.pi/2
+    cx,cy,_=drive(f)
+    heading=bearing+math.pi/2
     rest=(cx+3.6*math.cos(heading),cy+3.6*math.sin(heading),BASKET_REST)
     theta=THETA[i]
     low,high=base(k)+1.15,base(k)+HEIGHT-1.35
     work_z=low+(high-low)*s.step(e+2,g-2,f)
-    x,y=BACK+DEPTH/2,WIDTH/2+.95
+    x,y=BACK+DEPTH/2,SIDE*(WIDTH/2+.95)
     work=(x*math.cos(theta)-y*math.sin(theta),x*math.sin(theta)+y*math.cos(theta),work_z)
     u=lifted
-    return tuple(p+(q-p)*u for p,q in zip(rest,work)),heading+(theta-math.pi/2-heading)*u
+    return tuple(p+(q-p)*u for p,q in zip(rest,work)),heading+(theta-SIDE*math.pi/2-heading)*u
 
 
 def connected(i,f):
@@ -273,15 +300,37 @@ def sling_mesh():
     return m
 
 
+def screen_mesh():
+    """Concrete-grey steel mesh over the face, both ends and the top of one cooler frame."""
+    m=mesh("Dry cooler screen | concrete-grey steel mesh on the face, ends and top")
+    pitch,bar=.50,.12
+    face=DEPTH+.07;ends=WIDTH/2+.07;side="b6bab4"
+    def strips(count,make,colour):
+        for j in range(count+1):
+            wide=bar*1.8 if j in (0,count) else bar
+            both(m,make(j*pitch,wide/2),colour)
+    across,up,deep=round(WIDTH/pitch),round(HEIGHT/pitch),round((DEPTH-.3)/pitch)
+    strips(across,lambda y,w:[(face,y-WIDTH/2-w,0),(face,y-WIDTH/2+w,0),(face,y-WIDTH/2+w,HEIGHT),(face,y-WIDTH/2-w,HEIGHT)],SCREEN)
+    strips(up,lambda z,w:[(face,-WIDTH/2,z-w),(face,WIDTH/2,z-w),(face,WIDTH/2,z+w),(face,-WIDTH/2,z+w)],SCREEN)
+    for y in (-ends,ends):
+        strips(deep,lambda x,w:[(.3+x-w,y,0),(.3+x+w,y,0),(.3+x+w,y,HEIGHT),(.3+x-w,y,HEIGHT)],side)
+        strips(up,lambda z,w:[(.3,y,z-w),(face,y,z-w),(face,y,z+w),(.3,y,z+w)],side)
+    top=HEIGHT+.26
+    strips(across,lambda y,w:[(.3,y-WIDTH/2-w,top),(face,y-WIDTH/2-w,top),(face,y-WIDTH/2+w,top),(.3,y-WIDTH/2+w,top)],"d0d2cc")
+    strips(deep,lambda x,w:[(.3+x-w,-WIDTH/2,top),(.3+x+w,-WIDTH/2,top),(.3+x+w,WIDTH/2,top),(.3+x-w,WIDTH/2,top)],"d0d2cc")
+    return m
+
+
 def dunnage_mesh():
     m=mesh("Cooler frame laydown | timber dunnage and raking props")
     for y in (-WIDTH/2+.6,0,WIDTH/2-.6):
         closed(m,-.5,y-.20,DEPTH+.5,y+.20,0,GROUND,"8f8064")
     for y in (-WIDTH/2+.3,WIDTH/2-.3):
         for sign in (-1,1):
-            x=DEPTH/2+sign*(DEPTH/2-.1)
-            s.bar(m,(x,y,GROUND+4.2),(x+sign*3.1,y,.10),.12,"9a8a66")
-            closed(m,x+sign*3.1-.3,y-.3,x+sign*3.1+.3,y+.3,0,.10,"8f8064")
+            # Short feet on the silo side leave the boom lift a clear lane.
+            x=DEPTH/2+sign*(DEPTH/2-.1);run=3.1 if sign>0 else 1.0
+            s.bar(m,(x,y,GROUND+4.2 if sign>0 else GROUND+1.6),(x+sign*run,y,.10),.12,"9a8a66")
+            closed(m,x+sign*run-.3,y-.3,x+sign*run+.3,y+.3,0,.10,"8f8064")
     return m
 
 
@@ -407,9 +456,12 @@ def basket_mesh():
 
 
 def track_mesh():
+    """Crawler track and laydown apron. Both stop short of the pod terminal."""
     m=mesh("Crawler track and frame laydown apron")
-    s.sector(m,TRACK_R-4.2,TRACK_R+3.4,-.03,.004,0,s.TAU,96,["b8ad94","b8ad94","c2b89d","b8ad94"],caps=False)
-    s.sector(m,s.RO+4.1,LAY_R+DEPTH+4.2,-.03,.002,0,s.TAU,96,["b3ac93","b3ac93","bdb59c","b3ac93"],caps=False)
+    tone=["b8ad94","b8ad94","c2b89d","b8ad94"]
+    s.sector(m,TRACK_R-4.2,TRACK_R+3.4,-.03,.004,s.ENTRY+math.radians(17),s.ENTRY+math.radians(354),90,tone)
+    s.sector(m,s.RO+4.1,LAY_R+DEPTH+4.2,-.03,.002,s.ENTRY+math.radians(36),s.ENTRY+math.radians(352),84,
+             ["b3ac93","b3ac93","bdb59c","b3ac93"])
     return m
 
 
@@ -422,27 +474,33 @@ def add(scene,node,p):
         values=[fn(f) for f in range(a,b+1)]
         return [(0,values[0])]+[(a+k,v) for k,v in p.flat_keys(values)]
     apron=track_mesh()
-    node(apron.name,scene.mesh(apron),"Site works",tracks={"scale":window(START,p.yard.INSERT_AT)})
+    node(apron.name,scene.mesh(apron),"Site works",tracks={"scale":window(START)})
     steel=scene.mesh(frame_mesh());cooler=scene.mesh(cooler_mesh());pump=scene.mesh(pump_mesh())
+    screen=scene.mesh(screen_mesh())
     slings=scene.mesh(sling_mesh());dunnage=scene.mesh(dunnage_mesh())
     plate=scene.mesh(embed_plate());struts=scene.mesh(strut_mesh());sleeve=scene.mesh(sleeve_mesh())
     spool=scene.mesh(spool_mesh());reach_x=BACK+COOL_X0+.16-spool_origin()
+    scene.cooler_frames={}
     for i,k in enumerate(ORDER):
         a,b,c,d,e,r,g,end=times(i)
         bearing=BEARINGS[k];label=f"Cooler frame {k+1:02}"
-        def place(f,i=i,bearing=bearing):
+        def place(f,i=i):
             radius,z=pose(i,f)
-            return s.polar(radius,bearing,z)
-        root=node(label+f" | {ROWS} dry coolers, {ROWS} pumps and steel",-1,"Dry cooler frames",ang=bearing,
-                  tracks={"translation":curve(a,e,place),"scale":window(START)})
+            return s.polar(radius,frame_bearing(i,f),z)
+        tracks={"translation":curve(a,e,place),"scale":window(START)}
+        if lay_bearing(i)!=THETA[i]:tracks["yaw"]=curve(a,e,lambda f,i=i:(frame_bearing(i,f),))
+        root=node(label+f" | {ROWS} dry coolers, {ROWS} pumps and steel",-1,"Dry cooler frames",ang=bearing,tracks=tracks)
         node(label+" | steel frame",steel,"Cooler frames",root)
+        node(label+" | mesh screen",screen,"Cooler screens",root)
+        coolers=[]
         for row in range(ROWS):
             z=row*ROW+.15
-            node(label+f" | cooler {row+1}",cooler,"Dry coolers",root,t=(0,COOL_Y,z))
+            coolers.append(node(label+f" | cooler {row+1}",cooler,"Dry coolers",root,t=(0,COOL_Y,z)))
             node(label+f" | pump unit {row+1}",pump,"Pump units",root,t=(0,PUMP_Y,z))
-        node(label+" | lifting slings",slings,"Frame rigging",root,tracks={"scale":window(b-5,r)})
-        node(label+" | laydown dunnage",dunnage,"Frame laydown",ang=bearing,t=s.polar(LAY_R,bearing,0),
-             tracks={"scale":window(START,p.yard.INSERT_AT)})
+        sling=node(label+" | lifting slings",slings,"Frame rigging",root,tracks={"scale":window(b-5,r)})
+        lay=lay_bearing(i)
+        node(label+" | laydown dunnage",dunnage,"Frame laydown",ang=lay,t=s.polar(LAY_R,lay,0),
+             tracks={"scale":window(START,g)})
         station=node(label+" | fixed wall station",-1,"Cooler frame stations",ang=bearing)
         for y in COLUMNS:
             turn=math.asin(y/s.RO);x,yy,_=s.polar(s.RO,turn,0)
@@ -455,25 +513,24 @@ def add(scene,node,p):
             start,cast=pour_frames(z,-CONDUIT_R)
             node(label+f" | cast-in conduit {n+1}",sleeve,"Cooler conduits",station,ang=turn,
                  tracks={"scale":window(start),"translation":[(0,(0,0,z+.40)),(start,(0,0,z+.40)),(cast,(0,0,z))]})
-        node(label+" | pipe spools",spool,"Frame pipework",station,t=(spool_origin(),0,base(k)),
+        pipes=node(label+" | pipe spools",spool,"Frame pipework",station,t=(spool_origin(),0,base(k)),
              tracks={"scale":[(0,OFF),(e+2,OFF)]+[(f,(max(.001,reach_x*connected(i,f)),1,1)) for f in range(e+3,g+1)]})
+        scene.cooler_frames[k]=dict(root=root,coolers=coolers,slings=sling,spools=pipes,station=station,reach=reach_x)
     # One boom lift follows the crane round the silo with a two-person connection crew.
-    def drive(f):
-        return s.polar(LIFT_R,lift_bearing(f),0)
     def heading(f):
-        return (lift_bearing(f)-math.pi/2,)
+        return (lift_bearing(f)+math.pi/2,)
     car=node("Boom lift | chassis",scene.mesh(chassis_mesh()),"Boom lift",
-             tracks={"translation":curve(START,END,drive),"yaw":curve(START,END,heading),"scale":window(START,p.yard.INSERT_AT)})
+             tracks={"translation":curve(START,LIFT_GONE,drive),"yaw":curve(START,LIFT_GONE,heading),"scale":window(START,LIFT_GONE)})
     def boom(f):
         (bx,by,bz),_=basket(f);cx,cy,_=drive(f)
         dx,dz=math.hypot(bx-cx,by-cy),bz-.35-2.0
         return dx,dz,math.atan2(by-cy,bx-cx)
     node("Boom lift | telescopic boom",scene.mesh(boom_mesh()),"Boom lift",car,t=(0,0,2.0),tracks={
-        "yaw":curve(START,END,lambda f:(boom(f)[2]-heading(f)[0],)),
-        "scale":curve(START,END,lambda f:(boom(f)[0]/BOOM_NOMINAL[0],1,boom(f)[1]/BOOM_NOMINAL[1]))})
+        "yaw":curve(START,LIFT_GONE,lambda f:(boom(f)[2]-heading(f)[0],)),
+        "scale":curve(START,LIFT_GONE,lambda f:(boom(f)[0]/BOOM_NOMINAL[0],1,boom(f)[1]/BOOM_NOMINAL[1]))})
     cage=node("Boom lift | work basket",scene.mesh(basket_mesh()),"Boom lift",tracks={
-        "translation":curve(START,END,lambda f:basket(f)[0]),"yaw":curve(START,END,lambda f:(basket(f)[1],)),
-        "scale":window(START,p.yard.INSERT_AT)})
+        "translation":curve(START,LIFT_GONE,lambda f:basket(f)[0]),"yaw":curve(START,LIFT_GONE,lambda f:(basket(f)[1],)),
+        "scale":window(START,LIFT_GONE)})
     people={}
     for worker in range(SITE["workers_per_basket"]):
         actor=node(f"Boom lift | fitter {worker+1}",-1,"Connection crew",cage,t=(-.12,(-.62,.62,0)[worker%3],0))
@@ -481,7 +538,7 @@ def add(scene,node,p):
             spec=(worker%3,"inspect",index)
             if spec not in people:people[spec]=scene.mesh(crew.technician(*spec))
             keys=[(0,ON if index==0 else OFF)]
-            for f in range(START,END+1):
+            for f in range(FIRST,END+1):
                 was=((f-1+worker*3)//5)%crew.MODES["inspect"]==index
                 now=((f+worker*3)//5)%crew.MODES["inspect"]==index
                 if was!=now:keys.extend([(f-.025,ON if was else OFF),(f,ON if now else OFF)])
@@ -490,5 +547,5 @@ def add(scene,node,p):
         coolerCapacity_MW=D["cooler_capacity_mw"],coolerFrame_m=[WIDTH,HEIGHT,DEPTH],coolerCasing_m=[COOL_L,COOL_X1-COOL_X0,COOL_H],
         coolerFrameBackRadius_m=BACK,coolerFrameBearings_deg=[math.degrees(b) for b in BEARINGS],
         coolerFrameBase_m=[base(k) for k in range(N)],coolerFrameInstallOrder=[k+1 for k in ORDER],
-        coolerFrameSeatFrames=[times(i)[4] for i in range(N)],castInFrameAnchors=N*len(COLUMNS)*(ROWS+1),
+        coolerFrameSeatFrames=[times(i)[4] for i in range(N)],coolerScreen="Concrete-grey steel mesh on every frame",castInFrameAnchors=N*len(COLUMNS)*(ROWS+1),
         castInCoolerConduits=N*ROWS*D["conduits_per_cooler"],craneTrackRadius_m=TRACK_R,boomLiftCrew=SITE["workers_per_basket"])
