@@ -1,4 +1,5 @@
-"""Power-module picks through the open silo top, their stubs and exhaust vents, and the lid that closes the silo.
+"""Power-module picks through the open silo top, their stubs and exhaust vents, the gas turbine inside
+the lower module with its fold-down side, and the lid that closes the silo.
 
 Coordinates are metres and Z is up.
 """
@@ -8,8 +9,10 @@ import math
 
 from . import services
 from . import silo_model as s
+from . import clock
 from . import closing
 from . import maintenance as care
+from . import crew
 
 
 RADIAL_CLEARANCE = .05
@@ -53,15 +56,33 @@ def both(m,points,color):
     m.face(points[::-1],color)
 
 
+PAINT=("748d83","9e927a")
+RIB=("9cada1","bbad94")
+# The lower module's side toward the crew wedge is a separate panel hinged at floor level.
+HINGE_Y,HINGE_Z=-(WIDTH/2-.105),.15
+PANEL_HEIGHT=HEIGHT-.30
+PANEL_POSES=13
+
+
 def power_mesh(index):
     m=mesh("Closed corrugated power module "+str(index+1)+" | frame, end plenums and docking collars")
     l,w=LENGTH/2,WIDTH/2
-    paint=("748d83","9e927a")[index]
-    rib=("9cada1","bbad94")[index]
-    closed(m,-l+.08,-w+.105,l-.08,w-.105,.07,HEIGHT-.08,paint)
+    paint=PAINT[index]
+    rib=RIB[index]
+    if index:
+        closed(m,-l+.08,-w+.105,l-.08,w-.105,.07,HEIGHT-.08,paint)
+    else:
+        # An open shell: floor, roof, far wall and end bulkheads. The near side is the hinged panel.
+        inside="5f6f6a"
+        closed(m,-l+.08,-w+.105,l-.08,w-.105,.07,.13,inside)
+        closed(m,-l+.08,-w+.105,l-.08,w-.105,HEIGHT-.14,HEIGHT-.08,paint)
+        closed(m,-l+.08,w-.165,l-.08,w-.105,.13,HEIGHT-.14,paint)
+        for x0,x1 in ((-l+.08,-l+.14),(l-.14,l-.08)):
+            closed(m,x0,-w+.105,x1,w-.165,.13,HEIGHT-.14,paint)
     # Folded corrugations have a raised ridge with two sloping flanks.
     for sign in (-1,1):
         for k in range(41):
+            if index==0 and sign<0:break
             x=-l+.29+k*(LENGTH-.58)/40
             profile=[(x-.074,sign*(w-.102)),(x-.038,sign*(w-.042)),
                      (x+.035,sign*(w-.042)),(x+.073,sign*(w-.102))]
@@ -88,6 +109,78 @@ def power_mesh(index):
     services.pipe(m,(0,0,-.19),(0,0,.01),.51,STRUCT,.40,n=24)
     services.pipe(m,(0,0,HEIGHT-.005),(0,0,HEIGHT+.08),.61,STRUCT,n=24)
     services.pipe(m,(0,0,HEIGHT+.08),(0,0,HEIGHT+ROOF_STUB),.53,AMBER,n=24)
+    return m
+
+
+def enclosure_angle(t):
+    """Angle of the hinged side in radians, at frames after the store is full. 0 is closed."""
+    return math.pi/2*(s.step(*clock.ENCLOSURE_OPEN,t)-s.step(*clock.ENCLOSURE_CLOSE,t))
+
+
+def panel_mesh(theta):
+    """The hinged side of the lower module, turned down by theta about its bottom edge.
+
+    Closed it is the corrugated wall. Fully open it lies flat at floor level and is the work floor.
+    """
+    m=mesh(f"Power module 1 | hinged side at {math.degrees(theta):.1f} degrees")
+    l=LENGTH/2;co,si=math.cos(theta),math.sin(theta)
+    def at(x,v,n):
+        return (x,HINGE_Y-(v*si+n*co),HINGE_Z+v*co-n*si)
+    x0,x1=-l+.17,l-.17
+    both(m,[at(x0,0,0),at(x1,0,0),at(x1,PANEL_HEIGHT,0),at(x0,PANEL_HEIGHT,0)],"c9ccc3")
+    for k in range(41):
+        x=-l+.29+k*(LENGTH-.58)/40
+        profile=[(x-.074,.003),(x-.038,.063),(x+.035,.063),(x+.073,.003)]
+        for a,b in zip(profile,profile[1:]):
+            m.face([at(a[0],0,a[1]),at(b[0],0,b[1]),at(b[0],PANEL_HEIGHT,b[1]),at(a[0],PANEL_HEIGHT,a[1])],
+                   RIB[0] if a==profile[1] else PAINT[0])
+    for v in (0,PANEL_HEIGHT):
+        s.bar(m,at(x0,v,.03),at(x1,v,.03),.07,STRUCT)
+    if theta>.02:
+        # Two stays hold the free edge from the roof rail.
+        for x in (-l*.62,l*.62):
+            s.bar(m,(x,HINGE_Y,HEIGHT-.16),at(x,PANEL_HEIGHT-.05,0),.035,"80765c")
+    return m
+
+
+def turbine_mesh():
+    """A 25 MW class aeroderivative gas turbine and its generator on one skid, in module coordinates."""
+    m=mesh("Power module 1 | aeroderivative gas turbine, exhaust collector and generator")
+    y,z=.18,1.20
+    def drum(x0,x1,r,col,n=20):
+        services.pipe(m,(x0,y,z),(x1,y,z),r,col,n=n)
+    closed(m,-5.45,-.80,5.45,1.02,.13,.26,DARK)
+    # Inlet filter house and bellmouth
+    closed(m,-5.35,-.74,-3.95,.98,.26,2.22,"d5d8cf")
+    for k in range(6):
+        zz=.50+k*.29
+        both(m,[(-5.25,-.745,zz),(-4.05,-.745,zz),(-4.05,-.745,zz+.13),(-5.25,-.745,zz+.13)],"8d9690")
+    drum(-3.95,-3.74,.92,"aab4b2");drum(-3.74,-3.52,.78,"9aa6a5")
+    # Compressor with flanges
+    drum(-3.52,-1.36,.60,"8fa3a8")
+    for k in range(7):
+        x=-3.42+k*.33
+        drum(x,x+.05,.67,"6c7f86")
+    # Combustor, fuel manifold and nozzles
+    drum(-1.36,-.52,.80,"c98a4b")
+    drum(-1.10,-1.02,.90,"d9b13c");drum(-.82,-.74,.90,"d9b13c")
+    # Turbines
+    drum(-.52,.06,.70,"8a8f8c")
+    for k,r in enumerate((.76,.86,.96)):
+        drum(.06+k*.42,.48+k*.42,r,"7d8a8a")
+    # Exhaust collector rising to the roof
+    closed(m,1.32,-.78,2.52,1.00,.26,2.28,"9aa09a")
+    both(m,[(1.40,-.785,.50),(2.44,-.785,.50),(2.44,-.785,2.05),(1.40,-.785,2.05)],"868c86")
+    # Coupling and generator
+    drum(2.52,3.12,.13,"5c6468",12);drum(2.66,2.98,.25,"d6a23a",14)
+    closed(m,3.12,-.70,5.30,.96,.30,2.02,"5f7f9a")
+    for k in range(5):
+        x=3.36+k*.42
+        closed(m,x,-.72,x+.16,.98,2.02,2.12,"4d6a84")
+    closed(m,3.9,-.86,4.6,-.70,.9,1.6,"c9cdc8")
+    # Gas supply to the manifold
+    services.pipe(m,(-2.6,-.70,.46),(-1.06,-.70,.46),.055,"d9b13c",n=8)
+    services.pipe(m,(-1.06,-.70,.46),(-1.06,-.70,z-.2),.055,"d9b13c",n=8)
     return m
 
 
@@ -210,6 +303,18 @@ def add(scene,node,p):
              tracks={"scale":hide_after(p.FILLED+1,p.FILLED+VENT_END+12)})
         base=node(label+" | closed container body",addmesh(power_mesh(j)),"Power modules",ang=y,
              tracks={"translation":compact_relative(lambda t:body_position(p.CROWN,j,t)),"scale":show(p.FILLED+1)})
+        if j==0:
+            # Bake the hinged side at a set of angles and show the one nearest the current angle.
+            poses=[round(enclosure_angle(t)/(math.pi/2)*(PANEL_POSES-1)) for t in range(END)]
+            for k in range(PANEL_POSES):
+                keys=[(0,ON if poses[0]==k else OFF)]
+                for t in range(1,END):
+                    if (poses[t-1]==k)!=(poses[t]==k):
+                        keys.extend([(p.FILLED+t-.02,ON if poses[t-1]==k else OFF),(p.FILLED+t,ON if poses[t]==k else OFF)])
+                node(label+f" | hinged side, pose {k+1:02}",addmesh(panel_mesh(k/(PANEL_POSES-1)*math.pi/2)),"Power modules",base,
+                     tracks={"scale":keys})
+            node(label+" | gas turbine and generator",addmesh(turbine_mesh()),"Power modules",base,
+                 tracks={"scale":hide_after(p.FILLED+clock.ENCLOSURE_OPEN[0]-2,p.FILLED+clock.ENCLOSURE_CLOSE[1]+2)})
         node(label+" | four-leg rigging",rig,"Power picks",base,
              tracks={"scale":hide_after(p.FILLED+PICK_STARTS[j],p.FILLED+PICK_STARTS[j]+PICK_LENGTH+3)})
         roof=power_base(p.CROWN,j)+HEIGHT
@@ -242,7 +347,8 @@ def add(scene,node,p):
     cover=node("Silo lid | crane placement",addmesh(lid_mesh()),"Silo lid",tracks={
         "translation":compact_relative(lid_position),
         "scale":show(p.FILLED+1)+[(p.FILLED+care.CREW+14.98,ON),(p.FILLED+care.CREW+15,OFF),
-                                  (p.RESTORE-.02,OFF),(p.RESTORE,ON)]})
+                                  (p.RESTORE-.02,OFF),(p.RESTORE,ON),
+                                  (p.REGHOST-.02,ON),(p.REGHOST,OFF),(p.RESTORE2-.02,OFF),(p.RESTORE2,ON)]})
     node("Silo lid | lifting bridle",addmesh(lid_bridle()),"Lid pick",cover,
          tracks={"scale":hide_after(p.FILLED+LID[0]-4,p.FILLED+LID[1]+5)})
     timber=mesh("Silo lid | ground dunnage")
@@ -254,4 +360,7 @@ def add(scene,node,p):
         powerBodyBaseElevations_m=[power_base(p.CROWN,j) for j in (0,1)],powerYawDifference_deg=90,
         exhaustStacks=4,exhaustVentElevation_m=s.WALL_HEIGHT+VENT_RISE,lidElevation_m=LID_Z,lidRadius_m=LID_R,
         lidSeatedAt_s=(p.FILLED+LID[1])/p.FPS,firstLiquidAfter_s=p.C/p.FPS,
-        powerScope="Placeholder power modules. The electrical supply is not yet sized.")
+        powerModuleOutput_MW=cfg.POWER["module_output_mw"],primeMover=cfg.POWER["prime_mover"],
+        turbineEnclosureOpens_s=(p.FILLED+clock.ENCLOSURE_OPEN[0])/p.FPS,turbineWorkFloor_m=power_base(p.CROWN,0)+HINGE_Z,
+        powerScope="Each module is drawn as a container holding one aeroderivative gas turbine and generator. The package is not sized.")
+    assert abs(crew.POWER_FLOOR-power_base(p.CROWN,0)-HINGE_Z)<1e-9

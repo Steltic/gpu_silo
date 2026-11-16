@@ -97,6 +97,23 @@ def check_inputs():
         raise ValueError("Keep the cooler frames above the ground entry and below the silo rim.")
     if COOL["cooler_length_m"] + COOL["pump_unit_length_m"] > COOL["frame_width_m"] + 1e-6:
         raise ValueError("A cooler and its pump unit must fit across the frame.")
+    if COOL["cooler_section_m"] > COOL["frame_height_m"]/COOL["coolers_per_frame"] - .29 or COOL["cooler_section_m"] > COOL["frame_depth_m"] - .39:
+        raise ValueError("Each cooler needs 0.3 m of frame steel above it and 0.4 m in depth. Enlarge the frame or reduce cooler_section_m.")
+    heat = RACKS * CLUSTER["liquid_heat_per_rack_kw"] / 1000
+    if not 1 <= COOL["duty_coolers"] <= COOLERS or COOL["duty_coolers"] * COOL["cooler_capacity_mw"] < heat - 1e-6:
+        raise ValueError("duty_coolers must carry the liquid heat load and cannot exceed the coolers installed.")
+    if POWER["modules"] != 2 or POWER["module_output_mw"] <= 0:
+        raise ValueError("The model has two power modules, one above the other. Give each a positive output.")
+    if POWER["modules"] * POWER["module_output_mw"] < heat - 1e-6:
+        raise ValueError("The power modules generate less than the cluster's load.")
+    stack = CROWN + 2 * (POWER["height_m"] + .49)
+    if stack > SILO["height_m"] + .03:
+        raise ValueError(f"The pod store and two power modules reach {stack:.2f} m, above the lid. Reduce storage.pitch_m or crown_m, or raise the silo.")
+    if CROWN < STORE["lowest_berth_m"] + (LEVELS-1)*STORE["pitch_m"] + FRAME_HEIGHT + 1.5 - 1e-6:
+        raise ValueError("Leave 1.5 m between the top pod and the crown for the hoist.")
+    vent = PROJECT["ventilation"]
+    if vent["door_fans"] < 1 or vent["roof_air_vents"] < 1 or vent["door_fan_diameter_m"] > DOOR_WIDTH - .1:
+        raise ValueError("The door plug needs at least one fan narrower than the door, and the lid at least one air vent.")
     if not 0 <= SITE["first_frame"] < FRAMES:
         raise ValueError("installation.first_frame is a zero-based frame number.")
     if SITE["direction"] not in ("clockwise", "anticlockwise"):

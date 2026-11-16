@@ -1,6 +1,6 @@
-"""Cooler service during the pod exchange.
+"""Cooler service during the pod exchange, the last scene of the film.
 
-The retained crawler lowers one cooler frame to the ground, a cooler is drawn
+The crawler returns and lowers one cooler frame to the ground, a cooler is drawn
 out and replaced, and the frame is hung back on its seats. Times are frames
 after the start of the pod exchange. Station coordinates are X from the silo
 axis along the frame's bearing, Y along the wall and Z up.
@@ -39,13 +39,15 @@ RELEASE=874
 DONE=904
 LEAVE=(906,1036)
 GONE=1040
-PULL,PARK_OLD,PARK_NEW=3.3,6.15,9.25
+PULL,PARK_OLD,PARK_NEW=3.3,6.6,9.9
+# The frame is set down between the wall and the crane, clear of both.
+LAND_R=fr.BACK+6.0
 FLOOR=.30
 CENTRE=(fr.COOL_X0+fr.COOL_X1)/2
 SLING=1.9
-AWAY=82.
-# The crawler stands back from its track so the coolers on the ground stay outside its minimum radius.
-STAND=fr.TRACK_R+7.
+AWAY=96.
+# The crawler works from its track. The coolers on the ground stay outside its minimum radius.
+STAND=fr.TRACK_R
 OFF,ON=(0,0,0),(1,1,1)
 
 
@@ -56,7 +58,7 @@ def world(x,y,z):
 
 def frame(w):
     """Radius of the frame's back plane and elevation of its base."""
-    radius=fr.BACK+(fr.LAY_R-fr.BACK)*(s.step(*OUT,w)-s.step(*IN,w))
+    radius=fr.BACK+(LAND_R-fr.BACK)*(s.step(*OUT,w)-s.step(*IN,w))
     z=BASE+fr.OVER*s.step(*LIFT,w)+(fr.GROUND-BASE-fr.OVER)*s.step(*DOWN,w)
     z+=(BASE+fr.OVER-fr.GROUND)*s.step(*HOIST,w)-fr.OVER*s.step(*SEAT,w)
     return radius,z
@@ -83,7 +85,7 @@ def lugs(w):
 
 def cooler_pick(offset):
     out,up=offset
-    return (fr.LAY_R+out+CENTRE,fr.COOL_Y,fr.GROUND+REST+up+fr.COOL_H+SLING)
+    return (LAND_R+out+CENTRE,fr.COOL_Y,fr.GROUND+REST+up+fr.COOL_H+SLING)
 
 
 def glide(w,start,end,a,b,rise=1.6):
@@ -143,7 +145,7 @@ def install(scene,node,p):
     reach=info["reach"]
     scene.nodes[info["spools"]]["tracks"]["scale"]+=[(begin+RIG[0],(reach,1,1)),(begin+RIG[1],(.001,1,1)),(begin+RIG[1]+.02,OFF),
         (begin+RELEASE-.02,OFF),(begin+RELEASE,(.001,1,1)),(begin+DONE-4,(reach,1,1))]
-    node(label+" | service dunnage",scene.mesh(fr.dunnage_mesh()),"Frame laydown",ang=THETA,t=s.polar(fr.LAY_R,THETA,0),
+    node(label+" | service dunnage",scene.mesh(fr.dunnage_mesh()),"Frame laydown",ang=THETA,t=s.polar(LAND_R,THETA,0),
          tracks={"scale":[(0,OFF)]+window(ARRIVE,GONE)})
     old=scene.nodes[info["coolers"][ROW]];mesh_id=old["mesh"]
     def drawn(w):
@@ -160,10 +162,10 @@ def install(scene,node,p):
          tracks={"scale":[(0,OFF)]+window(TAKE[0]-2,DROP)})
     out,up=old_cooler(DROP)
     node(label+f" | cooler {ROW+1} | withdrawn unit on the ground",mesh_id,"Service coolers",ang=THETA,
-         t=world(fr.LAY_R+out,fr.COOL_Y,fr.GROUND+REST+up),tracks={"scale":[(0,OFF)]+window(DROP,GONE)})
+         t=world(LAND_R+out,fr.COOL_Y,fr.GROUND+REST+up),tracks={"scale":[(0,OFF)]+window(DROP,GONE)})
     def carried(w):
         out,up=new_cooler(w)
-        return world(fr.LAY_R+out,fr.COOL_Y,fr.GROUND+REST+up)
+        return world(LAND_R+out,fr.COOL_Y,fr.GROUND+REST+up)
     fresh=node(label+f" | replacement cooler {ROW+1}",mesh_id,"Service coolers",ang=THETA,
                tracks={"translation":[(0,carried(0))]+curve(RAISE[0],INSERT[1],carried),"scale":[(0,OFF)]+window(ARRIVE,INSERT[1])})
     node(label+f" | replacement cooler {ROW+1} | sling",rig_id,"Frame rigging",fresh,

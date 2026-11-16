@@ -109,9 +109,15 @@ def check(path):
             assert np.linalg.norm(block[:2]-centre)<.002 and abs(block[2]-load[2]-fr.HEIGHT-fr.SLING)<.002,(k,f,block,centre,load)
             reach=np.linalg.norm(block[:2]-foot[:2])
             assert 8<reach<fr.BOOM_LENGTH*.6 and block[2]<2.45+math.sqrt(fr.BOOM_LENGTH**2-reach**2)-2
-    # One crawler is retained from the steel cage to the cooler exchange, then leaves.
-    assert at(car,"scale",fr.START)[0]>.999 and at(car,"scale",p.FILLED+p.care.REPAIR+service.DONE)[0]>.999
+    # One crawler stays from the steel cage until the lid is on. It is away for the closing scenes and returns for the cooler exchange.
+    assert at(car,"scale",fr.START)[0]>.999 and at(car,"scale",p.FILLED+p.plant.LID[1])[0]>.999
+    assert at(car,"scale",p.FILLED+p.care.ORBIT)[0]<.001 and at(car,"scale",p.FILLED+p.closing.FUEL_END)[0]<.001
+    assert at(car,"scale",p.FILLED+p.care.REPAIR+service.ARRIVE)[0]>.999 and at(car,"scale",p.FILLED+p.care.REPAIR+service.DONE)[0]>.999
     assert at(car,"scale",p.FRAMES-1)[0]<.001
+    # The crawler's working position for the exchange is clear of the propane tanks and the gas line.
+    spot=zup(at(car,"translation",p.FILLED+p.care.REPAIR+service.DOWN[1]))
+    apart=abs((math.atan2(spot[1],spot[0])-p.fuel.BEARING+math.pi)%(2*math.pi)-math.pi)
+    assert apart*fr.TRACK_R>p.fuel.COUNT*p.fuel.PITCH/2+fr.WIDTH,"the cooler service is too close to the tank farm"
     # The boom lift is beside each frame end, with its crew at the working rows while the spools are made up.
     basket=ids["Boom lift | work basket"];chassis=ids["Boom lift | chassis"]
     assert sum(1 for n in ids if re.fullmatch(r"Boom lift \| fitter \d",n))==p.cfg.SITE["workers_per_basket"]
@@ -129,7 +135,7 @@ def check(path):
     root=ids[label+f" | {fr.ROWS} dry coolers, {fr.ROWS} pumps and steel"]
     seat=zup(at(root,"translation",begin+service.LIFT[0]-1))
     down=zup(at(root,"translation",begin+service.DOWN[1]))
-    assert abs(math.hypot(down[0],down[1])-fr.LAY_R)<.01 and abs(down[2]-fr.GROUND)<.01
+    assert abs(math.hypot(down[0],down[1])-service.LAND_R)<.01 and abs(down[2]-fr.GROUND)<.01
     for f in range(begin+service.LIFT[0],begin+service.SEAT[1]+1):
         pos=zup(at(root,"translation",f));radius=math.hypot(pos[0],pos[1])
         assert radius>=fr.BACK-1e-4 and pos[2]>=fr.GROUND-1e-4

@@ -40,7 +40,9 @@ def check(p,doc,names,parents,get,points,ids,overlap):
         assert np.isclose(planar[covered,:,2].max(),crew.WELL_FLOOR,atol=.00004)
         z=xyz(deck)[:,2]
         assert np.isclose(z[begin],crew.STOW) and np.isclose(z[begin+300],crew.target(b))
-        assert np.ptp(z[begin+247:begin+549])<.00003 and np.max(abs(z[begin+695:]-crew.STOW))<.00003
+        turbine=crew.LEVELS[b]==0;tw=[v-p.clock.CREW for v in p.clock.TURBINE_WORK]
+        hold=slice(begin+300,begin+tw[3]) if turbine else slice(begin+247,begin+549)
+        assert np.ptp(z[hold])<.00003 and np.max(abs(z[begin+(700 if turbine else 695):begin+786]-crew.STOW))<.00003
         ascent=np.where(np.diff(z[begin:begin+310])>.0001)[0][0]
         assert 105<ascent<139
         pts=points(deck)
@@ -58,29 +60,34 @@ def check(p,doc,names,parents,get,points,ids,overlap):
             assert scale(actor)[begin+780]<.001 and scale(actor)[repair]<.001
             assert t[begin+18,0]<crew.PLATE_IN and t[begin+105,0]>crew.PLATE_IN
             assert np.linalg.norm(t[begin+305,:2]-crew.workpoint(b,who))<.00002
-            assert np.max(abs(np.diff(t[begin+105:begin+695],axis=0)))<.00003
+            still=[(105,tw[0]),(tw[1]+8,tw[2]-8),(tw[3]+8,695)] if turbine else [(105,695)]
+            for a0,a1 in still:assert np.max(abs(np.diff(t[begin+a0:begin+a1],axis=0)))<.00003
             assert np.allclose(t[begin+775],t[begin+18],atol=.00002)
             moving=z[begin:begin+780]>crew.STOW+.003
+            # While the deck travels, everyone is on it. The turbine crew step off it only at the top.
+            if turbine:moving&=np.abs(np.gradient(z[begin:begin+780]))>1e-6
             foot=t[begin:begin+780][moving]
             assert np.min(np.hypot(foot[:,0],foot[:,1]))>crew.PLATE_IN
             assert np.max(np.hypot(foot[:,0],foot[:,1]))<crew.PLATE_OUT
             assert np.min(foot[:,0]*math.sin(crew.HALF)-abs(foot[:,1])*math.cos(crew.HALF))>.74
             pose_ids=[i for i,pa in parents.items() if pa==actor]
             assert np.allclose(np.sum([scale(i)[begin+8:begin+777] for i in pose_ids],axis=0),1,atol=.0002)
-            kind="underside" if crew.LEVELS[b]==0 else "inspect"
-            active=[i for label,i in names.items() if label.startswith(n+" | "+kind+" ")]
-            assert len(active)==6 and all(scale(i)[begin+300:begin+400].max()>.999 for i in active)
-            if crew.LEVELS[b]==0:
-                base=p.plant.power_base(p.CROWN,0)
+            active=[i for label,i in names.items() if label.startswith(n+" | inspect ")]
+            work=slice(begin+tw[1]+8,begin+tw[2]-8) if turbine else slice(begin+300,begin+400)
+            assert len(active)==6 and all(scale(i)[work].max()>.999 for i in active)
+            if turbine:
+                # At the turbine they stand on the folded side of the module, under the upper module, with the side fully down.
+                a=p.plant;at=begin+(tw[1]+tw[2])//2
+                assert p.FILLED+p.clock.ENCLOSURE_OPEN[1]<begin+tw[0] and begin+tw[3]<p.FILLED+p.clock.ENCLOSURE_CLOSE[0]
+                place=rotate(t[at,:2],yaw(root)[at]-a.POWER_YAW)
+                assert abs(place[0])<a.LENGTH/2-.3 and a.WIDTH/2+.2<abs(place[1])<a.WIDTH/2+a.PANEL_HEIGHT-.2
+                assert abs(z[at]+t[at,2]-crew.POWER_FLOOR)<.02
                 for i in active:
-                    figure=points(i)
-                    assert abs(crew.POWER_DECK+t[begin+300,2]+figure[:,2].max()-base)<.012
-                    helmet=figure[(figure[:,0]<.165)&(figure[:,2]>1.6)]
-                    assert crew.POWER_DECK+t[begin+300,2]+helmet[:,2].max()<base-.025
-                    tip=figure[np.argmax(figure[:,2])]
-                    local=t[begin+300,:2]+rotate(tip[:2],yaw(actor)[begin+300])
-                    power=rotate(local,yaw(root)[begin+300]-p.plant.POWER_YAW)
-                    assert abs(power[0])<p.plant.LENGTH/2 and abs(power[1])<p.plant.WIDTH/2
+                    assert z[at]+t[at,2]+points(i)[:,2].max()<a.power_base(p.CROWN,1)-.3
+                # Before and after, they wait on the deck clear of the swinging side.
+                for f in (begin+tw[0]-1,begin+tw[3]+12):
+                    wait=rotate(t[f,:2],yaw(root)[f]-a.POWER_YAW)
+                    assert abs(wait[1])>a.WIDTH/2+a.PANEL_HEIGHT+.2
     # The camera-facing equipment has a faint real material in the GLB.
     cooler_names=[n for n in names if re.fullmatch(r"Cooler frame \d\d \| cooler \d",n)]
     ghost_ids=[names[n+" | inspection finish"] for n in cooler_names]
@@ -88,7 +95,7 @@ def check(p,doc,names,parents,get,points,ids,overlap):
     orbit=slice(p.FILLED+c.ORBIT,p.FILLED+c.ORBIT_DONE+1)
     assert all(scale(i)[orbit].max()<.001 for i in ghost_ids)
     crown=names["Steel module | shaft, bearings, rim girders and braced columns | inspection finish"]
-    assert scale(crown)[begin+480]>.99 and scale(crown)[begin+310]<.001 and scale(crown)[orbit].max()<.001
+    assert scale(crown)[begin+480]>.99 and scale(crown)[begin+300]<.001 and scale(crown)[orbit].max()<.001
 
     fresh=names[f"Replacement {p.TOTAL+1:03} | L{c.LEVEL:02} B{c.BAY:02}"];old=ids[c.BAD]
     skins=[names["Swap | amber fault case"],names[f"Original pod {c.BAD+1:03} | bronze before fault"]]

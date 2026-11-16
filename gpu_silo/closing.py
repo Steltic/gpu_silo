@@ -1,4 +1,5 @@
-"""Frame clock for the closing scenes: propane storage, the plan-view cooling loop and the section.
+"""Frame clock for the closing scenes: propane storage, the plan-view cooling loop, the section,
+and the pod and cooler replacement that ends the film.
 
 Times are frames after the pod store is full. The plan-view scene is as long as its narration.
 """
@@ -7,10 +8,10 @@ import math
 from pathlib import Path
 
 from . import design as cfg
-from . import maintenance as care
+from . import clock
 
 FPS=24
-FUEL=care.ORBIT_DONE+24
+FUEL=clock.ORBIT_DONE+24
 TANKS=FUEL+56
 TANK_STEP=16
 LINE=TANKS+cfg.PROJECT["fuel"]["tanks"]*TANK_STEP+8
@@ -31,8 +32,12 @@ else:
 PLAN=FUEL_END
 PLAN_FRAMES=math.ceil((VOICE_LEAD+VOICE["duration"]+VOICE_TAIL)*FPS)
 SECTION=PLAN+PLAN_FRAMES
-SECTION_FRAMES=528
-END=SECTION+SECTION_FRAMES
+SECTION_FRAMES=624
+# The replacement scene is a cutaway again. The concrete returns for the last shot.
+REPAIR=SECTION+SECTION_FRAMES
+REPAIR_FRAMES=1212
+FINAL=(REPAIR+REPAIR_FRAMES,REPAIR+REPAIR_FRAMES+39)
+END=FINAL[1]+110
 
 
 def captions():
