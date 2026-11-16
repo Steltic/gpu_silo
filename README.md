@@ -57,6 +57,5 @@ These figures are written by `python -m gpu_silo calcs` and also appear on scree
 | [gpu_silo/](gpu_silo) | Parametric model, animation and checks |
 | [renderer/](renderer) | Film renderer and the on-screen design panels |
 | [docs/sequence.md](docs/sequence.md) | Scene-by-scene guide to the film |
-| [SETUP.md](SETUP.md) | Two one-time steps to put this repository on GitHub |
 
 This is a concept study. The model checks geometry and motion. It is not a structural, hydraulic, thermal or electrical design.
