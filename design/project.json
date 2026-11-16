@@ -1,0 +1,83 @@
+{
+  "project": {
+    "name": "GPU Silo",
+    "application": "House, power and liquid-cool GPU racks"
+  },
+  "cluster": {
+    "rack_model": "NVIDIA NVL72",
+    "racks_per_pod": 4,
+    "liquid_heat_per_rack_kw": 125.0,
+    "cdus_per_pod": 1,
+    "pumps_per_cdu": 1
+  },
+  "silo": {
+    "outside_diameter_m": 20.0,
+    "inside_diameter_m": 13.0,
+    "height_m": 30.0,
+    "outer_wall_m": 0.25,
+    "inner_wall_m": 0.25,
+    "concrete_lift_m": 3.0
+  },
+  "pod": {
+    "name": "4SU",
+    "rack_housing_length_m": 5.0,
+    "cdu_pump_section_m": 0.5,
+    "cdu_pump_section_m_by_unit": {},
+    "cdu_pump_section_colour": "#CFD2D2",
+    "body_width_m": 0.60,
+    "body_height_m": 2.30,
+    "frame_extra_width_m": 0.16,
+    "frame_extra_height_m": 0.10,
+    "intake_clearance_each_side_m": 0.05,
+    "intake_clearance_overhead_m": 0.10
+  },
+  "storage": {
+    "levels": 8,
+    "bays": 8,
+    "pitch_m": 2.5,
+    "lowest_berth_m": 0.20,
+    "shaft_radius_m": 0.58,
+    "root_radius_m": 0.86,
+    "crown_m": 21.60,
+    "packed_pitch_degrees": 40.0
+  },
+  "thermal_store": {
+    "fluid": "Water + propylene glycol",
+    "glycol_fraction": 0.25,
+    "density_kg_m3": 1020.0,
+    "specific_heat_kj_kgk": 3.90,
+    "freeboard_m": 0.25,
+    "target_volume_us_gal": 1500000,
+    "loop_delta_t_k": 10.0,
+    "usable_temperature_swing_k": 10.0
+  },
+  "dry_coolers": {
+    "frames": 8,
+    "coolers_per_frame": 4,
+    "cooler_capacity_mw": 1.0,
+    "pumps_per_cooler": 1,
+    "frame_width_m": 10.0,
+    "frame_height_m": 10.0,
+    "frame_depth_m": 2.5,
+    "cooler_length_m": 9.0,
+    "pump_unit_length_m": 1.0,
+    "wall_standoff_m": 0.20,
+    "tier_base_m": [9.5, 20.0],
+    "anchor_columns_m": [-4.0, -1.5, 1.5, 4.0],
+    "conduits_per_cooler": 2,
+    "pump_colour": "#A3A8A8"
+  },
+  "installation": {
+    "crane_track_radius_m": 38.0,
+    "laydown_radius_m": 22.5,
+    "first_frame": 7,
+    "first_cycle_frames": 170,
+    "repeat_cycle_frames": 84,
+    "boom_lifts": 2,
+    "workers_per_basket": 2,
+    "boom_lift_track_radius_m": 19.5
+  },
+  "power": {"width_m": 2.50, "height_m": 2.50, "first_heading_degrees": 12.0},
+  "service": {"fault_level": 6, "fault_bay": 5, "wedge_destinations": [4,0,7,3,6,2,5,8], "crew_by_wedge": [3,3,2,2,2,2,2,3]},
+  "movie": {"width_px": 1280, "height_px": 720, "lower_tier_speed": 3}
+}

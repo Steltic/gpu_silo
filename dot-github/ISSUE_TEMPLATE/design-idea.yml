@@ -1,0 +1,53 @@
+name: Design idea
+description: Propose a change to the silo, the pods, the cooling or the way a scene shows them
+title: "Design idea: "
+labels: ["design idea"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Design decisions on this project are made by looking at the animation. Describe your idea by what a viewer would see.
+        The current decisions are in design/README.md and the numbers behind them are in design/calcs.md.
+  - type: textarea
+    id: idea
+    attributes:
+      label: What should change?
+      description: The part of the design and the change you propose.
+      placeholder: "Example: move the lower tier of cooler frames up by 0.5 m so the two tiers touch."
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: Why is it better?
+      description: The problem it solves or the open question it answers. Include a number from the calculations if you have one.
+    validations:
+      required: true
+  - type: input
+    id: shot
+    attributes:
+      label: Where would we see it in the film?
+      description: A scene or timestamp from docs/sequence.md.
+      placeholder: "Cooler frames, 0:40 to 1:12"
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Silo and thermal store
+        - 4SU pod
+        - Pod storage and handling
+        - Dry coolers and frames
+        - Installation sequence
+        - Power
+        - Access and maintenance
+        - Film, camera and on-screen design information
+        - Calculations
+    validations:
+      required: true
+  - type: textarea
+    id: inputs
+    attributes:
+      label: Inputs that would change
+      description: Optional. Names and values in design/project.json, if you know them.
+      render: json
