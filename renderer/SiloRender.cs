@@ -44,6 +44,9 @@ class Data {
     // Cooler service during the pod exchange, and the closing scenes.
     public int ServiceFrame,ServiceRow,ServiceArrive,ServiceRigged,ServiceDown,ServiceOut,ServiceIn,ServiceReleased,ServiceDone;
     public int Fuel,Tanks,TankStep,FuelEnd,Plan,PlanFrames,Section,SectionFrames,Fade,TankCount;
+    public int Enc0,Enc1,Enc2,Enc3,DoorBegin,DoorEnd,RoofBegin,RoofEnd,FinalBegin,FinalEnd,DoorFans,RoofVents,PlugOut,PlugIn;
+    public float RoofVentRadius,RoofVentSize,ModuleMW;
+    public Row[] TurbineRows,AirRows;
     public int[] Line=new int[10];
     public float FuelBearing,FarmRadius,TankLength,TankDiameter,TankPitch,RiserRadius,GasTop,DropRadius,DropEnd;
     public Row[] FuelRows,PlanRows,SectionRows;public Caption[] Captions;
@@ -76,7 +79,7 @@ class Data {
     }
     public Data(string file){
         using(var r=new BinaryReader(File.OpenRead(file))){
-            if (System.Text.Encoding.ASCII.GetString(r.ReadBytes(8))!="GSILO02\0") throw new InvalidDataException("Unknown scene");
+            if (System.Text.Encoding.ASCII.GetString(r.ReadBytes(8))!="GSILO03\0") throw new InvalidDataException("Unknown scene");
             int nm=r.ReadInt32(),nn=r.ReadInt32(),nf=r.ReadInt32(); Fps=r.ReadInt32();
             Outer=r.ReadSingle();OuterInside=r.ReadSingle();InnerOutside=r.ReadSingle();Inner=r.ReadSingle();
             Height=r.ReadSingle();Lift=r.ReadSingle();
@@ -114,8 +117,12 @@ class Data {
             Fade=r.ReadInt32();TankCount=r.ReadInt32();
             FuelBearing=r.ReadSingle();FarmRadius=r.ReadSingle();TankLength=r.ReadSingle();TankDiameter=r.ReadSingle();TankPitch=r.ReadSingle();
             RiserRadius=r.ReadSingle();GasTop=r.ReadSingle();DropRadius=r.ReadSingle();DropEnd=r.ReadSingle();
+            Enc0=r.ReadInt32();Enc1=r.ReadInt32();Enc2=r.ReadInt32();Enc3=r.ReadInt32();DoorBegin=r.ReadInt32();DoorEnd=r.ReadInt32();
+            RoofBegin=r.ReadInt32();RoofEnd=r.ReadInt32();FinalBegin=r.ReadInt32();FinalEnd=r.ReadInt32();
+            DoorFans=r.ReadInt32();RoofVents=r.ReadInt32();PlugOut=r.ReadInt32();PlugIn=r.ReadInt32();
+            RoofVentRadius=r.ReadSingle();RoofVentSize=r.ReadSingle();ModuleMW=r.ReadSingle();
             Title=Str(r);Strip=Rows(r);Summary=Rows(r);StoreRows=Rows(r);FrameRows=Rows(r);
-            FuelRows=Rows(r);PlanRows=Rows(r);SectionRows=Rows(r);
+            FuelRows=Rows(r);PlanRows=Rows(r);SectionRows=Rows(r);TurbineRows=Rows(r);AirRows=Rows(r);
             Captions=new Caption[r.ReadInt32()];
             for(int i=0;i<Captions.Length;i++){Captions[i]=new Caption();Captions[i].First=r.ReadInt32();Captions[i].Last=r.ReadInt32();Captions[i].Text=Str(r);}
             Meshes=new Mesh[nm];Nodes=new Node[nn];Frames=new Frame[nf];
@@ -770,14 +777,17 @@ partial class Shot {
         Rule(g,x,164,xr,164,cLine,1);
         int at=0;
         for(int j=0;j<d.Bays;j++){
-            double set=d.WorkLevels[j]==0?d.Crown-1.52:d.BaseZ-.025+d.Pitch*(d.WorkLevels[j]-1);
+            double set=d.WorkLevels[j]==0?d.PowerBase0+.064:d.BaseZ-.025+d.Pitch*(d.WorkLevels[j]-1);
             if(Math.Abs(d.Nodes[decks[j]].WorldPose.T.Z-set)<.03)at++;
         }
         Text(g,"DECKS AT WORK",section,muted,x,182);g.DrawString(at+" / "+d.Bays,numbers,ink,new PointF(xr,169),rightText);
         float bar=(xr-x-4*(d.Bays-1))/d.Bays;
         for(int j=0;j<d.Bays;j++)g.FillRectangle(j<at?accent:light,x+j*(bar+4),212,bar,5);
-        string phase=w<104?"Board at ground":w<241?"Rise between pods":w<394?"Service the pods":
-            w<547?"Service the power unit":w<700?"Return to grade":w<775?"Crews disembark":"Stow the decks";
+        int e0=d.Enc0-d.Crew,e1=d.Enc1-d.Crew,e2=d.Enc2-d.Crew,e3=d.Enc3-d.Crew;
+        string phase=w<104?"Board at ground":w<241?"Rise between pods":w<e0-30?"Service the pods":
+            w<e1?"Open the turbine enclosure":w<e2-30?"Service the gas turbine":w<e3?"Close the enclosure":
+            w<700?"Return to grade":w<775?"Crews disembark":"Stow the decks";
+        if(w>=e0-6 && w<e3+10)TurbinePanel(g);
         Text(g,phase,strong,accent,x,236);
         Text(g,"Destinations",title2,muted,x,276);
         g.DrawString("See plan",mono,ink,new PointF(xr,275),rightText);
@@ -886,10 +896,12 @@ partial class Shot {
             if(frame>=d.Terminal && frame<d.FirstPod-8){TerminalOverlay(g,frame-d.Terminal);DesignStrip(g,frame);return;}
             if(frame>=d.BuildEnd){
                 int t=frame-d.Full;
-                if(Ghosted(frame) && t<d.SealBegin)ShellEdges(g);
-                if(t>=d.Fuel)FuelOverlay(g,frame);
-                else if(t>=d.SealBegin)DesignOverlay(g,frame);
+                if(Ghosted(frame) && (t<d.SealBegin || t>=d.Repair && t<d.FinalBegin))ShellEdges(g);
+                if(t>=d.FinalBegin)DesignOverlay(g,frame);
                 else if(t>=d.Repair){SwapOverlay(g,frame);ServicePanel(g,frame);}
+                else if(t>=d.Fuel)FuelOverlay(g,frame);
+                else if(t>=d.OrbitBegin-24)DesignOverlay(g,frame);
+                else if(t>=d.SealBegin)VentOverlay(g,frame);
                 else if(t>=d.Crew)CrewOverlay(g,frame);
                 else if(frame>=d.Full)PowerOverlay(g,frame);
                 else if(frame>=d.FrameTimes[0,0] && frame<d.FrameTimes[0,7])CoolerFrameOverlay(g,frame);
@@ -974,14 +986,15 @@ partial class Shot {
     }
     // In a cutaway the concrete is removed altogether. Its outline is drawn by ShellEdges.
     bool Ghosted(int frame){
-        return frame>=d.Ghost+17 && frame-d.Full<d.SealEnd;
+        int t=frame-d.Full;
+        return frame>=d.Ghost+17 && t<d.SealEnd || t>=d.Repair && t<d.FinalEnd;
     }
     // The lid is shown while it is placed, cleared for the cutaways and solid again for the closing scenes.
     int LidAlpha(int frame){
         int t=frame-d.Full;
         if(t<d.Crew)return 255;
         if(t<d.Crew+30)return (int)(255*(1-(t-d.Crew)/30.0));
-        return t<d.SealEnd?0:255;
+        return t<d.SealEnd?0:t<d.Repair?255:t<d.FinalEnd?0:255;
     }
     // A cooler frame facing the camera is ghosted only once it is connected and on its seats.
     bool Seated(Node n,int frame){
@@ -995,7 +1008,7 @@ partial class Shot {
     void WorldFrame(int poseFrame,int wallMode=0){
         UpdateWorld(poseFrame);alpha=255;
         int t=poseFrame-d.Full;
-        bool access=t>=d.Crew && t<d.SealEnd;
+        bool access=t>=d.Crew && t<d.SealEnd || t>=d.Repair && t<d.FinalEnd;
         softShadow=wallMode==2 || (wallMode==0 && Ghosted(poseFrame));
         Frame f=d.Frames[poseFrame];
         bool same=cachedFrame>=0 && siteColors!=null && softShadow==cachedSoft &&
@@ -1007,7 +1020,7 @@ partial class Shot {
             Sky();DrawNode(d.Nodes[0],poseFrame);
             DrawNode(d.Nodes[2],poseFrame);Shadows();DrawNode(d.Nodes[1],poseFrame);DrawNode(d.Nodes[3],poseFrame);
             cachedFrame=-2;
-            if(poseFrame>=d.BuildEnd && poseFrame+1<d.Frames.Length && !(t>=d.SealBegin && t<=d.SealEnd)){
+            if(poseFrame>=d.BuildEnd && poseFrame+1<d.Frames.Length && !(t>=d.SealBegin && t<=d.SealEnd) && !(t>=d.FinalBegin && t<=d.FinalEnd)){
                 Frame next=d.Frames[poseFrame+1];
                 if((next.Eye-f.Eye).Dot(next.Eye-f.Eye)<1e-10){
                     if(siteColors==null){siteColors=new int[pixels.Length];siteDepth=new float[depth.Length];}
@@ -1024,9 +1037,9 @@ partial class Shot {
                 if(wallMode==1)n.WorldPose.S=new V(1,1,1);
             }
             int mat=d.Meshes[n.M].Mat;
-            bool powerDetail=n.Kind==13 && t>=d.Crew+384 && t<d.Crew+545;
+            bool powerDetail=n.Kind==13 && t>=d.Enc0-58 && t<d.Enc3+30;
             if(access && softShadow && powerDetail){nearEquipment.Add(n);continue;}
-            if(n.Kind==16)continue;
+            if(n.Kind==16 || n.Kind==17)continue;
             if((n.Kind==4 || n.Kind==5) && (poseFrame>=d.FirstPod && poseFrame<d.Full+d.VentEnd || access && softShadow) && n.WorldPose.S.X>.999 && Seated(n,poseFrame)){
                 V az=new V(n.Cos,n.Sin,0);
                 if(az.Dot(new V(eye.X,eye.Y,0).Unit())>(access?-.12:.48) ){
@@ -1044,6 +1057,10 @@ partial class Shot {
             if(poseFrame>=d.Full+d.LidEnd)n.WorldPose.S=new V(1,1,1);
             DrawNode(n,poseFrame);
         }
+        if(alpha>0)foreach(Node n in d.Nodes)if(n.Kind==17 && n.M>=0){
+            if(t>=d.Repair && t<d.FinalEnd)n.WorldPose.S=new V(1,1,1);
+            if(n.WorldPose.S.X>.5)DrawNode(n,poseFrame);
+        }
         alpha=255;
         if(nearEquipment.Count>0){
             // Blend the complete front bank once, retaining the opacity of the unit in transit.
@@ -1058,6 +1075,12 @@ partial class Shot {
     public Bitmap Render(int frame){
         int t=frame-d.Full;
         if(t<d.Plan)return Render3D(frame);
+        if(t>=d.Repair){
+            // The replacement scene fades in over the section drawing.
+            Render3D(frame);
+            if(t-d.Repair<d.Fade)Schematic(d.Full+d.Repair-1,true,1-(t-d.Repair+1f)/(d.Fade+1));
+            return bmp;
+        }
         bool section=t>=d.Section;
         int since=t-(section?d.Section:d.Plan);
         if(since<d.Fade){
@@ -1086,6 +1109,10 @@ partial class Shot {
         } else if(frame>=d.Full+d.SealBegin && frame<d.Full+d.SealEnd){
             WorldFrame(frame,2);Array.Copy(pixels,alternate,pixels.Length);WorldFrame(frame,1);
             for(int i=0;i<pixels.Length;i++)pixels[i]=MixColor(alternate[i],pixels[i],solid);
+        } else if(frame>=d.Full+d.FinalBegin && frame<d.Full+d.FinalEnd){
+            double last=Sat((frame-d.Full-d.FinalBegin)/(double)(d.FinalEnd-d.FinalBegin));last=last*last*(3-2*last);
+            WorldFrame(frame,2);Array.Copy(pixels,alternate,pixels.Length);WorldFrame(frame,1);
+            for(int i=0;i<pixels.Length;i++)pixels[i]=MixColor(alternate[i],pixels[i],last);
         } else WorldFrame(frame);
         ToBitmap();Overlay(frame);return bmp;
     }

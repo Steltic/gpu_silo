@@ -1,5 +1,6 @@
 """Low-poly maintenance crews, recessed wedge decks and rack-and-pinion guides."""
 from . import design as cfg
+from . import clock
 
 import math
 
@@ -9,7 +10,13 @@ from . import silo_model as s
 LEVELS=tuple(cfg.SERVICE["wedge_destinations"])  # 0 is the underside of the lower power unit.
 SIZES=tuple(cfg.SERVICE["crew_by_wedge"])
 DISPATCH=(2,11,23,4,18,12,8,20)
-POWER_DECK=cfg.CROWN-1.52
+# The side of the lower power module folds down to floor level beside this wedge.
+# The deck stops just under it and the crew step across onto the folded side.
+POWER_FLOOR=cfg.CROWN+.27+.15
+POWER_DECK=POWER_FLOOR-.086
+PANEL_STEP=.080
+POWER_BAY=LEVELS.index(0) if 0 in LEVELS else -1
+TURBINE_POINTS=((2.05,1.55),(2.05,-1.45),(2.05,.05))
 STOW=-.004
 WELL_RADIUS=s.RI-.06
 WELL_FLOOR=-.42
@@ -29,6 +36,7 @@ def travel(w,bay):
     stop=start+60+2.95*target(bay)
     rise=s.step(start,stop,w)
     descend=s.step(572+DISPATCH[bay%len(DISPATCH)],670+DISPATCH[bay%len(DISPATCH)],w)
+    if LEVELS[bay]==0:descend=s.step(clock.TURBINE_WORK[3]-clock.CREW+2,698,w)
     return rise*(1-descend)
 
 
@@ -247,7 +255,8 @@ def technician(style,mode,index):
 
 def workpoint(bay,worker):
     if LEVELS[bay]==0:
-        return ((4.54,.28),(3.77,-.32),(2.94,.16))[worker]
+        # Clear of the folding side until it is down.
+        return ((5.30,.55),(4.75,-.50),(4.20,.15))[worker]
     x=(4.58,3.85,3.06)[worker]
     sign=(1,-1,1)[worker]
     y=sign*(x*math.sin(HALF)-(cfg.FRAME_WIDTH/2+.415))/math.cos(HALF)
@@ -262,12 +271,24 @@ def progress(w,bay,worker):
     return enter*(1-leave)
 
 
+def at_turbine(w,worker):
+    """0 on the deck, 1 on the folded side of the power module."""
+    a,b,c,d=(v-clock.CREW for v in clock.TURBINE_WORK)
+    return s.step(a+worker*2,b+worker*2,w)*(1-s.step(c-worker*2,d-worker*2,w))
+
+
 def worker_pose(w,bay,worker):
     fraction=progress(w,bay,worker)
+    if LEVELS[bay]==0 and at_turbine(w,worker)>0:
+        g=at_turbine(w,worker)
+        x0,y0=workpoint(bay,worker);x1,y1=TURBINE_POINTS[worker]
+        walking=math.atan2(y1-y0,x1-x0)+(math.pi if w>clock.TURBINE_WORK[2]-clock.CREW-worker*2 else 0)
+        yaw=math.pi if g>.997 else walking
+        return (x0+(x1-x0)*g,y0+(y1-y0)*g,.006+PANEL_STEP*s.step(.15,.45,g)),yaw
     x0,y0=((2.24,.23),(1.89,-.19),(1.39,.005))[worker]
     x1,y1=workpoint(bay,worker)
     yaw=(math.atan2(y1-y0,x1-x0))*(1-s.step(.80,1.,fraction))
-    facing=(math.radians(106 if worker!=1 else -106) if LEVELS[bay] else math.radians(18+worker*40))
+    facing=(math.radians(106 if worker!=1 else -106) if LEVELS[bay] else math.pi)
     yaw+=facing*s.step(.80,1.,fraction)
     if w>695:yaw+=math.pi*(1-s.step(749,775,w))*s.step(695,702,w)
     return (x0+(x1-x0)*fraction,y0+(y1-y0)*fraction,.006),yaw
@@ -277,9 +298,13 @@ def current_pose(w,bay,worker):
     g=progress(w,bay,worker)
     seed=worker*3+bay*2
     if .003<g<.997:return "walk",(int((w+seed)/2.1)%8)
+    if LEVELS[bay]==0:
+        t=at_turbine(w,worker)
+        if .003<t<.997:return "walk",(int((w+seed)/2.1)%8)
+        if t>=.997:return "inspect",int((w+seed*3)/4.2)%6
+        return "stand",0
     if travel(w,bay)>.999 and w>185 and w<552:
-        name="underside" if LEVELS[bay]==0 else "inspect"
-        return name,int((w+seed*3)/4.2)%6
+        return "inspect",int((w+seed*3)/4.2)%6
     return "stand",0
 
 

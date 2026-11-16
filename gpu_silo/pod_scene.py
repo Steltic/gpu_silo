@@ -17,6 +17,7 @@ from . import closing
 from . import crane
 from . import fuel
 from . import service
+from . import vents
 from . import crew
 from . import cargo
 from . import yard
@@ -84,6 +85,10 @@ SPEED_FRAME=STARTS[2*BAYS]
 FILLED=STARTS[-1]
 FRAMES=FILLED+closing.END
 RESTORE=FILLED+(care.SOLID_BEGIN+care.SOLID_END)//2
+# The concrete is see-through a second time for the replacement scene that ends the film.
+REGHOST=FILLED+care.REPAIR
+RESTORE2=FILLED+sum(care.FINAL)//2
+CUTAWAY=[(RESTORE-.01,0),(RESTORE,1),(REGHOST-.01,1),(REGHOST,0),(RESTORE2-.01,0),(RESTORE2,1)]
 if frames.END>FILLED-8:
     raise ValueError("The cooler frames finish after the pods. Shorten installation.repeat_cycle_frames.")
 SOURCE_END=SOURCE_STARTS[-1]
@@ -206,6 +211,8 @@ def construction_camera(frame):
     if frame<C: return s.camera_at(frame)
     t=frame-C
     cam=camera
+    if frame>=FILLED+care.REPAIR:
+        return plant.camera_power(sys.modules[__name__],frame,None,cam,blend)
     if frame>=FILLED+closing.FUEL:
         orbit_end=plant.camera_power(sys.modules[__name__],FILLED+care.ORBIT_DONE,None,cam,blend)
         return fuel.camera(min(frame-FILLED,closing.FUEL_END),orbit_end,cam,blend)
@@ -447,7 +454,7 @@ def build():
     for item in scene.nodes:
         if "concrete wall" in item['group']:
             tr=item['tracks']['scale']
-            tr.extend([(PORTAL_VIEW+16,tr[-1][1]),(PORTAL_VIEW+17,OFF),(RESTORE-.01,OFF),(RESTORE,ON)])
+            tr.extend([(PORTAL_VIEW+16,tr[-1][1]),(PORTAL_VIEW+17,OFF)]+[(f,ON if v else OFF) for f,v in CUTAWAY])
     def mesh(m): return scene.mesh(m)
     def node(name,mid,group,parent=-1,ang=0,t=(0,0,0),tracks=None):
         scene.node(name,mid,group,ang,t,tracks)
@@ -460,7 +467,7 @@ def build():
     for lite in (False,True):
         m=casing(lite)
         if not lite:m=services.bore_rows(m,0,[services.port_height(l) for l in range(1,LEVELS+1)])
-        node(m.name,mesh(m),"Translucent silo",tracks={'scale':show(PORTAL_VIEW+17)+[(RESTORE-.01,ON),(RESTORE,OFF)]})
+        node(m.name,mesh(m),"Translucent silo",tracks={'scale':show(PORTAL_VIEW+17)+[(f,OFF if v else ON) for f,v in CUTAWAY]})
     dock=loading_dock()
     node(dock.name,mesh(dock),"Intake",ang=ENTRY,tracks={'scale':show(PORTAL_VIEW+17)})
     # This single parent carries the entire empty module during both crane picks.
@@ -477,7 +484,7 @@ def build():
         foot=[base]*FRAMES;heading=[0.]*FRAMES;leaves=C+349
         if sign<0:
             # The south crawler stays for every later lift: cooler frames, power modules, lid and cooler service.
-            path,leaves=crane.poses(sys.modules[__name__])
+            path,(leaves,returns,departs)=crane.poses(sys.modules[__name__])
             for f,(place,(x,y,z),facing) in path.items():
                 foot[f]=place;hx[f],hy[f],hook[f]=x,y,z;heading[f]=facing
         a=[math.atan2(y-b[1],x-b[0])-h for x,y,b,h in zip(hx,hy,foot,heading)]
@@ -488,6 +495,7 @@ def build():
         side="North" if sign>0 else "South"
         lower=crane_lower()
         seen=interval(STEEL_START,leaves)
+        if sign<0:seen=seen+[(returns-1,OFF),(returns,ON),(departs-1,ON),(departs,OFF)]
         tracks={'scale':seen}
         if sign<0:tracks.update(translation=flat_keys(foot),yaw=flat_keys([(h,) for h in heading]))
         car=node(side+" crawler",mesh(lower),"Tandem crane lift",t=base,tracks=tracks)
@@ -582,6 +590,7 @@ def build():
     care.install(scene,node,sys.modules[__name__])
     service.install(scene,node,sys.modules[__name__])
     fuel.install(scene,node,sys.modules[__name__])
+    vents.install(scene,node,sys.modules[__name__])
     scene.storage_inspection=(FIRST_POD,FILLED+plant.VENT_END)
     yard.install_terminal(scene,node,sys.modules[__name__])
     return scene
@@ -593,7 +602,7 @@ def render_data(scene,path):
         def floats(*v): file.write(struct.pack("<"+"f"*len(v),*v))
         def string(txt):
             b=txt.encode("utf8");ints(len(b));file.write(b)
-        file.write(b"GSILO02\0")
+        file.write(b"GSILO03\0")
         ints(len(scene.meshes),len(scene.nodes),FRAMES,FPS)
         floats(s.RO,s.RI_OUTER,s.RO_INNER,s.RI,s.WALL_HEIGHT,s.LIFT)
         ints(s.COUNT,s.LAST_POUR,s.LAST_POUR+s.REVEAL//2,s.LAST_POUR+s.REVEAL,
@@ -620,9 +629,14 @@ def render_data(scene,path):
         ints(closing.FUEL,closing.TANKS,closing.TANK_STEP,*closing.HEADER,*closing.RUN,*closing.RISER,*closing.ROOF,*closing.DROP,
              closing.FUEL_END,closing.PLAN,closing.PLAN_FRAMES,closing.SECTION,closing.SECTION_FRAMES,closing.FADE,fuel.COUNT)
         floats(fuel.BEARING,fuel.FARM_R,fuel.LENGTH,fuel.DIA,fuel.PITCH,fuel.RISER_R,fuel.TOP,fuel.DROP_R,fuel.drop_end(CROWN))
+        # Turbine enclosure, door plug, roof vents and the last cutaway.
+        ints(*clock.ENCLOSURE_OPEN,*clock.ENCLOSURE_CLOSE,*clock.DOOR,*clock.ROOF,*closing.FINAL,
+             vents.FANS,vents.ROOF,vents.PLUG_OUT[1],vents.PLUG_IN[0])
+        floats(vents.ROOF_RADIUS,vents.ROOF_R,cfg.POWER["module_output_mw"])
         string(cfg.TITLE)
         panels=calcs.panel()
-        for rows in (calcs.strip(),calcs.summary(),panels["store"],panels["frames"],panels["fuel"],panels["plan"],panels["section"]):
+        for rows in (calcs.strip(),calcs.summary(),panels["store"],panels["frames"],panels["fuel"],panels["plan"],panels["section"],
+                     panels["turbine"],panels["air"]):
             ints(len(rows))
             for left,right in rows:string(left);string(right)
         lines=closing.captions()
@@ -640,6 +654,7 @@ def render_data(scene,path):
             if node['group']=="Crew decks":typ=6
             if node['group']=="Replacement pod":typ=7
             if node['group']=="Silo lid":typ=16
+            if node['group']=="Roof vents":typ=17
             if node['group']=="Crew poses":typ=9
             if node['group']=="Structure":typ=13
             if node['group']=="Hoist":typ=10+int(node['name']=="Twin self-releasing pickup heads")

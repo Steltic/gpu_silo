@@ -271,11 +271,15 @@ def main(path):
     assert np.allclose(camera[0],camera[-1],atol=.0001)
     for name,i in names.items():
         if re.match(r"^(Inner|Outer) wall \| lift",name):
-            assert np.allclose(get(i,"scale",[1,1,1])[view0:],1,atol=.00002)
+            # Solid for the orbit and the last shot, removed for the two cutaways.
+            assert np.allclose(get(i,"scale",[1,1,1])[view0:p.REGHOST],1,atol=.00002)
+            assert np.allclose(get(i,"scale",[1,1,1])[p.RESTORE2:],1,atol=.00002)
             assert np.allclose(get(i,"scale",[1,1,1])[p.PORTAL_VIEW+17:p.RESTORE],0,atol=.00002)
+            assert np.allclose(get(i,"scale",[1,1,1])[p.REGHOST:p.RESTORE2],0,atol=.00002)
         if name.startswith("Ghosted concrete |"):
-            assert np.allclose(get(i,"scale",[1,1,1])[view0:],0,atol=.00002)
+            assert np.allclose(get(i,"scale",[1,1,1])[view0:p.REGHOST],0,atol=.00002)
             assert np.allclose(get(i,"scale",[1,1,1])[p.PORTAL_VIEW+17:p.RESTORE],1,atol=.00002)
+            assert np.allclose(get(i,"scale",[1,1,1])[p.REGHOST:p.RESTORE2],1,atol=.00002)
     # The lid closes the bore and the store after the vents are up, with the vents standing through it.
     lid=names["Silo lid | crane placement"];deck=points(lid);seat=get(lid,"translation",[0,0,0])
     assert np.allclose(seat[p.FILLED+a.LID[1]:],[0,a.LID_Z,0],atol=.0001)
@@ -283,6 +287,44 @@ def main(path):
     assert a.LID_Z+deck[:,2].max()<p.s.WALL_HEIGHT+a.VENT_RISE-.2 and a.LID[0]>a.VENT_END
     assert get(lid,"scale",[1,1,1])[p.FILLED+a.LID[0],0]>.999 and get(lid,"scale",[1,1,1])[-1,0]>.999
     assert np.allclose(get(lid,"scale",[1,1,1])[p.FILLED+p.care.CREW+16:p.RESTORE-1],0,atol=.00002)
+    assert np.allclose(get(lid,"scale",[1,1,1])[p.REGHOST:p.RESTORE2-1],0,atol=.00002)
+    # The lower power module holds a gas turbine. Its near side folds down to the crew's floor level and closes again.
+    clock=p.clock
+    poses=[names[f"Power unit 01 | hinged side, pose {k+1:02}"] for k in range(a.PANEL_POSES)]
+    shown=np.array([get(i,"scale",[1,1,1])[:,0]>.5 for i in poses])
+    assert (shown.sum(axis=0)==1).all(), "exactly one pose of the hinged side is shown at a time"
+    opened=p.FILLED+clock.ENCLOSURE_OPEN[1];closed=p.FILLED+clock.ENCLOSURE_CLOSE[1]
+    assert shown[0,:p.FILLED+clock.ENCLOSURE_OPEN[0]].all() and shown[0,closed+1:].all()
+    assert shown[-1,opened+1:p.FILLED+clock.ENCLOSURE_CLOSE[0]].all()
+    flat=points(poses[-1]);wall=points(poses[0]);floor=a.power_base(p.CROWN,0)+a.HINGE_Z
+    assert np.ptp(flat[:,1])>a.PANEL_HEIGHT-.01 and abs(flat[flat[:,1]<a.HINGE_Y-.3][:,2].max()-a.HINGE_Z)<.03
+    assert wall[:,1].min()>-a.WIDTH/2-.001 and np.ptp(wall[:,2])>a.PANEL_HEIGHT-.01
+    turbine=names["Power unit 01 | gas turbine and generator"];machine=points(turbine)
+    assert np.abs(machine[:,0]).max()<a.LENGTH/2-.1 and np.abs(machine[:,1]).max()<a.WIDTH/2-.1
+    assert machine[:,2].min()>.1 and machine[:,2].max()<a.HEIGHT-.1
+    assert get(turbine,"scale",[1,1,1])[opened,0]>.999 and get(turbine,"scale",[1,1,1])[p.FILLED+p.care.SOLID_END,0]<.001
+    assert abs(p.crew.POWER_FLOOR-floor)<1e-9 and p.cfg.POWER["modules"]*p.cfg.POWER["module_output_mw"]>=p.calcs.C["heat_mw"]-1e-9
+    # Door plug and roof vents: in place for the orbit, the plug set aside while pods pass through the door.
+    vents=p.vents;plug=names["Door plug | ventilation panel in the ground door"];place=get(plug,"translation",[0,0,0])
+    assert get(plug,"scale",[1,1,1])[p.FILLED+clock.DOOR[0]-2,0]<.001
+    for f in (p.FILLED+clock.DOOR[1],p.FILLED+clock.ORBIT,p.FILLED+p.care.REPAIR,p.FRAMES-1):
+        assert np.allclose(place[f],0,atol=.0001) and get(plug,"scale",[1,1,1])[f,0]>.999
+    panel=points(plug)
+    assert np.ptp(panel[:,1])<=p.s.OPENING_WIDTH+.1 and panel[:,2].max()<=p.s.OPENING_HEIGHT+.05 and panel[:,0].min()>p.s.RO-.2
+    repair=p.FILLED+p.care.REPAIR
+    aside=place[repair+vents.PLUG_OUT[1]:repair+vents.PLUG_IN[0]]
+    along=-aside[:,0]*math.sin(p.ENTRY)+(-aside[:,2])*math.cos(p.ENTRY)
+    assert np.abs(along).min()>p.s.OPENING_WIDTH+.5, "the plug must clear the doorway during the exchange"
+    assert vents.PLUG_OUT[1]<434 and vents.PLUG_IN[0]>790
+    roof=[names[f"Roof air vent {k+1:02}"] for k in range(vents.ROOF)]
+    for i in roof:
+        final=get(i,"translation",[0,0,0])[-1]
+        assert abs(final[1]-a.LID_Z-a.LID_THICK)<.001 and math.hypot(final[0],final[2])<p.s.RI-vents.ROOF_R
+        assert get(i,"scale",[1,1,1])[p.FILLED+clock.ROOF[0]-2,0]<.001 and get(i,"scale",[1,1,1])[p.FILLED+clock.ORBIT,0]>.999
+        for x in (-a.STACK_X,a.STACK_X):
+            for j in (0,1):
+                yaw=a.POWER_YAW+j*math.pi/2;stack=(x*math.cos(yaw),x*math.sin(yaw))
+                assert math.hypot(final[0]-stack[0],-final[2]-stack[1])>vents.ROOF_R+a.STACK_R+.3
     # Fuel: every tank lands on the pad and each leg of the gas line is at full length at the end.
     fuel,closing=p.fuel,p.closing
     tanks=[names[f"Propane tank {j+1:02}"] for j in range(fuel.COUNT)]
@@ -308,6 +350,8 @@ def main(path):
     print(f"{p.TOTAL} ground-fed {p.cfg.NAME} pods on {p.LEVELS} levels. All framed dimensions, CDU section colours and dock strokes passed.")
     print(f"Clear bore {2*p.s.RI:.2f} m. Steel cage radius {outer_r:.3f} m. Bunched inner-corner clearance {bunched_gap*1000:.1f} mm.")
     print(f"Two {a.LENGTH:.2f} m power units seat at 90 degrees. Four vents stand through the lid to {p.s.WALL_HEIGHT+a.VENT_RISE:.2f} m.")
+    print(f"The lower module's side folds to a work floor at {floor:.2f} m over a {p.cfg.POWER['module_output_mw']:g} MW turbine. "
+          f"A {vents.FANS}-fan plug closes the door and {vents.ROOF} air vents sit in the lid.")
     print(f"Pod sleeves end in the store at radius {l.TANK_END:.2f} m. {fuel.COUNT} propane tanks at {fuel.FARM_R:g} m feed one gas line.")
     print(f"Water-glycol reaches {top:.2f} m between the walls. Lower storage tiers run at {p.FAST_RATE:g}x.")
 

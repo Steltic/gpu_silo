@@ -9,6 +9,7 @@ using System.Drawing.Text;
 // and a section showing power, water-glycol and gas. Moving dashes show flow direction.
 partial class Shot {
     readonly Color cHot=Color.FromArgb(201,84,58),cCold=Color.FromArgb(52,122,178),cPower=Color.FromArgb(222,160,38),cGas=Color.FromArgb(98,150,70);
+    readonly Color cDrawn=Color.FromArgb(92,128,132),cAirIn=Color.FromArgb(120,178,226),cAirOut=Color.FromArgb(236,140,118);
     readonly Color cConcrete=Color.FromArgb(152,162,154),cSteel=Color.FromArgb(76,98,102),cBronze=Color.FromArgb(160,137,89),cGrey=Color.FromArgb(207,210,210);
     Bitmap sheet;
 
@@ -17,11 +18,12 @@ partial class Shot {
     }
 
     // Dashes travel along the path from its first point to its last.
-    void Stream(Graphics g,IList<PointF> path,Color from,Color to,float width,double travel,float dash=9,float period=22){
+    // With fade set, the stream thins out toward its end: the liquid is dispersing into the store.
+    void Stream(Graphics g,IList<PointF> path,Color from,Color to,float width,double travel,float dash=9,float period=22,bool fade=false){
         var run=new double[path.Count];
         for(int i=1;i<path.Count;i++)run[i]=run[i-1]+Math.Sqrt(Math.Pow(path[i].X-path[i-1].X,2)+Math.Pow(path[i].Y-path[i-1].Y,2));
         double total=run[path.Count-1];if(total<1)return;
-        using(var guide=new Pen(Color.FromArgb(46,Blend(from,to,.5)),width+2.2f)){guide.LineJoin=LineJoin.Round;g.DrawLines(guide,ToArray(path));}
+        if(!fade)using(var guide=new Pen(Color.FromArgb(46,Blend(from,to,.5)),width+2.2f)){guide.LineJoin=LineJoin.Round;g.DrawLines(guide,ToArray(path));}
         Func<double,PointF> at=s=>{
             int i=1;while(i<path.Count-1 && run[i]<s)i++;
             double span=Math.Max(1e-6,run[i]-run[i-1]),q=Sat((s-run[i-1])/span);
@@ -33,7 +35,8 @@ partial class Shot {
             var points=new List<PointF>();points.Add(at(a));
             for(int i=1;i<path.Count-1;i++)if(run[i]>a && run[i]<b)points.Add(path[i]);
             points.Add(at(b));
-            using(var pen=new Pen(Blend(from,to,(a+b)/(2*total)),width)){
+            double along=(a+b)/(2*total);
+            using(var pen=new Pen(Color.FromArgb(fade?(int)(255*Math.Pow(1-along,1.3)):255,Blend(from,to,along)),fade?(float)(width*(1+.6*along)):width)){
                 pen.StartCap=LineCap.Round;pen.EndCap=LineCap.Round;pen.LineJoin=LineJoin.Round;
                 g.DrawLines(pen,points.ToArray());
             }
@@ -74,7 +77,7 @@ partial class Shot {
     // ---------------------------------------------------------------- plan
     void PlanScene(Graphics g,int tick){
         using(var ground=new SolidBrush(Color.FromArgb(233,235,221)))g.FillRectangle(ground,UiLeft,0,1280-UiLeft,720);
-        const float cx=752,cy=338;float m=20.4f;
+        const float cx=752,cy=322;float m=18.8f;
         double turn=-Math.PI/2-d.Entry;
         Func<double,double,PointF> polar=(r,a)=>new PointF(cx+(float)(m*r*Math.Cos(a+turn)),cy-(float)(m*r*Math.Sin(a+turn)));
         Func<double,double,double,PointF> local=(a,x,y)=>new PointF(
@@ -116,53 +119,60 @@ partial class Shot {
             using(var sleeve=new Pen(Color.FromArgb(150,120,84),3.2f))g.DrawLine(sleeve,local(a,tip,0),local(a,d.InnerOutside+.45,0));
         }
         using(var steel=new SolidBrush(cSteel))disc(d.ShaftRadius+.25,steel);
-        // Flow. Hot water-glycol leaves each CDU through the inner wall and drifts out to a cooler's suction.
-        // Cold water-glycol returns from the far end of each cooler frame and drifts in to the next sleeve.
-        double sweep=Math.Asin((d.CoolerFrameWidth/2-d.PumpLength/2)/d.Outer),travel=tick*1.5;
-        for(int i=0;i<d.CoolerFrames;i++){
-            double a=d.FrameBearing[i];
-            for(int side=-1;side<=1;side+=2){
-                var path=new List<PointF>();bool hot=side>0;
-                int steps=18;
-                for(int k=0;k<=steps;k++){
-                    double q=k/(double)steps,ease=q*q*(3-2*q);
-                    double r=d.InnerOutside-.25+(d.OuterInside+.3-d.InnerOutside)*q,angle=a+side*(.035+(sweep-.035)*ease);
-                    path.Add(polar(r,angle));
-                }
-                path.Add(local(a,d.CoolerBack+.75,side*(d.CoolerFrameWidth/2-d.PumpLength/2)));
-                if(hot){
-                    path.Insert(0,local(a,d.RootRadius+d.Lengths[0]-.2,.16));
-                    Stream(g,path,cHot,cHot,3.0f,travel);
-                    Arrow(g,path[2],Math.Atan2(path[2].Y-path[1].Y,path[2].X-path[1].X),cHot,7);
-                }else{
-                    path.Reverse();path.Add(local(a,d.RootRadius+d.Lengths[0]-.2,-.16));
-                    Stream(g,path,cCold,cCold,3.0f,travel);
-                    Arrow(g,path[3],Math.Atan2(path[3].Y-path[2].Y,path[3].X-path[2].X),cCold,7);
-                }
+        // Flow. Hot water-glycol leaves each CDU through the inner wall and disperses into the store.
+        double travel=tick*1.5;
+        for(int j=0;j<d.Bays;j++){
+            double a=d.Entry+(j+.5)*2*Math.PI/d.Bays;float mouth=d.InnerOutside+.42f;
+            for(int k=-1;k<=1;k++){
+                var plume=new List<PointF>();
+                plume.Add(local(a,d.RootRadius+d.Lengths[0]-.25,.14));plume.Add(local(a,mouth,.14));
+                for(int q=1;q<=6;q++){double u=q/6.0;plume.Add(local(a,mouth+2.5*u,.14+k*1.75*u*u+.25*u));}
+                Stream(g,plume,cHot,Blend(cHot,warm,.55),3.0f,travel+k*5,8,19,true);
             }
-            // Through the cooler: warm in at the pump end, cold out at the other.
-            var through=new List<PointF>();float end=d.CoolerFrameWidth/2-d.PumpLength/2;
+            // The same CDU pump draws its supply from the store.
+            var supply=new List<PointF>();
+            supply.Add(local(a,mouth+1.5,-1.25));supply.Add(local(a,mouth+.1,-.2));supply.Add(local(a,d.RootRadius+d.Lengths[0]-.25,-.16));
+            Stream(g,supply,cDrawn,cDrawn,1.9f,travel,5,14);
+        }
+        // Each cooler pump draws from the store. The cooled liquid returns at the outer wall and disperses.
+        for(int i=0;i<d.CoolerFrames;i++){
+            double a=d.FrameBearing[i];float end=d.CoolerFrameWidth/2-d.PumpLength/2;
+            double wall=Math.Sqrt(d.OuterInside*d.OuterInside-end*end);
+            var suction=new List<PointF>();
+            suction.Add(local(a,wall-1.5,end-1.0));suction.Add(local(a,wall-.15,end));suction.Add(local(a,d.CoolerBack+.75,end));
+            Stream(g,suction,cDrawn,cHot,1.9f,travel,5,14);
+            var through=new List<PointF>();
             through.Add(local(a,d.CoolerBack+.75,end));through.Add(local(a,d.CoolerBack+1.5,end));
             through.Add(local(a,d.CoolerBack+1.5,-end));through.Add(local(a,d.CoolerBack+.75,-end));
             Stream(g,through,cHot,cCold,2.6f,travel,8,20);
+            for(int k=-1;k<=1;k++){
+                var plume=new List<PointF>();
+                plume.Add(local(a,d.CoolerBack+.75,-end));plume.Add(local(a,wall-.1,-end));
+                for(int q=1;q<=6;q++){double u=q/6.0;plume.Add(local(a,wall-.1-2.4*u,-end+k*1.7*u*u+.9*u));}
+                Stream(g,plume,cCold,Blend(cCold,cool,.5),3.0f,travel+k*5,8,19,true);
+            }
         }
         PointF door=polar(d.CoolerBack+d.CoolerFrameDepth+1.0,d.Entry);
         Rule(g,door.X-5,door.Y+10,door.X,door.Y+3,cAccent,1.4f);Rule(g,door.X+5,door.Y+10,door.X,door.Y+3,cAccent,1.4f);
         g.DrawString("GROUND ENTRY",section,muted,new PointF(door.X,door.Y+14),middleText);
         // Labels
-        Note(g,"Hot water-glycol enters the store",d.Total+" CDUs, at the inner wall",1052,70,polar(d.InnerOutside+.55,d.FrameBearing[IndexNear(-.4)]+.07));
-        Note(g,"Cold water-glycol enters the store",(d.CoolerFrames*d.CoolerRows)+" dry coolers, at the outer wall",1052,206,polar(d.OuterInside-.45,d.FrameBearing[IndexNear(-1.2)]-sweep*.86));
-        Note(g,"Dry cooler frame",d.CoolerRows+" coolers, "+d.CoolerRows+" pumps",1070,470,local(d.FrameBearing[IndexNear(-2.0)],d.CoolerBack+d.CoolerFrameDepth,-1.5));
+        {
+            double hot=d.Entry+(PodNear(-.4)+.5)*2*Math.PI/d.Bays;
+            Note(g,"Hot water-glycol enters the store","from "+d.Total+" CDUs, and disperses",1052,70,local(hot,d.InnerOutside+1.5,.5));
+            int f=IndexNear(-1.25);float e=d.CoolerFrameWidth/2-d.PumpLength/2;
+            Note(g,"Cold water-glycol enters the store","from "+(d.CoolerFrames*d.CoolerRows)+" dry coolers, and disperses",1052,206,
+                local(d.FrameBearing[f],Math.Sqrt(d.OuterInside*d.OuterInside-e*e)-1.2,-e+.5));
+            Note(g,"Dry cooler frame",d.CoolerRows+" coolers, "+d.CoolerRows+" pumps",1070,470,local(d.FrameBearing[IndexNear(-2.0)],d.CoolerBack+d.CoolerFrameDepth,-1.5));
+        }
         Note(g,d.UnitName+" pod","4 racks, CDU and pump",452,96,local(d.Entry+(PodNear(.4)+.5)*2*Math.PI/d.Bays,d.RootRadius+3.2,0),true);
         Note(g,"Water-glycol store","between the two walls",452,470,polar((d.InnerOutside+d.OuterInside)/2,d.Entry+Math.PI+1.96),true);
         SceneHeading(g,"COOLING LOOP","Plan view","Looking down on one pod level");
         Legend(g,24,186,cHot,"Hot water-glycol");Legend(g,24,214,cCold,"Cold water-glycol");
-        g.DrawString("Each CDU pump sends hot liquid",title2,muted,new PointF(24,262),leftText);
-        g.DrawString("into the store. Each cooler pump",title2,muted,new PointF(24,282),leftText);
-        g.DrawString("draws it out, cools it and",title2,muted,new PointF(24,302),leftText);
-        g.DrawString("returns it cold.",title2,muted,new PointF(24,322),leftText);
-        Rule(g,24,362,222,362,cLine,1);g.DrawString("AT FULL LOAD",section,muted,new PointF(24,380),leftText);
-        Rows(g,d.PlanRows,24,222,402,27);
+        Legend(g,24,242,cDrawn,"Drawn from the store");
+        string[] words={"Hot and cold streams both","disperse into the stored","liquid. Nothing is piped","from a cooler to a pod."};
+        for(int i=0;i<words.Length;i++)g.DrawString(words[i],title2,muted,new PointF(24,286+20*i),leftText);
+        Rule(g,24,382,222,382,cLine,1);g.DrawString("AT FULL LOAD",section,muted,new PointF(24,400),leftText);
+        Rows(g,d.PlanRows,24,222,422,27);
     }
     // Frame nearest a bearing measured anticlockwise from straight up on the drawing, in radians.
     int IndexNear(double fromTop){
@@ -191,7 +201,7 @@ partial class Shot {
     // ------------------------------------------------------------- section
     void SectionScene(Graphics g,int tick){
         using(var sky=new SolidBrush(Color.FromArgb(236,238,226)))g.FillRectangle(sky,UiLeft,0,1280-UiLeft,720);
-        const float cx=838,ground=646;float m=18.6f;
+        const float cx=806,ground=646;float m=16.8f;
         Func<double,double,PointF> at=(x,z)=>new PointF(cx+(float)(m*x),ground-(float)(m*z));
         Action<Brush,double,double,double,double> box=(b,x0,z0,x1,z1)=>g.FillRectangle(b,cx+(float)(m*Math.Min(x0,x1)),ground-(float)(m*Math.Max(z0,z1)),(float)(m*Math.Abs(x1-x0)),(float)(m*Math.Abs(z1-z0)));
         using(var soil=new SolidBrush(Color.FromArgb(206,202,176)))g.FillRectangle(soil,UiLeft,ground,1280-UiLeft,720-ground);
@@ -247,13 +257,37 @@ partial class Shot {
                 g.DrawRectangle(edge,a.X,a.Y,(float)(m*(tip-d.RootRadius)),(float)(m*(d.FrameHeight-.1)));
                 for(int k=1;k<4;k++){PointF p=at(side*(d.RootRadius+d.CoreLength*k/4),z+.05),q=at(side*(d.RootRadius+d.CoreLength*k/4),z+d.FrameHeight-.05);g.DrawLine(edge,p,q);}
                 double port=d.PortZ+level*d.Pitch;
-                using(var sleeve=new SolidBrush(Color.FromArgb(150,120,84)))box(sleeve,side*tip,port-.1,side*(d.InnerOutside+.45),port+.1);
+                if(!(level==0 && side>0))using(var sleeve=new SolidBrush(Color.FromArgb(150,120,84)))box(sleeve,side*tip,port-.1,side*(d.InnerOutside+.45),port+.1);
             }
+            // Ground door through both walls, with its fan plug at the outer face.
+            using(var tunnel=new SolidBrush(Color.FromArgb(232,233,222)))box(tunnel,d.Inner-.02,0,d.Outer+.02,d.OpeningHeight);
+            using(var lining=new Pen(cSteel,1.2f)){
+                PointF a=at(d.Inner,d.OpeningHeight),b=at(d.Outer,d.OpeningHeight);g.DrawLine(lining,a,b);
+            }
+            using(var plug=new SolidBrush(Color.FromArgb(120,132,134)))box(plug,d.Outer-.05,0,d.Outer+.22,d.OpeningHeight);
+            // Roof air vents in the lid.
+            using(var curb=new SolidBrush(Color.FromArgb(196,201,196)))
+                foreach(double x in new[]{-(double)d.RoofVentRadius*.72,(double)d.RoofVentRadius*.72})box(curb,x-d.RoofVentSize,d.LidZ+.24,x+d.RoofVentSize,d.LidZ+.86);
+        }
+        // Air by natural convection: cool in at the door plug, warmed by the pods, out at the roof vents.
+        {
+            double ventX=d.RoofVentRadius*.72,inZ=d.OpeningHeight*.5;
+            foreach(int side in new[]{1,-1}){
+                var air=new List<PointF>();
+                air.Add(at(d.Outer+2.8,inZ));air.Add(at(d.Inner-1.2,inZ));
+                if(side<0){air.Add(at(ventX,inZ-.55));air.Add(at(-ventX,inZ-.55));}
+                air.Add(at(side*ventX,inZ+(side<0?-.55:0)));air.Add(at(side*ventX,d.LidZ+.9));air.Add(at(side*ventX+side*.9,d.LidZ+2.6));
+                Stream(g,air,cAirIn,cAirOut,4.2f,tick*1.1+(side<0?7:0),5,13);
+                PointF tip=air[air.Count-1],before=air[air.Count-2];
+                Arrow(g,tip,Math.Atan2(tip.Y-before.Y,tip.X-before.X),cAirOut,9);
+            }
+            Arrow(g,at(d.Outer+.5,inZ),Math.PI,cAirIn,9);
         }
         float lowTier=d.Height;for(int i=0;i<d.CoolerFrames;i++)lowTier=Math.Min(lowTier,d.FrameBase[i]);
         float rowHeight=d.CoolerFrameHeight/d.CoolerRows;
         // Water-glycol: cold in from the store, over the racks, hot back out. Then out to the coolers and back cold.
         for(int level=0;level<d.Levels;level++)for(int side=-1;side<=1;side+=2){
+            if(level==0 && side>0)continue;
             double z=d.BaseZ+level*d.Pitch,tip=d.RootRadius+d.Lengths[0],port=d.PortZ+level*d.Pitch;
             var loop=new List<PointF>();
             loop.Add(at(side*(d.InnerOutside+.9),port-.42));loop.Add(at(side*(tip-.15),port-.42));
@@ -310,17 +344,20 @@ partial class Shot {
         Stream(g,branch,cGas,cGas,2.4f,travel,6,14);
         // Labels
         Note(g,"Power modules","burn gas, make power",1098,86,at(d.PowerLength/2-1.2,d.PowerBase0+d.PowerHeight/2));
-        Note(g,"Lid with four vents",null,1098,40,at(d.StackX,d.VentTop-.2));
+        Note(g,"Lid and exhaust vents",null,1098,40,at(d.StackX,d.VentTop-.2));
+        Note(g,"Cool air in","fan plug in the ground door",1098,578,at(d.Outer+.1,d.OpeningHeight*.7));
+        Note(g,"Warm air out",d.RoofVents+" roof vents",560,64,at(-d.RoofVentRadius*.72,d.LidZ+1.0),true);
         Note(g,"Power down the steel shaft","out to all "+d.Total+" pods",1098,146,at(d.RootRadius+2.2,d.BaseZ+7*d.Pitch+d.FrameHeight/2));
         Note(g,"Water-glycol over the racks","cold in, hot out",1098,206,at(d.RootRadius+3.4,d.BaseZ+6*d.Pitch+d.FrameHeight-.42));
         Note(g,"Dry coolers","draw hot, return cold",1098,334,at(d.CoolerBack+d.CoolerFrameDepth-.7,lowTier+2.5*rowHeight));
-        Note(g,"Water-glycol store",null,1098,520,at((d.InnerOutside+d.OuterInside)/2+.3,3.2));
+        Note(g,"Water-glycol store",null,1098,500,at((d.InnerOutside+d.OuterInside)/2+.3,3.2));
         Note(g,"Gas line","up the wall, over the lid",560,150,at(-d.RiserRadius,lowTier+d.CoolerFrameHeight+4.2),true);
-        SceneHeading(g,"HOW IT WORKS","Section","Power, cooling and fuel");
+        SceneHeading(g,"HOW IT WORKS","Section","Power, cooling, fuel and air");
         Legend(g,24,186,cPower,"Electrical power");Legend(g,24,214,cCold,"Cold water-glycol");
         Legend(g,24,242,cHot,"Hot water-glycol");Legend(g,24,270,cGas,"Propane gas");
-        Rule(g,24,318,222,318,cLine,1);g.DrawString("AT FULL LOAD",section,muted,new PointF(24,336),leftText);
-        Rows(g,d.SectionRows,24,222,358,27);
+        Legend(g,24,298,Blend(cAirIn,cAirOut,.5),"Air, cool in, warm out");
+        Rule(g,24,340,222,340,cLine,1);g.DrawString("AT FULL LOAD",section,muted,new PointF(24,358),leftText);
+        Rows(g,d.SectionRows,24,222,380,27);
         g.DrawString("Section turned to show a",monoSmall,muted,new PointF(24,560),leftText);
         g.DrawString("lower cooler frame each side.",monoSmall,muted,new PointF(24,575),leftText);
         g.DrawString("Tank farm not to scale.",monoSmall,muted,new PointF(24,598),leftText);

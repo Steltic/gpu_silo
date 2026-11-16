@@ -1,8 +1,8 @@
 """One crawler crane for the whole job.
 
 After the tandem cage lift the south crawler stays. It hangs the cooler frames,
-lowers the power modules and the lid, and comes back for the cooler service
-during the pod exchange. This module joins those lifts into one continuous path.
+lowers the power modules and the lid, drives off, and comes back for the cooler
+service during the pod exchange at the end. This module joins those lifts into one continuous path.
 """
 import math
 
@@ -25,8 +25,21 @@ def _transit(f,start,end,a,b):
     return foot,hook,math.atan2(foot[1],foot[0])+math.pi/2
 
 
+AWAY=96.
+
+
+def _clear(pose,radius=AWAY):
+    """The same crawler with its hook carried, moved straight out to a given radius."""
+    (x,y,_),(hx,hy,hz),heading=pose
+    r=math.hypot(x,y);k=radius/r
+    return (x*k,y*k,0),(hx+x*(k-1),hy+y*(k-1),max(hz,24.)),heading
+
+
 def poses(p):
-    """Foot, hook and heading of the retained crawler for every frame from the pod delivery to its departure."""
+    """Foot, hook and heading of the crawler, and the two spans of frames in which it is on site.
+
+    It stays from the cage lift until the lid is on, drives off, and comes back for the cooler service.
+    """
     def frames(f):
         foot,hook,_,heading=fr.crane(f)
         return foot,hook,heading
@@ -36,15 +49,21 @@ def poses(p):
     def cooler(f):
         return service.crane(f-p.FILLED-care.REPAIR)
     picks=p.FILLED+plant.PICK_STARTS[0]-2
-    lidded=p.FILLED+plant.LID[1]+30
-    parked=lidded+150
+    lidded=p.FILLED+plant.LID[1]+12
+    gone=lidded+110
     serving=p.FILLED+care.REPAIR+service.ARRIVE
+    back=serving-120
     result={}
     for f in range(fr.START,p.FRAMES):
         if f<=fr.END:pose=frames(f)
         elif f<picks:pose=_transit(f,fr.END,picks,frames(fr.END),power(picks))
         elif f<=lidded:pose=power(f)
-        elif f<serving:pose=_transit(f,lidded,parked,power(lidded),cooler(serving))
+        elif f<back:
+            q=s.step(lidded,gone,f);a=power(lidded);b=_clear(a)
+            pose=(tuple(u+(v-u)*q for u,v in zip(a[0],b[0])),tuple(u+(v-u)*q for u,v in zip(a[1],b[1])),a[2])
+        elif f<serving:
+            q=s.step(back,serving-8,f);b=cooler(serving);a=_clear(b)
+            pose=(tuple(u+(v-u)*q for u,v in zip(a[0],b[0])),tuple(u+(v-u)*q for u,v in zip(a[1],b[1])),b[2])
         else:pose=cooler(f)
         result[f]=pose
-    return result,p.FILLED+care.REPAIR+service.GONE
+    return result,(gone,back,p.FILLED+care.REPAIR+service.GONE)

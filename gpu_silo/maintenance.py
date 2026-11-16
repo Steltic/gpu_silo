@@ -3,20 +3,22 @@ from . import design as cfg
 
 import math
 
+from . import clock
+from . import closing
 from . import crew
 from . import cargo
 from . import services
 from . import silo_model as s
 
 
-POWER_DONE=536
-LID=(POWER_DONE+10,POWER_DONE+128)
-CREW=LID[1]+38
-REPAIR=CREW+786
-REPAIR_LENGTH=1262
-SOLID_BEGIN,SOLID_END=REPAIR+1212,REPAIR+1251
-ORBIT,ORBIT_DONE=SOLID_END+1,SOLID_END+457
-END=ORBIT_DONE+72
+POWER_DONE,LID,CREW=clock.POWER_DONE,clock.LID,clock.CREW
+SOLID_BEGIN,SOLID_END=clock.SOLID_BEGIN,clock.SOLID_END
+ORBIT,ORBIT_DONE=clock.ORBIT,clock.ORBIT_DONE
+# The exchange is the last scene. The concrete is see-through again from REPAIR to FINAL.
+REPAIR=closing.REPAIR
+REPAIR_LENGTH=closing.END-REPAIR
+FINAL=closing.FINAL
+END=closing.END
 # Level selected by the storyboard. Retain the last approved circumferential bay.
 LEVEL,BAY=cfg.SERVICE["fault_level"],cfg.SERVICE["fault_bay"]
 BAD=(cfg.LEVELS-LEVEL)*cfg.BAYS+BAY-1
@@ -26,7 +28,7 @@ OFF,ON=(0.,0.,0.),(1.,1.,1.)
 DECK_STOW=crew.STOW
 # The wide shot of the exchange also takes in the cooler frame being serviced on the ground.
 WIDE=(322,918)
-WIDE_TARGET=(-3.,-13.,11.)
+WIDE_TARGET=(-4.,-16.,10.)
 WIDE_AZIMUTH=-80
 def step(a,b,w):
     return s.step(a,b,w)
@@ -120,24 +122,42 @@ def orbit_fraction(t):
 def service_camera(t,section,cam,blend):
     """Camera from the end of the power installation to the last frame."""
     u=orbit_fraction(t)
-    ext=cam((0,0,14.6),-62+360*u,15+6*math.sin(math.pi*u)**2,86.0)
+    ext=cam(EXTERIOR,-62+360*u,15+6*math.sin(math.pi*u)**2,92.0)
+    start=cam(EXTERIOR,-62,15,92.0)
     if t<CREW:return section
-    if t<REPAIR:return crew_camera(t-CREW,cam,blend,section)
-    return repair_camera(t-REPAIR,cam,blend,ext) if t<ORBIT else ext
+    if t<SOLID_BEGIN+8:return crew_camera(t-CREW,cam,blend,section)
+    if t<ORBIT:return vent_camera(t,cam,blend,start)
+    if t<REPAIR:return ext
+    return repair_camera(t-REPAIR,cam,blend,start)
+
+
+EXTERIOR=(0,0,14.6)
+
+
+def door_view(cam):
+    return cam(s.polar(s.RO+.4,s.ENTRY,1.5),math.degrees(s.ENTRY)+38,9,13.5)
+
+
+def vent_camera(t,cam,blend,start):
+    """Close on the door plug, rise to the roof vents, then pull back for the orbit."""
+    door=door_view(cam)
+    roof=cam((0,0,s.WALL_HEIGHT+.6),math.degrees(s.ENTRY)+20,36,31)
+    if t<clock.DOOR[1]+26:return door
+    if t<clock.ROOF[1]+4:return blend(door,roof,step(clock.DOOR[1]+26,clock.ROOF[0]-6,t))
+    return blend(roof,start,step(clock.ROOF[1]+4,ORBIT-2,t))
 
 
 def crew_camera(w,cam,blend,section):
     entry=cam(s.polar(3.10,s.ENTRY,.92),-48,31,13.6)
     lift=cam((.55,-.7,10.7),-70,17,47)
     pod=cam(s.polar(3.64,s.ENTRY,8.57),-46,10,12.6)
-    power=cam(s.polar(3.67,s.ENTRY+math.pi/4,21.13),-24,-4,12.7)
+    power=cam(s.polar(2.3,s.ENTRY+crew.POWER_BAY*2*math.pi/cfg.BAYS,crew.POWER_FLOOR+1.05),math.degrees(s.ENTRY)+crew.POWER_BAY*360/cfg.BAYS-34,9,13.4)
     down=cam((0,0,10.1),-58,18,48)
     if w<62:return blend(section,entry,step(0,53,w))
     if w<225:return blend(entry,lift,step(106,205,w))
-    if w<372:return blend(lift,pod,step(248,295,w))
-    if w<536:return blend(pod,power,step(387,441,w))
-    if w<715:return blend(power,down,step(540,584,w))
-    return blend(down,fault_view(cam),step(726,REPAIR-CREW-2,w))
+    if w<352:return blend(lift,pod,step(248,295,w))
+    if w<clock.ENCLOSURE_CLOSE[0]-CREW+6:return blend(pod,power,step(352,404,w))
+    return blend(power,door_view(cam),step(clock.ENCLOSURE_CLOSE[0]-CREW+6,SOLID_BEGIN-CREW+4,w))
 
 
 def repair_camera(w,cam,blend,exterior):
@@ -153,14 +173,14 @@ def repair_camera(w,cam,blend,exterior):
         u=step(198,299,w)
         return cam((.7*u,-1.2*u,10.4-.7*u),146+139*u,20-5*u,48-3*u)
     # Zoom out. The pod exchange at the door and the cooler service beside it share one shot.
-    wide=cam(WIDE_TARGET,WIDE_AZIMUTH,19,116)
+    wide=cam(WIDE_TARGET,WIDE_AZIMUTH,19,134)
     if w<WIDE[1]:return blend(side,wide,step(WIDE[0],WIDE[0]+62,w))
     if w<999:return blend(wide,side,step(WIDE[1],WIDE[1]+70,w))
     if w<1105:
         u=step(1002,1097,w)
         return cam((.7*(1-u),-1.2*(1-u),9.7+.7*u),285-139*u,15+5*u,45+3*u)
     if w<1200:return blend(tower,final,step(1121,1189,w))
-    return blend(final,exterior,step(1203,ORBIT-REPAIR-2,w))
+    return blend(final,exterior,step(1203,FINAL[1]-REPAIR-2,w))
 
 
 def yard_station(p):
@@ -259,8 +279,8 @@ def install(scene,node,p):
     for i in (line,hooks):overwrite_after(i,"translation",lambda w:(0,0,hook_z(w,p)),(0,0,p.EMPTY_HOOK))
     overwrite_after(line,"scale",lambda w:(1,1,p.HEAD-hook_z(w,p)),(1,1,p.HEAD-p.EMPTY_HOOK))
     overwrite_after(lookup["Portal rail insert"],"translation",lambda w:(0,0,gate_z(w)),(0,0,0))
-    scene.inspection_windows=((p.FILLED+CREW,p.FILLED+(SOLID_BEGIN+SOLID_END)//2),)
-    scene.power_detail=(p.FILLED+CREW+384,p.FILLED+CREW+545)
+    scene.inspection_windows=((p.FILLED+CREW,p.FILLED+(SOLID_BEGIN+SOLID_END)//2),(p.FILLED+REPAIR,p.FILLED+sum(FINAL)//2))
+    scene.power_detail=(p.FILLED+CREW+384,p.FILLED+clock.ENCLOSURE_CLOSE[1]+30)
     scene.project_info.update(servicePlatforms=cfg.BAYS,serviceCrewCount=sum(crew.SIZES),crewByWedge=list(crew.SIZES),
         crewDestinations=["Lower power unit" if n==0 else f"Level {n}" for n in crew.LEVELS],
         powerServiceDeckElevation_m=crew.POWER_DECK,crewSceneStart_s=(p.FILLED+CREW)/p.FPS,

@@ -43,17 +43,20 @@ def chapters():
             (full+care.LID[0],"Lower the lid over the store and the vents"),
             (full+care.CREW,f"Board the {p.BAYS} wedge work platforms"),
             (full+care.CREW+248,"Service the pods on their assigned levels"),
-            (full+care.CREW+420,"Service the underside of the lower power unit"),
-            (repair,f"Fault in pod {care.BAD+1:03} on Level {care.LEVEL}"),
+            (full+clock.ENCLOSURE_OPEN[0],f"Fold down the side of the lower power module | {cfg.POWER['module_output_mw']:g} MW gas turbine"),
+            (full+clock.ENCLOSURE_CLOSE[0],"Close the enclosure and return to grade"),
+            (full+care.SOLID_BEGIN,"Finished silo | fan plug in the ground door and four roof air vents"),
+            (full+care.ORBIT,"Design basis and 360-degree exterior sweep"),
+            (full+closing.FUEL,f"Place {cfg.PROJECT['fuel']['tanks']} propane tanks and run the gas line to the power modules"),
+            (full+closing.PLAN,"Plan view | hot and cold water-glycol dispersing into the store (narrated)"),
+            (full+closing.SECTION,"Section | power, cooling, gas and air"),
+            (repair,f"Replacement | fault in pod {care.BAD+1:03} on Level {care.LEVEL}"),
             (repair+65,"Disconnect and clear the vertical bay"),
             (repair+service.RIG[0],f"Wide shot | crawler lowers cooler frame {service.K+1:02} while the pod comes out"),
-            (repair+service.SLIDE[0],"Withdraw one 1 MW cooler and fit its replacement"),
+            (repair+service.SLIDE[0],f"Withdraw one {frames.D['cooler_capacity_mw']:g} MW cooler and fit its replacement"),
             (repair+649,f"Feed replacement pod {p.TOTAL+1:03} | hang the cooler frame back"),
             (repair+1151,f"Reconnect the {p.TOTAL} service positions"),
-            (full+care.SOLID_BEGIN,"Finished silo | design basis and 360-degree exterior sweep"),
-            (full+closing.FUEL,f"Place {cfg.PROJECT['fuel']['tanks']} propane tanks and run the gas line to the power modules"),
-            (full+closing.PLAN,"Plan view | hot and cold water-glycol entering the store (narrated)"),
-            (full+closing.SECTION,"Section | power, cooling and gas")]
+            (full+closing.FINAL[0],"Finished silo")]
     if any(a[0]>=b[0] for a,b in zip(marks,marks[1:])):
         raise ValueError("Chapters are out of order: "+str([f for f,_ in marks]))
     return marks

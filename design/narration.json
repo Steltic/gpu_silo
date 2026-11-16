@@ -4,22 +4,38 @@
     "speed": 1.0,
     "pause_seconds": 0.35,
     "lines": [
-      {"say": "This is the cooling loop, seen from above.",
-       "show": "This is the cooling loop, seen from above."},
-      {"say": "Every four S U pod carries its own C D U and pump at the wall end.",
-       "show": "Every 4SU pod carries its own CDU and pump at the wall end."},
-      {"say": "That pump sends hot water-glycol through the inner wall and into the store.",
-       "show": "That pump sends hot water-glycol through the inner wall and into the store."},
-      {"say": "Sixty-four pods put thirty-two megawatts of heat into the store this way.",
-       "show": "64 pods put 32 MW of heat into the store this way."},
-      {"say": "Outside, every dry cooler has a pump of its own.",
-       "show": "Outside, every dry cooler has a pump of its own."},
-      {"say": "It draws liquid out of the store, cools it, and returns it cold at the outer wall.",
-       "show": "It draws liquid out of the store, cools it, and returns it cold at the outer wall."},
-      {"say": "So hot enters at the inner wall, and cold enters at the outer wall.",
-       "show": "So hot enters at the inner wall, and cold enters at the outer wall."},
-      {"say": "The store between them lets heat collection and heat rejection run independently.",
-       "show": "The store between them lets heat collection and heat rejection run independently."}
+      {
+        "say": "This is the cooling loop, seen from above.",
+        "show": "This is the cooling loop, seen from above."
+      },
+      {
+        "say": "Every four S U pod carries its own C D U and pump at the wall end.",
+        "show": "Every 4SU pod carries its own CDU and pump at the wall end."
+      },
+      {
+        "say": "That pump sends hot water-glycol through the inner wall, where it disperses into the store.",
+        "show": "That pump sends hot water-glycol through the inner wall, where it disperses into the store."
+      },
+      {
+        "say": "Sixty-four pods put fifty megawatts of heat into the store this way.",
+        "show": "64 pods put 50 MW of heat into the store this way."
+      },
+      {
+        "say": "Outside, every dry cooler has a pump of its own.",
+        "show": "Outside, every dry cooler has a pump of its own."
+      },
+      {
+        "say": "It draws liquid out of the store, cools it, and returns it cold at the outer wall.",
+        "show": "It draws liquid out of the store, cools it, and returns it cold at the outer wall."
+      },
+      {
+        "say": "The cold stream disperses as well. Nothing is piped straight from a cooler to a pod.",
+        "show": "The cold stream disperses as well. Nothing is piped straight from a cooler to a pod."
+      },
+      {
+        "say": "The store between them lets heat collection and heat rejection run independently.",
+        "show": "The store between them lets heat collection and heat rejection run independently."
+      }
     ]
   }
 }

@@ -2,7 +2,7 @@
   "voice": "am_eric",
   "model": "Kokoro v1.0",
   "sample_rate": 24000,
-  "duration": 29.862,
+  "duration": 31.512,
   "lines": [
     {
       "start": 0.0,
@@ -16,32 +16,32 @@
     },
     {
       "start": 6.739,
-      "end": 10.299,
-      "text": "That pump sends hot water-glycol through the inner wall and into the store."
+      "end": 11.138,
+      "text": "That pump sends hot water-glycol through the inner wall, where it disperses into the store."
     },
     {
-      "start": 10.649,
-      "end": 14.397,
-      "text": "64 pods put 32 MW of heat into the store this way."
+      "start": 11.488,
+      "end": 15.037,
+      "text": "64 pods put 50 MW of heat into the store this way."
     },
     {
-      "start": 14.747,
-      "end": 17.483,
+      "start": 15.387,
+      "end": 18.123,
       "text": "Outside, every dry cooler has a pump of its own."
     },
     {
-      "start": 17.833,
-      "end": 21.724,
+      "start": 18.473,
+      "end": 22.364,
       "text": "It draws liquid out of the store, cools it, and returns it cold at the outer wall."
     },
     {
-      "start": 22.074,
-      "end": 25.431,
-      "text": "So hot enters at the inner wall, and cold enters at the outer wall."
+      "start": 22.714,
+      "end": 27.081,
+      "text": "The cold stream disperses as well. Nothing is piped straight from a cooler to a pod."
     },
     {
-      "start": 25.781,
-      "end": 29.862,
+      "start": 27.431,
+      "end": 31.512,
       "text": "The store between them lets heat collection and heat rejection run independently."
     }
   ]
