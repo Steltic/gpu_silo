@@ -99,6 +99,21 @@ def check_inputs():
         raise ValueError("A cooler and its pump unit must fit across the frame.")
     if not 0 <= SITE["first_frame"] < FRAMES:
         raise ValueError("installation.first_frame is a zero-based frame number.")
+    if SITE["direction"] not in ("clockwise", "anticlockwise"):
+        raise ValueError("installation.direction is 'clockwise' or 'anticlockwise', seen from above.")
+    if any(not 1 <= int(k) <= FRAMES or abs(v) > 30 for k, v in SITE["laydown_offset_degrees_by_frame"].items()):
+        raise ValueError("Laydown offsets are keyed by one-based frame number and stay within 30 degrees.")
+    if not 1 <= SERVICE["cooler_service_frame"] <= FRAMES or not 1 <= SERVICE["cooler_service_row"] <= COOL["coolers_per_frame"]:
+        raise ValueError("The cooler service must select an installed frame and one of its coolers.")
+    fuel = PROJECT["fuel"]
+    if fuel["tanks"] < 1 or min(fuel["tank_diameter_m"], fuel["tank_length_m"]) <= 0 or fuel["tank_length_m"] <= fuel["tank_diameter_m"]:
+        raise ValueError("Fuel tanks are horizontal cylinders: give a positive count, diameter and a length greater than the diameter.")
+    if fuel["tank_spacing_m"] < fuel["tank_diameter_m"] + .5 or fuel["distance_m"] < OUTSIDE_R + 25:
+        raise ValueError("Leave 0.5 m between tanks and keep the tank farm at least 25 m from the silo wall.")
+    if not 0 < fuel["fill_fraction"] <= .9 or not 0 < fuel["generation_efficiency"] < 1 or fuel["energy_mj_per_litre"] <= 0:
+        raise ValueError("Use a fill fraction up to 0.9, an efficiency between 0 and 1 and a positive energy density.")
+    if not 1 <= fuel["riser_behind_frame"] <= FRAMES or abs(fuel["riser_offset_m"]) >= COOL["frame_width_m"]/2:
+        raise ValueError("The gas riser runs up the wall behind one cooler frame, inside its width.")
     if MOVIE["lower_tier_speed"] < 1 or any(int(n)!=n or n<=0 or n%2 for n in (MOVIE["width_px"],MOVIE["height_px"])):
         raise ValueError("Use a positive playback rate and positive, even video dimensions.")
 

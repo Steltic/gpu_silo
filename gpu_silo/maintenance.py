@@ -9,7 +9,9 @@ from . import services
 from . import silo_model as s
 
 
-CREW=542
+POWER_DONE=536
+LID=(POWER_DONE+10,POWER_DONE+128)
+CREW=LID[1]+38
 REPAIR=CREW+786
 REPAIR_LENGTH=1262
 SOLID_BEGIN,SOLID_END=REPAIR+1212,REPAIR+1251
@@ -22,6 +24,10 @@ PORT=services.PORT_ANGLES[BAY-1]
 REGISTER=(s.ENTRY-PORT+math.pi)%(2*math.pi)-math.pi
 OFF,ON=(0.,0.,0.),(1.,1.,1.)
 DECK_STOW=crew.STOW
+# The wide shot of the exchange also takes in the cooler frame being serviced on the ground.
+WIDE=(322,918)
+WIDE_TARGET=(-3.,-13.,11.)
+WIDE_AZIMUTH=-80
 def step(a,b,w):
     return s.step(a,b,w)
 
@@ -146,11 +152,10 @@ def repair_camera(w,cam,blend,exterior):
     if w<300:
         u=step(198,299,w)
         return cam((.7*u,-1.2*u,10.4-.7*u),146+139*u,20-5*u,48-3*u)
-    if w<463:return side
-    if w<505:return blend(side,door,step(463,502,w))
-    if w<715:return blend(door,yard,step(510,571,w))
-    if w<806:return blend(yard,door,step(714,786,w))
-    if w<999:return blend(door,side,step(813,910,w))
+    # Zoom out. The pod exchange at the door and the cooler service beside it share one shot.
+    wide=cam(WIDE_TARGET,WIDE_AZIMUTH,19,116)
+    if w<WIDE[1]:return blend(side,wide,step(WIDE[0],WIDE[0]+62,w))
+    if w<999:return blend(wide,side,step(WIDE[1],WIDE[1]+70,w))
     if w<1105:
         u=step(1002,1097,w)
         return cam((.7*(1-u),-1.2*(1-u),9.7+.7*u),285-139*u,15+5*u,45+3*u)

@@ -15,7 +15,7 @@ PORT_RADIUS=.106
 PORT_ANGLES=[s.ENTRY+TAU/BAYS*(i+.5) for i in range(BAYS)]
 POD_FACE=cfg.STORE["root_radius_m"]+cfg.BODY_LENGTH
 WALL_FACE=s.RI+.009
-EXT_END=s.RO+.38
+TANK_END=s.RO_INNER+.55
 JAMB=cfg.DOOR_WIDTH/2+.20
 LINTEL=cfg.DOOR_HEIGHT+.22
 ON=(1.,1.,1.)
@@ -45,14 +45,6 @@ def sleeve_frames(level):
     return start-8,start
 
 
-def cap_frames(level):
-    k=int(port_height(level)//s.LIFT)
-    start=lift_start(k)
-    span=s.SLOW_CYCLE if k==0 else s.FAST_CYCLE
-    at=math.ceil(start+.93*span)
-    return at,at+5
-
-
 def pipe(m,a,b,r,col,ri=0.,n=12):
     """A capped rod or an open, hollow pipe between two 3-D centres."""
     v=s.norm(s.minus(b,a))
@@ -78,41 +70,18 @@ def barrel(m,a,b,r,col,ri=0,n=16):
 
 
 def station_mesh():
-    m=s.Mesh("Cast-in pod service sleeve | supply, return and dry power and data duct")
+    """A sleeve through the inner skin only. The pod's CDU draws from and returns to the store through it."""
+    m=s.Mesh("Cast-in pod service sleeve | supply and return through the inner wall")
     m.material=3
-    barrel(m,WALL_FACE,s.RO+.015,PORT_RADIUS,BRONZE,.082)
-    # Wall flanges and annulus pickup/return branches. The barrel contains a
-    # separately insulated dry pin chamber for the electrical circuit.
-    for x in (s.RI+.18,s.RI_OUTER+.05):
-        barrel(m,x-.022,x+.022,.157,"89938c",.083)
+    barrel(m,WALL_FACE,TANK_END,PORT_RADIUS,BRONZE,.082)
+    barrel(m,s.RO_INNER+.02,s.RO_INNER+.065,.157,"89938c",.083)
     barrel(m,WALL_FACE,WALL_FACE+.040,.142,"799794",.094)
     barrel(m,WALL_FACE+.005,WALL_FACE+.040,.090,SEAL)
     for lateral,col in [(-.043,INLET),(.043,RETURN)]:
-        pipe(m,(WALL_FACE+.001,lateral,.015),(s.RO+.016,lateral,.015),.028,col,ri=.017)
-    for x,sign,col in [(s.RO_INNER+.35,1,INLET),(s.RO_INNER+.70,-1,RETURN)]:
-        pipe(m,(x,sign*.039,.01),(x,sign*.235,-.055),.044,col,ri=.024)
-    pipe(m,(WALL_FACE+.001,0,-.047),(s.RO+.018,0,-.047),.018,POWER)
-    return m
-
-
-def outside_cap():
-    m=s.Mesh("Exterior power and data entry | bolted flange")
-    m.material=3
-    barrel(m,s.RO+.004,EXT_END-.045,.095,"aa966f",.068)
-    barrel(m,s.RO+.025,s.RO+.060,.132,"bcb49b",.069)
-    barrel(m,EXT_END-.09,EXT_END-.035,.161,BRONZE,.066)
-    return m
-
-
-def blind_cover():
-    m=s.Mesh("Removable weather cover, gasket and bolts")
-    m.material=3
-    barrel(m,EXT_END-.036,EXT_END,.154,"88a9a3")
-    barrel(m,EXT_END,EXT_END+.009,.093,"369384")
-    for j in range(6):
-        a=TAU*j/6
-        y,z=.118*math.cos(a),.118*math.sin(a)
-        pipe(m,(EXT_END-.01,y,z),(EXT_END+.013,y,z),.014,"d4cab0",n=6)
+        pipe(m,(WALL_FACE+.001,lateral,.015),(TANK_END+.001,lateral,.015),.028,col,ri=.017)
+    # Open branches in the liquid: supply drawn from below, return released above.
+    for x,sign,col in [(s.RO_INNER+.22,-1,INLET),(s.RO_INNER+.42,1,RETURN)]:
+        pipe(m,(x,sign*.039,sign*.01),(x,sign*.20,sign*.19),.044,col,ri=.024)
     return m
 
 
@@ -176,7 +145,7 @@ def bore_rows(mesh,zbase,world_heights):
 def perforate_concrete(scene):
     cache={}
     for obj in scene.nodes:
-        if "concrete wall" not in obj["group"]: continue
+        if obj["group"]!="Inner concrete wall": continue
         floor=obj['translation'][2]
         heights=tuple(port_height(i) for i in range(1,LEVELS+1) if floor<port_height(i)<floor+s.LIFT)
         if not heights:continue
@@ -226,20 +195,13 @@ def liquid_mesh(name,notch,top=False):
 def add_fixed(scene,node,flat_keys,levels):
     """Cast-in pod stations, the sealed doorway and the liquid. ``levels`` is the fill elevation at every frame."""
     sleeve=scene.mesh(station_mesh())
-    cap=scene.mesh(outside_cap())
-    blind=scene.mesh(blind_cover())
     for level in range(1,LEVELS+1):
-        z=port_height(level);start,end=sleeve_frames(level);cap0,cap1=cap_frames(level)
+        z=port_height(level);start,end=sleeve_frames(level)
         for bay,angle in enumerate(PORT_ANGLES,1):
             name=f"L{level:02} P{bay:02}"
             node(name+" | cast-in service conduit",sleeve,"Cast-in conduits",ang=angle,t=(0,0,z),
                  tracks={"scale":[(0,OFF),(start-1,OFF),(start,ON)],
                          "translation":[(0,(0,0,z+.40)),(start,(0,0,z+.40)),(end,(0,0,z))]})
-            dx=.26*math.cos(angle);dy=.26*math.sin(angle)
-            for suffix,part in [("exterior service flange",cap),("removable blind cover",blind)]:
-                node(name+" | "+suffix,part,"Exterior service flanges",ang=angle,t=(0,0,z),
-                     tracks={"scale":[(0,OFF),(cap0-1,OFF),(cap0,ON)],
-                             "translation":[(0,(dx,dy,z)),(cap0,(dx,dy,z)),(cap1,(0,0,z))]})
     m=door_barrier()
     node(m.name,scene.mesh(m),"Door blockout",ang=s.ENTRY,tracks={"scale":[(0,OFF),(3,OFF),(4,ON)]})
     h=list(levels)

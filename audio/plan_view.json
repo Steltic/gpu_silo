@@ -1,0 +1,48 @@
+{
+  "voice": "am_eric",
+  "model": "Kokoro v1.0",
+  "sample_rate": 24000,
+  "duration": 29.862,
+  "lines": [
+    {
+      "start": 0.0,
+      "end": 2.175,
+      "text": "This is the cooling loop, seen from above."
+    },
+    {
+      "start": 2.525,
+      "end": 6.389,
+      "text": "Every 4SU pod carries its own CDU and pump at the wall end."
+    },
+    {
+      "start": 6.739,
+      "end": 10.299,
+      "text": "That pump sends hot water-glycol through the inner wall and into the store."
+    },
+    {
+      "start": 10.649,
+      "end": 14.397,
+      "text": "64 pods put 32 MW of heat into the store this way."
+    },
+    {
+      "start": 14.747,
+      "end": 17.483,
+      "text": "Outside, every dry cooler has a pump of its own."
+    },
+    {
+      "start": 17.833,
+      "end": 21.724,
+      "text": "It draws liquid out of the store, cools it, and returns it cold at the outer wall."
+    },
+    {
+      "start": 22.074,
+      "end": 25.431,
+      "text": "So hot enters at the inner wall, and cold enters at the outer wall."
+    },
+    {
+      "start": 25.781,
+      "end": 29.862,
+      "text": "The store between them lets heat collection and heat rejection run independently."
+    }
+  ]
+}

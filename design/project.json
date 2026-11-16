@@ -70,14 +70,30 @@
   "installation": {
     "crane_track_radius_m": 38.0,
     "laydown_radius_m": 22.5,
-    "first_frame": 7,
+    "first_frame": 0,
+    "direction": "anticlockwise",
+    "laydown_offset_degrees_by_frame": {"1": 16, "8": -8},
     "first_cycle_frames": 170,
-    "repeat_cycle_frames": 84,
+    "repeat_cycle_frames": 122,
     "boom_lifts": 2,
     "workers_per_basket": 2,
     "boom_lift_track_radius_m": 19.5
   },
   "power": {"width_m": 2.50, "height_m": 2.50, "first_heading_degrees": 12.0},
-  "service": {"fault_level": 6, "fault_bay": 5, "wedge_destinations": [4,0,7,3,6,2,5,8], "crew_by_wedge": [3,3,2,2,2,2,2,3]},
+  "fuel": {
+    "gas": "Propane",
+    "tanks": 8,
+    "tank_diameter_m": 3.0,
+    "tank_length_m": 20.0,
+    "tank_spacing_m": 4.6,
+    "distance_m": 60.0,
+    "fill_fraction": 0.85,
+    "energy_mj_per_litre": 23.5,
+    "generation_efficiency": 0.40,
+    "riser_behind_frame": 7,
+    "riser_offset_m": -2.6
+  },
+  "service": {"fault_level": 6, "fault_bay": 5, "wedge_destinations": [4,0,7,3,6,2,5,8], "crew_by_wedge": [3,3,2,2,2,2,2,3],
+              "cooler_service_frame": 7, "cooler_service_row": 4},
   "movie": {"width_px": 1280, "height_px": 720, "lower_tier_speed": 3}
 }

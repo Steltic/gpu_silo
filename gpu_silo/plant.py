@@ -1,4 +1,4 @@
-"""Power-module picks through the open silo top, their stubs and exhaust risers.
+"""Power-module picks through the open silo top, their stubs and exhaust vents, and the lid that closes the silo.
 
 Coordinates are metres and Z is up.
 """
@@ -8,6 +8,7 @@ import math
 
 from . import services
 from . import silo_model as s
+from . import closing
 from . import maintenance as care
 
 
@@ -17,9 +18,15 @@ LENGTH = math.floor(200*math.sqrt((s.RI-RADIAL_CLEARANCE)**2-(WIDTH/2)**2))/100
 BASE_STUB, ROOF_STUB = .27, .22
 STACK_X, STACK_R = LENGTH/2-.69, .47
 POWER_YAW = math.radians(cfg.POWER["first_heading_degrees"])
-PICK_STARTS = (20, 260)
+PICK_STARTS = (50, 290)
 PICK_LENGTH = 151
-VENT_START, VENT_END, END = 435, 506, care.END
+VENT_START, VENT_END, END = 465, care.POWER_DONE, closing.END
+VENT_RISE = .90
+LID = care.LID
+LID_SITE = (-40.,-4.)
+LID_R, LID_THICK = s.RO+.14, .22
+LID_Z = s.WALL_HEIGHT+.03
+LID_GROUND, LID_TRANSIT, LID_APEX = .30, s.WALL_HEIGHT+VENT_RISE+3.6, 7.0
 PICK_SITES = ((-21.5,-8.0),(-21.5,4.0))
 CRANE_BASE = (-20.,-23.,0.)
 TRANSIT = 35.
@@ -120,9 +127,45 @@ def hook_position(crown,t):
                 +(GROUND+APEX-high)*s.step(a+63,PICK_STARTS[1]-1,t))
     x,y,z=body_position(crown,1,t)
     end=PICK_STARTS[1]+PICK_LENGTH
-    away=s.step(end+22,end+55,t)
-    offered=(x-16*away,y-4*away,z+APEX+(TRANSIT+APEX-z-APEX)*s.step(end+3,end+22,t))
-    return offered
+    if t<=end+3:return x,y,z+APEX
+    a,b=LID
+    lx,ly,lz=lid_position(t)
+    if t<a:
+        # Leave the upper unit, travel high and come down onto the lid's bridle.
+        up=TRANSIT+APEX;go=s.step(end+25,a-22,t)
+        height=z+APEX+(up-z-APEX)*s.step(end+3,end+24,t)+(lz+LID_APEX-up)*s.step(a-22,a-2,t)
+        return lx*go,ly*go,height
+    return lx,ly,lz+LID_APEX+8*s.step(b+6,b+30,t)
+
+
+def lid_position(t):
+    """The lid waits on the ground, is carried over the vents and lowered onto the rim."""
+    a,b=LID;x,y=LID_SITE
+    across=s.step(a+45,a+80,t)
+    z=LID_GROUND+(LID_TRANSIT-LID_GROUND)*s.step(a+8,a+45,t)+(LID_Z-LID_TRANSIT)*s.step(a+80,b,t)
+    return (x*(1-across),y*(1-across),z)
+
+
+def lid_mesh():
+    m=mesh("Silo lid | steel deck over the bore and the liquid, with four vent openings")
+    s.sector(m,0,LID_R,0,LID_THICK,0,s.TAU,48,["9aa39f","9aa39f","b9beb8","9aa39f"],caps=False)
+    s.sector(m,LID_R-.16,LID_R,LID_THICK,LID_THICK+.10,0,s.TAU,48,["8b9591","8b9591","a7aeaa","8b9591"],caps=False)
+    for k in range(8):
+        a=k*s.TAU/8+.2
+        s.bar(m,s.polar(1.2,a,LID_THICK+.05),s.polar(LID_R-.3,a,LID_THICK+.05),.16,"a3aaa5",.10)
+    for j in (0,1):
+        yaw=POWER_YAW+j*math.pi/2
+        for sign in (-1,1):
+            x,y,_=s.polar(sign*STACK_X,yaw,0)
+            services.pipe(m,(x,y,LID_THICK),(x,y,LID_THICK+.16),STACK_R+.16,"7f8a86",STACK_R+.03,n=16)
+    return m
+
+
+def lid_bridle():
+    m=mesh("Lid pick | four-leg bridle")
+    for k in range(4):
+        s.bar(m,s.polar(LID_R*.62,k*s.TAU/4+.4,LID_THICK),(0,0,LID_APEX),.07,"726952")
+    return m
 
 
 def camera_power(p,frame,old,cam,blend):
@@ -133,12 +176,17 @@ def camera_power(p,frame,old,cam,blend):
     first=cam((-.5,0,24.8),-52,33,49)
     second=cam((0,0,24.7),-45,40,43)
     finished=cam((0,0,24.5),-39,53,41)
-    if t<45:return blend(old,wide,s.step(0,38,t))
-    if t<147:return blend(wide,first,s.step(93,143,t))
-    if t<230:return blend(first,wide,s.step(190,228,t))
-    if t<391:return blend(wide,second,s.step(330,391,t))
-    power_end=blend(second,finished,s.step(417,505,t))
-    return care.service_camera(t,power_end,cam,blend) if t>=VENT_END else power_end
+    if t<75:return blend(old,wide,s.step(0,44,t))
+    if t<177:return blend(wide,first,s.step(123,173,t))
+    if t<260:return blend(first,wide,s.step(220,258,t))
+    if t<421:return blend(wide,second,s.step(360,421,t))
+    if t<VENT_END:return blend(second,finished,s.step(447,VENT_END-1,t))
+    # Pull back for the lid, then look down on it as it closes the silo.
+    lift=cam((-9,-1,24),-64,22,104)
+    closed_view=cam((0,0,28.5),-52,38,66)
+    if t<LID[0]+60:lid_view=blend(finished,lift,s.step(VENT_END,LID[0]+18,t))
+    else:lid_view=blend(lift,closed_view,s.step(LID[0]+62,LID[1]-8,t))
+    return care.service_camera(t,lid_view,cam,blend)
 
 
 def add(scene,node,p):
@@ -167,7 +215,7 @@ def add(scene,node,p):
         roof=power_base(p.CROWN,j)+HEIGHT
         for sign in (-1,1):
             dx=sign*STACK_X
-            run=s.WALL_HEIGHT-roof
+            run=s.WALL_HEIGHT+VENT_RISE-roof
             joint=.12
             # Nested stainless tubes extend from both end plenums after crane release.
             # The socket lips overlap axially at each telescoping joint.
@@ -190,27 +238,20 @@ def add(scene,node,p):
                 services.pipe(lip,(0,0,-.068),(0,0,0),rr+.025,SILVER,rr-.038,n=16)
                 node(name+" lip",addmesh(lip),"End exhausts",base,tracks={"translation":compact_relative(
                     lambda t:(dx,0,origin(t)[2]+length(t)[2]))})
-    car=node("Power pick | crawler",addmesh(p.crane_lower()),"Power crane",t=CRANE_BASE,
-             tracks={"scale":hide_after(p.FILLED+1,p.FILLED+VENT_END+18)})
-    hooks=[hook_position(p.CROWN,t) for t in range(END)]
-    dx=[v[0]-CRANE_BASE[0] for v in hooks]
-    dy=[v[1]-CRANE_BASE[1] for v in hooks]
-    reach=[math.hypot(x,y) for x,y in zip(dx,dy)]
-    tip=[2.45+math.sqrt(p.BOOM_LENGTH**2-d*d) for d in reach]
-    deck=node("Power pick | slewing deck",addmesh(p.crane_upper()),"Power crane",car,
-              tracks={"yaw":compact_relative(lambda t:(math.atan2(dy[t],dx[t]),))})
-    node("Power pick | lattice boom",addmesh(p.boom_mesh()),"Power crane",deck,t=(0,0,2.45),
-         tracks={"scale":compact_relative(lambda t:(reach[t]/17,1,(tip[t]-2.45)/math.sqrt(p.BOOM_LENGTH**2-17**2)))})
-    fall=mesh("Power crane main hoist line")
-    closed(fall,-.045,-.045,.045,.045,0,1,DARK)
-    node("Power pick | hoist rope",addmesh(fall),"Power crane",car,tracks={
-        "translation":compact_relative(lambda t:(dx[t],dy[t],hooks[t][2])),
-        "scale":compact_relative(lambda t:(1,1,tip[t]-hooks[t][2]))})
-    block=mesh("Power crane hook block")
-    closed(block,-.20,-.16,.20,.16,0,.42,AMBER)
-    node("Power pick | hook block",addmesh(block),"Power crane",car,tracks={
-        "translation":compact_relative(lambda t:(dx[t],dy[t],hooks[t][2]))})
+    # The lid is the retained crawler's last lift of the build.
+    cover=node("Silo lid | crane placement",addmesh(lid_mesh()),"Silo lid",tracks={
+        "translation":compact_relative(lid_position),
+        "scale":show(p.FILLED+1)+[(p.FILLED+care.CREW+14.98,ON),(p.FILLED+care.CREW+15,OFF),
+                                  (p.RESTORE-.02,OFF),(p.RESTORE,ON)]})
+    node("Silo lid | lifting bridle",addmesh(lid_bridle()),"Lid pick",cover,
+         tracks={"scale":hide_after(p.FILLED+LID[0]-4,p.FILLED+LID[1]+5)})
+    timber=mesh("Silo lid | ground dunnage")
+    for k in range(3):
+        a=k*s.TAU/3
+        s.bar(timber,s.polar(1.5,a,LID_GROUND/2),s.polar(LID_R-.5,a,LID_GROUND/2),.40,"8f8064",LID_GROUND)
+    node(timber.name,addmesh(timber),"Power laydown",t=(*LID_SITE,0),tracks={"scale":hide_after(p.FILLED+1,p.FILLED+LID[1]+10)})
     scene.project_info.update(powerBodies_m=[LENGTH,WIDTH,HEIGHT],powerCornerAllowance_m=RADIAL_CLEARANCE,
         powerBodyBaseElevations_m=[power_base(p.CROWN,j) for j in (0,1)],powerYawDifference_deg=90,
-        exhaustStacks=4,exhaustRimElevation_m=s.WALL_HEIGHT,firstLiquidAfter_s=p.C/p.FPS,
+        exhaustStacks=4,exhaustVentElevation_m=s.WALL_HEIGHT+VENT_RISE,lidElevation_m=LID_Z,lidRadius_m=LID_R,
+        lidSeatedAt_s=(p.FILLED+LID[1])/p.FPS,firstLiquidAfter_s=p.C/p.FPS,
         powerScope="Placeholder power modules. The electrical supply is not yet sized.")

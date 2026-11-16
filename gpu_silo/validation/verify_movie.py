@@ -4,7 +4,7 @@ from pathlib import Path
 import subprocess
 import sys
 
-from .. import design, pod_scene
+from .. import closing, design, pod_scene, render_project
 
 
 def check(path):
@@ -21,9 +21,25 @@ def check(path):
     assert chapters and float(chapters[0]["start_time"]) == 0
     assert abs(float(chapters[-1]["end_time"]) - frames / pod_scene.FPS) < .002
     assert all(a["end"] == b["start"] for a, b in zip(chapters, chapters[1:]))
+    sound = [stream for stream in info["streams"] if stream["codec_type"] == "audio"]
+    voice = ""
+    if render_project.NARRATION.is_file():
+        assert len(sound) == 1 and sound[0]["codec_name"] == "aac", "the narration track is missing"
+        assert abs(float(sound[0]["duration"]) - frames / pod_scene.FPS) < .1
+        # The voice must sit inside the plan-view scene and be silent before it.
+        begin = (pod_scene.FILLED + closing.PLAN) / pod_scene.FPS
+        end = (pod_scene.FILLED + closing.SECTION) / pod_scene.FPS
+        def peak(start, length):
+            out = subprocess.run(["ffmpeg", "-v", "info", "-ss", f"{start:.3f}", "-t", f"{length:.3f}", "-i", str(path),
+                                  "-map", "0:a:0", "-af", "volumedetect", "-f", "null", "-"],
+                                 capture_output=True, text=True, check=True).stderr
+            return float(out.split("max_volume:")[1].split("dB")[0])
+        assert peak(begin + closing.VOICE_LEAD, closing.VOICE["duration"]) > -12, "no narration in the plan view"
+        assert peak(max(0, begin - 20), 19.5) < -60 and peak(end + .5, 10) < -60, "narration outside the plan view"
+        voice = ", narration in the plan view"
     subprocess.run(["ffmpeg", "-v", "error", "-xerror", "-i", str(path), "-map", "0:v:0",
                     "-f", "null", "-"], check=True)
-    print(f"{frames} frames at {pod_scene.FPS} fps, {len(chapters)} chapters, full MP4 decode passed")
+    print(f"{frames} frames at {pod_scene.FPS} fps, {len(chapters)} chapters{voice}, full MP4 decode passed")
 
 
 if __name__ == "__main__":

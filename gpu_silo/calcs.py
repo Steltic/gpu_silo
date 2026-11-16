@@ -93,6 +93,15 @@ def compute():
     c["anchors"] = c["anchors_per_frame"] * cfg.FRAMES
     c["conduits_per_frame"] = co["conduits_per_cooler"] * co["coolers_per_frame"]
     c["frame_conduits"] = c["conduits_per_frame"] * cfg.FRAMES
+    # Fuel storage
+    fu=cfg.PROJECT["fuel"];radius=fu["tank_diameter_m"]/2
+    c["tank_each_m3"]=math.pi*radius**2*(fu["tank_length_m"]-2*radius)+4/3*math.pi*radius**3
+    c["fuel_m3"]=c["tank_each_m3"]*fu["tanks"]*fu["fill_fraction"]
+    c["fuel_gal"]=c["fuel_m3"]/US_GAL
+    c["fuel_mwh_th"]=c["fuel_m3"]*1000*fu["energy_mj_per_litre"]/3600
+    c["fuel_mwh_e"]=c["fuel_mwh_th"]*fu["generation_efficiency"]
+    c["fuel_hours"]=c["fuel_mwh_e"]/c["heat_mw"]
+    c["fuel_burn_m3_h"]=c["fuel_m3"]/c["fuel_hours"]
     # Pod fit
     longest = cfg.BODY_LENGTH + max([cfg.SECTION, *cfg.SECTIONS.values()])
     c["pod_length"] = cfg.BODY_LENGTH + cfg.SECTION
@@ -155,6 +164,18 @@ def panel():
                   ("Volume", f"{n(C['tank_m3'])} m³"), ("", f"{C['tank_gal']/1e6:.2f} M US gal"),
                   ("Target", f"{C['target_gal']/1e6:.2f} M US gal"),
                   ("Heat buffer", f"{C['min_per_k']:.1f} min / K")],
+        "fuel": [("Tanks", f"{cfg.PROJECT['fuel']['tanks']} × {cfg.PROJECT['fuel']['tank_length_m']:g} m"),
+                 ("Tank diameter", f"{cfg.PROJECT['fuel']['tank_diameter_m']:g} m"),
+                 ("Stored propane", f"{n(C['fuel_m3'])} m³"),
+                 ("Heat in the fuel", f"{n(C['fuel_mwh_th'])} MWh"),
+                 ("Electricity", f"{n(C['fuel_mwh_e'])} MWh"),
+                 (f"Run time at {C['heat_mw']:.0f} MW", f"{C['fuel_hours']:.0f} h")],
+        "plan": [("Liquid heat", f"{C['heat_mw']:.0f} MW"), ("Loop flow", f"{n(C['flow_total'][1]/1000,1)} m³/min"),
+                 ("Rise across the pods", f"{C['dt']:g} K"), ("Store", f"{n(C['tank_m3'])} m³"),
+                 ("Store turnover", f"{C['turnover_min']:.0f} min")],
+        "section": [("Power modules", "2"), ("Electrical load", f"{C['heat_mw']:.0f} MW"),
+                    (f"{cfg.NAME} pods on the shaft", f"{C['pods']}"), ("Dry coolers", f"{C['coolers']} × {cfg.COOL['cooler_capacity_mw']:g} MW"),
+                    ("Propane stored", f"{n(C['fuel_m3'])} m³"), ("Run time", f"{C['fuel_hours']:.0f} h")],
         "frames": [("Dry coolers", f"{cfg.COOL['coolers_per_frame']} × {cfg.COOL['cooler_capacity_mw']:g} MW"),
                    ("Pump units", f"{cfg.COOL['coolers_per_frame']}"),
                    ("Cast-in anchors", f"{C['anchors_per_frame']}"),
@@ -164,7 +185,7 @@ def panel():
 
 
 def markdown():
-    c, s, co, fl = C, cfg.SILO, cfg.COOL, cfg.FLUID
+    c, s, co, fl, fu = C, cfg.SILO, cfg.COOL, cfg.FLUID, cfg.PROJECT["fuel"]
     kg, lpm, gpm = c["flow_total"]
     short = c["target_m3"] - c["tank_m3"]
     lines = f"""# Design calculations
@@ -268,7 +289,23 @@ Eight {co['frame_width_m']:g} m frames need {c['frame_run_m']:.0f} m of wall and
 | **Radial clearance** | **{c['pod_clearance']*1000:.0f} mm** | bore − corner |
 | Storage height | {c['store_height']:.1f} m | {cfg.LEVELS} levels × {cfg.STORE['pitch_m']:g} m |
 
-## 6. Open questions raised by these numbers
+## 6. Fuel storage
+
+The power modules burn {fu['gas'].lower()} from tanks beside the silo. One gas line runs along the ground, up the outside wall, over the lid and down to the modules.
+
+| Quantity | Value | Basis |
+| --- | ---: | --- |
+| Tanks | {fu['tanks']} | {fu['tank_length_m']:g} m long × {fu['tank_diameter_m']:g} m diameter, {fu['distance_m']:g} m from the silo axis |
+| Volume of one tank | {c['tank_each_m3']:.0f} m³ | cylinder with hemispherical ends |
+| Stored liquid | {n(c['fuel_m3'])} m³ = {n(c['fuel_gal'])} US gal | {fu['fill_fraction']*100:.0f}% fill |
+| Stored energy | {n(c['fuel_mwh_th'])} MWh thermal | {fu['energy_mj_per_litre']:g} MJ per litre, lower heating value |
+| Electricity generated | {n(c['fuel_mwh_e'])} MWh | {fu['generation_efficiency']*100:.0f}% generation efficiency |
+| **Run time at full load** | **{c['fuel_hours']:.0f} h ({c['fuel_hours']/24:.1f} days)** | {c['heat_mw']:.0f} MW electrical load |
+| Burn rate at full load | {c['fuel_burn_m3_h']:.1f} m³/h | one {fu['tank_length_m']:g} m tank every {c['tank_each_m3']*fu['fill_fraction']/c['fuel_burn_m3_h']:.0f} h |
+
+The load is taken as the {c['heat_mw']:.0f} MW that reaches the liquid. Fans, pumps and conversion losses would add to it.
+
+## 7. Open questions raised by these numbers
 
 1. **Tank volume.** The geometry gives {c['tank_gal']/1e6:.2f} M US gal against a 1.5 M target. See the three options in section 2.
 2. **Rack generation.** {c['rack_kw']:.0f} kW per rack matches a GB200-class NVL72 (about 120 to 132 kW). Published figures for the Vera Rubin NVL72 are about 190 to 230 kW per rack, which would put {c['racks']} racks at {c['racks']*0.19:.0f} to {c['racks']*0.23:.0f} MW. Confirm the rack generation before fixing the cooler count.
@@ -276,7 +313,9 @@ Eight {co['frame_width_m']:g} m frames need {c['frame_run_m']:.0f} m of wall and
 4. **Wall design.** {c['head_kpa']:.0f} kPa at the base puts about {c['outer_hoop_mpa']:.0f} MPa of hoop tension in a {s['outer_wall_m']*1000:.0f} mm outer skin. That needs post-tensioning or a thicker wall, and the inner skin needs a buckling check under external pressure.
 5. **Pod clearance.** {c['pod_clearance']*1000:.0f} mm between the rotating pod and the bore is tight for a {c['pod_length']:.1f} m cantilever.
 6. **Air path.** Four coolers stacked vertically discharge outward. Recirculation between rows and between the two tiers has not been checked.
-7. **Electrical supply.** The two power modules in the film are placeholders. Supplying about {c['heat_mw']:.0f} MW of IT load is not yet sized.
+7. **Power modules.** Two container-sized modules would each have to deliver {c['heat_mw']/2:.0f} MW. A generator set of that size is normally rated at a few megawatts, so the number or size of the modules needs a decision.
+8. **Fuel.** {n(c['fuel_m3'])} m³ of propane runs the site for about {c['fuel_hours']/24:.0f} days. Separation distances, bunding and the resupply rate have not been checked.
+9. **Power in the shaft.** {c['heat_mw']:.0f} MW passes down the steel shaft to {c['pods']} pods, {c['pod_kw']:.0f} kW each. The busbar, its cooling and the rotating connection at each level are not designed.
 
 ## Fluid properties used
 

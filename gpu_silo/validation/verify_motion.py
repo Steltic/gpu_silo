@@ -161,15 +161,13 @@ def main(path):
     assert doc['extras']['storageLevels']==p.LEVELS and doc['extras']['podsPerLevel']==p.BAYS
     l=p.services
     sleeves=[i for name,i in names.items() if name.endswith(" | cast-in service conduit")]
-    caps=[i for name,i in names.items() if name.endswith(" | exterior service flange")]
-    covers=[i for name,i in names.items() if name.endswith(" | removable blind cover")]
-    assert len(sleeves)==len(caps)==p.TOTAL
-    assert len(covers)==p.TOTAL and all(get(i,"scale",[1,1,1])[-1,0]>.999 for i in covers)
-    assert len({nodes[i]['mesh'] for i in sleeves})==1
-    pipe=points(sleeves[0]);cap=points(caps[0])
+    assert len(sleeves)==p.TOTAL and len({nodes[i]['mesh'] for i in sleeves})==1
+    # Nothing belonging to a pod reaches the outer wall: no flange, cover or sleeve outside the store.
+    assert not [n for n in names if "exterior service" in n or "blind cover" in n]
+    pipe=points(sleeves[0])
     assert np.isclose(pipe[:,0].min(),l.WALL_FACE,atol=.001)
-    assert pipe[:,0].max()>=p.s.RO and cap[:,0].min()<pipe[:,0].max()
-    assert abs(cap[:,0].max()-l.EXT_END+.035)<.00002
+    assert p.s.RO_INNER<pipe[:,0].max()<=l.TANK_END+.002<p.s.RI_OUTER
+    assert l.port_height(p.LEVELS)<p.CROWN, "sleeves are only needed up to the top of the pod store"
     for slot in sleeves:
         level=int(nodes[slot]['name'][1:3]);bearing=int(nodes[slot]['name'][5:7])-1
         t=get(slot,'translation',[0,0,0]);ay=get(slot,'rotation',[0])[-1,0]
@@ -179,8 +177,8 @@ def main(path):
         assert get(slot,"scale",[1,1,1])[finish,0]>.999
         assert abs(t[finish,1]-l.port_height(level))<1e-5
         assert p.s.display_info(finish)["height"]<l.port_height(level)
-    # Check the through-wall holes on both actual concrete surfaces by casting
-    # a centreline ray through the triangles of the receiving lift.
+    # Cast a centreline ray through the triangles of the receiving lift: the inner wall
+    # is bored at every sleeve and the outer wall is left solid.
     for level in range(1,p.LEVELS+1):
         h=l.port_height(level);lift=math.floor(h/p.s.LIFT)
         for face in ["Inner","Outer"]:
@@ -194,13 +192,14 @@ def main(path):
                 u=(q0*perp).sum(axis=1)/det
                 cross=np.cross(q0,L);vv=(v*cross).sum(axis=1)/det
                 distance=(M*cross).sum(axis=1)/det
-                assert not (ok&(u>=-.00001)&(vv>=-.00001)&(u+vv<=1.00001)&(distance>p.s.RI-.2)).any()
+                hit=(ok&(u>=-.00001)&(vv>=-.00001)&(u+vv<=1.00001)&(distance>p.s.RI-.2)).any()
+                assert hit==(face=="Outer"),(face,level,"sleeve opening")
     liquid=names["Free liquid surface | full ring"]
     heights=get(liquid,"translation",[0,0,0])[:,1]
     top=p.cfg.LIQUID_TOP
     assert np.diff(heights).min()>-.00005 and abs(heights[-1]-top)<1e-5 and top<=p.s.WALL_HEIGHT
     assert np.max(np.abs(heights[:p.C+1]))<.00001 and heights[p.C+10]>0
-    assert heights[p.FIRST_POD]>l.port_height(p.LEVELS) and np.isclose(heights[p.frames.STORE_END],top)
+    assert heights[p.FIRST_POD]>l.port_height(p.LEVELS) and np.isclose(heights[p.clock.STORE_FILL[1]],top)
     for f in range(p.C): assert heights[f]<=p.s.display_info(f)['height']+.0001
     low=points(names["Water-glycol store | sealed doorway band"])
     # No triangle in the lower band crosses the blocked doorway strip.
@@ -260,7 +259,7 @@ def main(path):
             assert parents[stack]==body
             offsets=get(stack,"translation",[0,0,0])
             assert abs(abs(offsets[-1,0])-a.STACK_X)<.00005
-            assert abs(xyz[-1,1]+offsets[-1,1]+points(stack)[:,2].max()-p.s.WALL_HEIGHT)<.00005
+            assert abs(xyz[-1,1]+offsets[-1,1]+points(stack)[:,2].max()-p.s.WALL_HEIGHT-a.VENT_RISE)<.00005
             assert np.max(np.abs(np.diff(offsets[:p.FILLED+a.VENT_START+1,1])))<.00002
             assert np.isclose(np.linalg.norm(points(stack)[:,:2],axis=1).min(),a.STACK_R-.038*2-.038,atol=.00002)
         assert get(body,"scale",[1,1,1])[p.FILLED,0]<.001
@@ -273,16 +272,43 @@ def main(path):
     for name,i in names.items():
         if re.match(r"^(Inner|Outer) wall \| lift",name):
             assert np.allclose(get(i,"scale",[1,1,1])[view0:],1,atol=.00002)
-            assert np.allclose(get(i,"scale",[1,1,1])[p.frames.START:p.frames.END,0],1,atol=.00002)
-            assert np.allclose(get(i,"scale",[1,1,1])[p.FIRST_POD:p.FILLED+p.care.REPAIR],0,atol=.00002)
+            assert np.allclose(get(i,"scale",[1,1,1])[p.PORTAL_VIEW+17:p.RESTORE],0,atol=.00002)
         if name.startswith("Ghosted concrete |"):
             assert np.allclose(get(i,"scale",[1,1,1])[view0:],0,atol=.00002)
-            assert np.allclose(get(i,"scale",[1,1,1])[p.FIRST_POD:p.FILLED+p.care.REPAIR],1,atol=.00002)
+            assert np.allclose(get(i,"scale",[1,1,1])[p.PORTAL_VIEW+17:p.RESTORE],1,atol=.00002)
+    # The lid closes the bore and the store after the vents are up, with the vents standing through it.
+    lid=names["Silo lid | crane placement"];deck=points(lid);seat=get(lid,"translation",[0,0,0])
+    assert np.allclose(seat[p.FILLED+a.LID[1]:],[0,a.LID_Z,0],atol=.0001)
+    assert np.linalg.norm(deck[:,:2],axis=1).max()>=p.s.RO and p.s.WALL_HEIGHT<=a.LID_Z+deck[:,2].min()
+    assert a.LID_Z+deck[:,2].max()<p.s.WALL_HEIGHT+a.VENT_RISE-.2 and a.LID[0]>a.VENT_END
+    assert get(lid,"scale",[1,1,1])[p.FILLED+a.LID[0],0]>.999 and get(lid,"scale",[1,1,1])[-1,0]>.999
+    assert np.allclose(get(lid,"scale",[1,1,1])[p.FILLED+p.care.CREW+16:p.RESTORE-1],0,atol=.00002)
+    # Fuel: every tank lands on the pad and each leg of the gas line is at full length at the end.
+    fuel,closing=p.fuel,p.closing
+    tanks=[names[f"Propane tank {j+1:02}"] for j in range(fuel.COUNT)]
+    shell=points(tanks[0])
+    assert np.isclose(shell[:,0].max(),fuel.LENGTH/2,atol=.01) and np.isclose(np.ptp(shell[:,1]),fuel.DIA,atol=.1)
+    spots=[]
+    for j,i in enumerate(tanks):
+        t=get(i,"translation",[0,0,0]);landed=p.FILLED+closing.TANKS+(j+1)*closing.TANK_STEP
+        assert get(i,"scale",[1,1,1])[p.FILLED+closing.FUEL,0]<.001 and get(i,"scale",[1,1,1])[landed,0]>.999
+        assert np.allclose(t[landed:],t[-1],atol=.0001) and abs(t[-1,1])<.0001
+        spots.append(t[-1,[0,2]])
+    spots=np.array(spots);centre=spots.mean(axis=0)
+    assert abs(np.linalg.norm(centre)-fuel.FARM_R)<.01 and fuel.FARM_R-fuel.LENGTH/2>p.s.RO+25
+    assert np.allclose(np.linalg.norm(np.diff(spots,axis=0),axis=1),fuel.PITCH,atol=.001) and fuel.PITCH>fuel.DIA+.5
+    legs={"Gas line | ground run to the silo":(0,fuel.HEADER_R-fuel.RISER_R),"Gas line | riser on the outside wall":(2,fuel.TOP-fuel.LOW),
+          "Gas line | run across the lid":(0,fuel.RISER_R-fuel.DROP_R),"Gas line | drop to the power modules":(2,fuel.TOP-fuel.drop_end(p.CROWN))}
+    for name,(axis,length) in legs.items():
+        size=get(names[name],"scale",[1,1,1])
+        assert size[p.FILLED+closing.FUEL,0]<.001 and abs(size[-1,{0:0,2:1}[axis]]-length)<.001,name
+    assert fuel.TOP>a.LID_Z+.3 and fuel.RISER_R>p.s.RO and fuel.drop_end(p.CROWN)<fuel.TOP
     from .verify_service import check
     check(p,doc,names,parents,get,points,ids,planar_overlap)
     print(f"{p.TOTAL} ground-fed {p.cfg.NAME} pods on {p.LEVELS} levels. All framed dimensions, CDU section colours and dock strokes passed.")
     print(f"Clear bore {2*p.s.RI:.2f} m. Steel cage radius {outer_r:.3f} m. Bunched inner-corner clearance {bunched_gap*1000:.1f} mm.")
-    print(f"Two {a.LENGTH:.2f} m power units seat at 90 degrees. Four exhausts terminate at {p.s.WALL_HEIGHT:.2f} m.")
+    print(f"Two {a.LENGTH:.2f} m power units seat at 90 degrees. Four vents stand through the lid to {p.s.WALL_HEIGHT+a.VENT_RISE:.2f} m.")
+    print(f"Pod sleeves end in the store at radius {l.TANK_END:.2f} m. {fuel.COUNT} propane tanks at {fuel.FARM_R:g} m feed one gas line.")
     print(f"Water-glycol reaches {top:.2f} m between the walls. Lower storage tiers run at {p.FAST_RATE:g}x.")
 
 

@@ -99,7 +99,23 @@ Eight 10 m frames need 80 m of wall and the silo has 62.8 m, so they cannot shar
 | **Radial clearance** | **129 mm** | bore − corner |
 | Storage height | 20.0 m | 8 levels × 2.5 m |
 
-## 6. Open questions raised by these numbers
+## 6. Fuel storage
+
+The power modules burn propane from tanks beside the silo. One gas line runs along the ground, up the outside wall, over the lid and down to the modules.
+
+| Quantity | Value | Basis |
+| --- | ---: | --- |
+| Tanks | 8 | 20 m long × 3 m diameter, 60 m from the silo axis |
+| Volume of one tank | 134 m³ | cylinder with hemispherical ends |
+| Stored liquid | 913 m³ = 241,258 US gal | 85% fill |
+| Stored energy | 5,962 MWh thermal | 23.5 MJ per litre, lower heating value |
+| Electricity generated | 2,385 MWh | 40% generation efficiency |
+| **Run time at full load** | **75 h (3.1 days)** | 32 MW electrical load |
+| Burn rate at full load | 12.3 m³/h | one 20 m tank every 9 h |
+
+The load is taken as the 32 MW that reaches the liquid. Fans, pumps and conversion losses would add to it.
+
+## 7. Open questions raised by these numbers
 
 1. **Tank volume.** The geometry gives 1.22 M US gal against a 1.5 M target. See the three options in section 2.
 2. **Rack generation.** 125 kW per rack matches a GB200-class NVL72 (about 120 to 132 kW). Published figures for the Vera Rubin NVL72 are about 190 to 230 kW per rack, which would put 256 racks at 49 to 59 MW. Confirm the rack generation before fixing the cooler count.
@@ -107,7 +123,9 @@ Eight 10 m frames need 80 m of wall and the silo has 62.8 m, so they cannot shar
 4. **Wall design.** 298 kPa at the base puts about 12 MPa of hoop tension in a 250 mm outer skin. That needs post-tensioning or a thicker wall, and the inner skin needs a buckling check under external pressure.
 5. **Pod clearance.** 129 mm between the rotating pod and the bore is tight for a 5.5 m cantilever.
 6. **Air path.** Four coolers stacked vertically discharge outward. Recirculation between rows and between the two tiers has not been checked.
-7. **Electrical supply.** The two power modules in the film are placeholders. Supplying about 32 MW of IT load is not yet sized.
+7. **Power modules.** Two container-sized modules would each have to deliver 16 MW. A generator set of that size is normally rated at a few megawatts, so the number or size of the modules needs a decision.
+8. **Fuel.** 913 m³ of propane runs the site for about 3 days. Separation distances, bunding and the resupply rate have not been checked.
+9. **Power in the shaft.** 32 MW passes down the steel shaft to 64 pods, 500 kW each. The busbar, its cooling and the rotating connection at each level are not designed.
 
 ## Fluid properties used
 
