@@ -233,37 +233,57 @@ def main(path):
         assert abs(p.OUTER+p.cfg.extension(j+1)+points(plug)[:,0].max()-l.WALL_FACE)<.00001
     assert len([n for n in names if n.endswith(" | fluid and power online")])==p.TOTAL+1
     a=p.plant
-    for j in (0,1):
-        name=f"Power unit {j+1:02}"
-        body=names[name+" | closed container body"]
+    def cleared(pts,x0,y0,x1,y1,gap):
+        """True when no point of a level-coordinate box comes within gap of the access wedge."""
+        for x in np.linspace(x0,x1,9):
+            for y in np.linspace(y0,y1,9):
+                r=math.hypot(x,y)
+                if r>p.crew.PLATE_IN-gap and abs(math.atan2(x,y))<p.crew.HALF+gap/max(r,1):return False
+        return True
+    for j,label in enumerate(("Power level 01 | diesel deck assembly","Power level 02 | turbine deck assembly")):
+        body=names[label]
         xyz=get(body,"translation",[0,0,0])
         pts=points(body)
-        assert np.allclose(np.ptp(pts,axis=0)[:2],[a.LENGTH,a.WIDTH])
-        assert np.isclose(np.min(pts[:,2]),-a.BASE_STUB)
-        assert np.isclose(np.max(pts[:,2]),a.HEIGHT+a.ROOF_STUB)
-        rad=np.linalg.norm(pts[:,:2],axis=1).max()
-        assert a.RADIAL_CLEARANCE-.00001<=p.s.RI-rad<a.RADIAL_CLEARANCE+.0051
+        # Every level fits in the bore, sits on its floor structure and stays under the lid.
+        assert np.linalg.norm(pts[:,:2],axis=1).max()<p.s.RI-.05
+        assert np.isclose(np.min(pts[:,2]),-a.DECK+.05,atol=.02)
         first=p.FILLED+a.PICK_STARTS[j]
         landing=first+a.PICK_LENGTH
         assert np.allclose(xyz[first],[a.PICK_SITES[j][0],a.GROUND,-a.PICK_SITES[j][1]],atol=.00003)
         assert np.allclose(xyz[landing:],[0,a.power_base(p.CROWN,j),0],atol=.00003)
-        yaw=get(body,"rotation",[0])[-1,0]
-        assert abs(yaw-a.POWER_YAW-j*math.pi/2)<.00002
+        assert abs(get(body,"rotation",[0])[-1,0]-a.POWER_YAW)<.00002
         while_crossing=(np.linalg.norm(xyz[:,[0,2]],axis=1)>1.e-4)&(np.linalg.norm(xyz[:,[0,2]],axis=1)<15.)
         assert np.min(xyz[while_crossing,1]+pts[:,2].min())>p.s.WALL_HEIGHT+2
-        rest=xyz[-1,1]+np.min(pts[:,2])
-        support=p.CROWN if j==0 else a.power_base(p.CROWN,0)+a.HEIGHT+a.ROOF_STUB
-        assert np.isclose(rest,support,atol=.00003)
-        for sign in ["negative","positive"]:
-            stack=names[name+" | "+sign+" end stack 3 lip"]
-            assert parents[stack]==body
-            offsets=get(stack,"translation",[0,0,0])
-            assert abs(abs(offsets[-1,0])-a.STACK_X)<.00005
-            assert abs(xyz[-1,1]+offsets[-1,1]+points(stack)[:,2].max()-p.s.WALL_HEIGHT-a.VENT_RISE)<.00005
-            assert np.max(np.abs(np.diff(offsets[:p.FILLED+a.VENT_START+1,1])))<.00002
-            assert np.isclose(np.linalg.norm(points(stack)[:,:2],axis=1).min(),a.STACK_R-.038*2-.038,atol=.00002)
+        assert xyz[-1,1]+pts[:,2].min()>=p.CROWN-.001 and xyz[-1,1]+pts[:,2].max()<a.LID_Z
         assert get(body,"scale",[1,1,1])[p.FILLED,0]<.001
-    assert doc["extras"]["dryCoolers"]==p.cfg.COOLERS and doc["extras"]["exhaustStacks"]==4
+    assert a.power_base(p.CROWN,1)-a.power_base(p.CROWN,0)>=a.GEN_H+a.DECK-1e-9
+    assert a.power_base(p.CROWN,1)+a.SET_H<=a.LID_Z
+    # Two turbine sets side by side clear the wall. The diesel sets clear each other, the wall and the crew's access wedge.
+    assert math.hypot(a.SET_L/2,a.SET_Y+a.SET_W/2)<p.s.RI-.25 and a.SET_Y-a.SET_W/2>=.5
+    boxes=[]
+    for cx,cy,deg in a.GEN_AT:
+        long,wide=(a.GEN_L,a.GEN_W) if not deg else (a.GEN_W,a.GEN_L)
+        box=(cx-long/2,cy-wide/2,cx+long/2,cy+wide/2)
+        assert max(math.hypot(x,y) for x in box[::2] for y in box[1::2])<p.s.RI-.3
+        assert cleared(None,*box,.2),"a diesel set blocks the access wedge"
+        for other in boxes:
+            assert box[0]>other[2]+.6 or other[0]>box[2]+.6 or box[1]>other[3]+.6 or other[1]>box[3]+.6
+        boxes.append(box)
+    assert len(boxes)==p.cfg.PROJECT["diesel"]["sets"] and abs(p.crew.PLATE_IN-(a.SET_Y+a.SET_W/2))>=.1
+    assert doc["extras"]["dryCoolers"]==p.cfg.COOLERS and doc["extras"]["exhaustStacks"]==p.cfg.POWER["modules"]
+    # Roof equipment: each stack and inlet house stands over its turbine set, and nothing on the roof overlaps.
+    for (ex,ey),(ix,iy) in zip(a.EXHAUST_AT,a.INLET_AT):
+        assert abs(abs(ey)-a.SET_Y)<1e-9 and abs(ex)<a.SET_L/2 and abs(iy)==abs(ey) and ex-ix>a.EXHAUST_R+a.INLET_HOUSE[0]/2+1.5
+    assert a.EXHAUST_H>a.INLET_HOUSE[2]+1.5,"exhaust must discharge above the air inlets"
+    roof=[(x,y,a.EXHAUST_R,a.EXHAUST_R) for x,y in a.EXHAUST_AT]+[(x,y,a.DIESEL_STACK_R,a.DIESEL_STACK_R) for x,y in a.DIESEL_STACKS]
+    roof+=[(x,y,a.INLET_HOUSE[0]/2,a.INLET_HOUSE[1]/2) for x,y in a.INLET_AT]+[(x,y,a.ROOM_VENT[0]/2,a.ROOM_VENT[1]/2) for x,y in a.ROOM_VENTS]
+    for i,(x,y,hx,hy) in enumerate(roof):
+        assert math.hypot(abs(x)+hx,abs(y)+hy)<a.LID_R
+        for u,v,qx,qy in roof[:i]:
+            assert abs(x-u)>hx+qx+.3 or abs(y-v)>hy+qy+.3,("roof equipment overlaps",(x,y),(u,v))
+    # Diesel exhausts rise through the turbine level beside the sets or in the aisle.
+    for x,y in a.DIESEL_STACKS:
+        assert abs(y)<a.AISLE/2-a.DIESEL_STACK_R or abs(y)>a.SET_Y+a.SET_W/2+a.DIESEL_STACK_R
     view0,view1=p.FILLED+p.care.ORBIT,p.FILLED+p.care.ORBIT_DONE
     camera=get(names["Construction camera"],"translation",[0,0,0])[view0:view1+1]
     angles=np.unwrap(np.arctan2(-camera[:,2],camera[:,0]))
@@ -284,47 +304,33 @@ def main(path):
     lid=names["Silo lid | crane placement"];deck=points(lid);seat=get(lid,"translation",[0,0,0])
     assert np.allclose(seat[p.FILLED+a.LID[1]:],[0,a.LID_Z,0],atol=.0001)
     assert np.linalg.norm(deck[:,:2],axis=1).max()>=p.s.RO and p.s.WALL_HEIGHT<=a.LID_Z+deck[:,2].min()
-    assert a.LID_Z+deck[:,2].max()<p.s.WALL_HEIGHT+a.VENT_RISE-.2 and a.LID[0]>a.VENT_END
+    assert abs(a.LID_Z+deck[:,2].max()-p.s.WALL_HEIGHT-a.VENT_RISE)<.01 and a.LID[0]>a.VENT_END
     assert get(lid,"scale",[1,1,1])[p.FILLED+a.LID[0],0]>.999 and get(lid,"scale",[1,1,1])[-1,0]>.999
     assert np.allclose(get(lid,"scale",[1,1,1])[p.FILLED+p.care.CREW+16:p.RESTORE-1],0,atol=.00002)
     assert np.allclose(get(lid,"scale",[1,1,1])[p.REGHOST:p.RESTORE2-1],0,atol=.00002)
     # The lower power module holds a gas turbine. Its near side folds down to the crew's floor level and closes again.
     clock=p.clock
-    poses=[names[f"Power unit 01 | hinged side, pose {k+1:02}"] for k in range(a.PANEL_POSES)]
+    poses=[names[f"Turbine set A | hinged side, pose {k+1:02}"] for k in range(a.PANEL_POSES)]
     shown=np.array([get(i,"scale",[1,1,1])[:,0]>.5 for i in poses])
     assert (shown.sum(axis=0)==1).all(), "exactly one pose of the hinged side is shown at a time"
     opened=p.FILLED+clock.ENCLOSURE_OPEN[1];closed=p.FILLED+clock.ENCLOSURE_CLOSE[1]
     assert shown[0,:p.FILLED+clock.ENCLOSURE_OPEN[0]].all() and shown[0,closed+1:].all()
     assert shown[-1,opened+1:p.FILLED+clock.ENCLOSURE_CLOSE[0]].all()
-    flat=points(poses[-1]);wall=points(poses[0]);floor=a.power_base(p.CROWN,0)+a.HINGE_Z
-    assert np.ptp(flat[:,1])>a.PANEL_HEIGHT-.01 and abs(flat[flat[:,1]<a.HINGE_Y-.3][:,2].max()-a.HINGE_Z)<.03
-    assert wall[:,1].min()>-a.WIDTH/2-.001 and np.ptp(wall[:,2])>a.PANEL_HEIGHT-.01
-    turbine=names["Power unit 01 | gas turbine and generator"];machine=points(turbine)
-    assert np.abs(machine[:,0]).max()<a.LENGTH/2-.1 and np.abs(machine[:,1]).max()<a.WIDTH/2-.1
-    assert machine[:,2].min()>.1 and machine[:,2].max()<a.HEIGHT-.1
-    assert get(turbine,"scale",[1,1,1])[opened,0]>.999 and get(turbine,"scale",[1,1,1])[p.FILLED+p.care.SOLID_END,0]<.001
+    flat=points(poses[-1]);wall=points(poses[0]);floor=a.power_base(p.CROWN,1)+a.HINGE_Z
+    assert np.ptp(flat[:,1])>a.PANEL_HEIGHT-.01 and abs(flat[flat[:,1]>a.HINGE_Y+.3][:,2].max()-a.HINGE_Z)<.03
+    assert np.linalg.norm(flat[:,:2],axis=1).max()<p.s.RI-.2,"the folded side must stay inside the bore"
+    assert wall[:,1].max()<a.SET_Y+a.SET_W/2+.02 and np.ptp(wall[:,2])>a.PANEL_HEIGHT-.01
+    turbine=names["Turbine set A | gas turbine and generator"];machine=points(turbine)
+    assert np.abs(machine[:,0]).max()<a.SET_L/2-.1 and machine[:,1].min()>a.SET_Y-a.SET_W/2+.05 and machine[:,1].max()<a.SET_Y+a.SET_W/2-.05
+    assert machine[:,2].min()>.1 and machine[:,2].max()<a.SET_H-.1
     assert abs(p.crew.POWER_FLOOR-floor)<1e-9 and p.cfg.POWER["modules"]*p.cfg.POWER["module_output_mw"]>=p.calcs.C["heat_mw"]-1e-9
-    # Door plug and roof vents: in place for the orbit, the plug set aside while pods pass through the door.
-    vents=p.vents;plug=names["Door plug | ventilation panel in the ground door"];place=get(plug,"translation",[0,0,0])
-    assert get(plug,"scale",[1,1,1])[p.FILLED+clock.DOOR[0]-2,0]<.001
-    for f in (p.FILLED+clock.DOOR[1],p.FILLED+clock.ORBIT,p.FILLED+p.care.REPAIR,p.FRAMES-1):
-        assert np.allclose(place[f],0,atol=.0001) and get(plug,"scale",[1,1,1])[f,0]>.999
-    panel=points(plug)
-    assert np.ptp(panel[:,1])<=p.s.OPENING_WIDTH+.1 and panel[:,2].max()<=p.s.OPENING_HEIGHT+.05 and panel[:,0].min()>p.s.RO-.2
-    repair=p.FILLED+p.care.REPAIR
-    aside=place[repair+vents.PLUG_OUT[1]:repair+vents.PLUG_IN[0]]
-    along=-aside[:,0]*math.sin(p.ENTRY)+(-aside[:,2])*math.cos(p.ENTRY)
-    assert np.abs(along).min()>p.s.OPENING_WIDTH+.5, "the plug must clear the doorway during the exchange"
-    assert vents.PLUG_OUT[1]<434 and vents.PLUG_IN[0]>790
-    roof=[names[f"Roof air vent {k+1:02}"] for k in range(vents.ROOF)]
-    for i in roof:
-        final=get(i,"translation",[0,0,0])[-1]
-        assert abs(final[1]-a.LID_Z-a.LID_THICK)<.001 and math.hypot(final[0],final[2])<p.s.RI-vents.ROOF_R
-        assert get(i,"scale",[1,1,1])[p.FILLED+clock.ROOF[0]-2,0]<.001 and get(i,"scale",[1,1,1])[p.FILLED+clock.ORBIT,0]>.999
-        for x in (-a.STACK_X,a.STACK_X):
-            for j in (0,1):
-                yaw=a.POWER_YAW+j*math.pi/2;stack=(x*math.cos(yaw),x*math.sin(yaw))
-                assert math.hypot(final[0]-stack[0],-final[2]-stack[1])>vents.ROOF_R+a.STACK_R+.3
+    # A walkway ring at every level joins the sectors, between the shaft and the pod roots.
+    cage=points(names["Steel module | shaft, bearings, rim girders and braced columns"])
+    for level in range(1,p.LEVELS+1):
+        z=p.level_z(level);ring=cage[(np.abs(cage[:,2]-(z-.09))<.002)]
+        radii=np.linalg.norm(ring[:,:2],axis=1)
+        assert radii.min()<p.SHAFT+.25 and p.INNER-.2<radii[radii<p.INNER].max()<p.INNER, "walkway ring missing"
+    assert p.INNER-p.SHAFT>1.8 and p.crew.PLATE_IN>p.INNER
     # Fuel: every tank lands on the pad and each leg of the gas line is at full length at the end.
     fuel,closing=p.fuel,p.closing
     tanks=[names[f"Propane tank {j+1:02}"] for j in range(fuel.COUNT)]
@@ -339,19 +345,28 @@ def main(path):
     spots=np.array(spots);centre=spots.mean(axis=0)
     assert abs(np.linalg.norm(centre)-fuel.FARM_R)<.01 and fuel.FARM_R-fuel.LENGTH/2>p.s.RO+25
     assert np.allclose(np.linalg.norm(np.diff(spots,axis=0),axis=1),fuel.PITCH,atol=.001) and fuel.PITCH>fuel.DIA+.5
+    bulk=names["Diesel bulk tank"];where=get(bulk,"translation",[0,0,0])[-1]
+    assert abs(where[1])<.0001 and get(bulk,"scale",[1,1,1])[-1,0]>.999 and np.linalg.norm(where[[0,2]]-centre)>fuel.COUNT*fuel.PITCH/2
+    assert fuel.PIPE*2>=.1,"the propane line is drawn at its design bore"
     legs={"Gas line | ground run to the silo":(0,fuel.HEADER_R-fuel.RISER_R),"Gas line | riser on the outside wall":(2,fuel.TOP-fuel.LOW),
-          "Gas line | run across the lid":(0,fuel.RISER_R-fuel.DROP_R),"Gas line | drop to the power modules":(2,fuel.TOP-fuel.drop_end(p.CROWN))}
+          "Gas line | run across the lid":(0,fuel.RISER_R-fuel.DROP_R),"Gas line | drop to the power modules":(2,fuel.TOP-fuel.drop_end(p.CROWN)),
+          "Diesel line | drop to the day tanks":(2,fuel.TOP-fuel.diesel_end(p.CROWN))}
     for name,(axis,length) in legs.items():
         size=get(names[name],"scale",[1,1,1])
         assert size[p.FILLED+closing.FUEL,0]<.001 and abs(size[-1,{0:0,2:1}[axis]]-length)<.001,name
-    assert fuel.TOP>a.LID_Z+.3 and fuel.RISER_R>p.s.RO and fuel.drop_end(p.CROWN)<fuel.TOP
+    assert fuel.TOP>a.LID_Z+.3 and fuel.RISER_R>p.s.RO and fuel.diesel_end(p.CROWN)<fuel.drop_end(p.CROWN)<fuel.TOP
+    # The drops come down beside the turbine sets and clear of the roof equipment.
+    turn=fuel.BEARING-a.POWER_YAW;drop=(fuel.DROP_R*math.cos(turn),fuel.DROP_R*math.sin(turn))
+    assert abs(drop[1])>a.SET_Y+a.SET_W/2+.3 and math.hypot(*drop)<p.s.RI-.5
+    for x,y,hx,hy in roof:
+        assert abs(drop[0]-x)>hx+.4 or abs(drop[1]-y)>hy+.4
     from .verify_service import check
     check(p,doc,names,parents,get,points,ids,planar_overlap)
     print(f"{p.TOTAL} ground-fed {p.cfg.NAME} pods on {p.LEVELS} levels. All framed dimensions, CDU section colours and dock strokes passed.")
     print(f"Clear bore {2*p.s.RI:.2f} m. Steel cage radius {outer_r:.3f} m. Bunched inner-corner clearance {bunched_gap*1000:.1f} mm.")
     print(f"Two {a.LENGTH:.2f} m power units seat at 90 degrees. Four vents stand through the lid to {p.s.WALL_HEIGHT+a.VENT_RISE:.2f} m.")
-    print(f"The lower module's side folds to a work floor at {floor:.2f} m over a {p.cfg.POWER['module_output_mw']:g} MW turbine. "
-          f"A {vents.FANS}-fan plug closes the door and {vents.ROOF} air vents sit in the lid.")
+    print(f"Turbine set A's side folds to a work floor at {floor:.2f} m. {len(a.GEN_AT)} diesel sets leave the access wedge clear. "
+          f"The lid carries {len(a.EXHAUST_AT)} exhaust stacks to {p.s.WALL_HEIGHT+a.VENT_RISE:.1f} m.")
     print(f"Pod sleeves end in the store at radius {l.TANK_END:.2f} m. {fuel.COUNT} propane tanks at {fuel.FARM_R:g} m feed one gas line.")
     print(f"Water-glycol reaches {top:.2f} m between the walls. Lower storage tiers run at {p.FAST_RATE:g}x.")
 

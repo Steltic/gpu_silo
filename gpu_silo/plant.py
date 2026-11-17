@@ -1,5 +1,9 @@
-"""Power-module picks through the open silo top, their stubs and exhaust vents, the gas turbine inside
-the lower module with its fold-down side, and the lid that closes the silo.
+"""The two power levels above the pods and the lid that closes the silo.
+
+The lower level carries the backup diesel sets and their day tanks. The upper level carries two in-line
+gas turbine generator sets side by side. Each level is lowered through the open top as one assembly.
+One turbine enclosure has a side that folds down to a work floor. The lid arrives with the exhaust
+stacks, air inlet houses and diesel vents already on it.
 
 Coordinates are metres and Z is up.
 """
@@ -15,26 +19,46 @@ from . import maintenance as care
 from . import crew
 
 
-RADIAL_CLEARANCE = .05
-WIDTH, HEIGHT = cfg.POWER["width_m"], cfg.POWER["height_m"]
-LENGTH = math.floor(200*math.sqrt((s.RI-RADIAL_CLEARANCE)**2-(WIDTH/2)**2))/100
-BASE_STUB, ROOF_STUB = .27, .22
-STACK_X, STACK_R = LENGTH/2-.69, .47
-POWER_YAW = math.radians(cfg.POWER["first_heading_degrees"])
+P, D = cfg.POWER, cfg.PROJECT["diesel"]
+# One in-line turbine generator set, and the names the rest of the model uses for it.
+SET_L, SET_W, SET_H = P["set_length_m"], P["set_width_m"], P["set_height_m"]
+LENGTH, WIDTH, HEIGHT = SET_L, SET_W, SET_H
+AISLE = P["aisle_m"]
+SET_Y = AISLE/2+SET_W/2
+GEN_L, GEN_W, GEN_H = D["set_length_m"], D["set_width_m"], D["set_height_m"]
+DECK = P["floor_structure_m"]
+LEVEL = (GEN_H+DECK, SET_H+DECK)
+# Level coordinates: X along the turbine sets, Y toward the crew wedge that reaches the turbine level.
+# The diesel sets leave that wedge clear so its work deck can pass.
+GEN_AT = ((0.,-.6,0),(-5.65,-.4,90),(0.,-4.9,0),(5.65,-.4,90))[:D["sets"]]
+DAY_TANKS = ((3.2,3.2),(-3.2,3.2))[:D["day_tanks"]]
+ACCESS_HALF = math.radians(26)
+EXHAUST_R, EXHAUST_H = P["exhaust_stack_diameter_m"]/2, P["exhaust_stack_height_m"]
+EXHAUST_AT = ((.6,SET_Y),(.6,-SET_Y))
+INLET_HOUSE = tuple(P["inlet_house_m"])
+INLET_AT = ((-5.9,SET_Y),(-5.9,-SET_Y))
+DIESEL_STACK_R, DIESEL_STACK_H = D["exhaust_stack_diameter_m"]/2, D["exhaust_stack_height_m"]
+DIESEL_STACKS = ((-5.65,-4.6),(5.65,-4.6),(2.9,-5.3),(-2.9,0.))[:D["sets"]]
+ROOM_VENT = tuple(D["room_vent_m"])
+ROOM_VENTS = ((4.6,5.6),(-6.0,5.0))[:D["room_vents"]]
+STACK_X, STACK_R = EXHAUST_AT[0][0], EXHAUST_R
+POWER_YAW = math.radians(P["first_heading_degrees"])
 PICK_STARTS = (50, 290)
 PICK_LENGTH = 151
-VENT_START, VENT_END, END = 465, care.POWER_DONE, closing.END
-VENT_RISE = .90
+# After the second level is seated the crane goes for the lid.
+VENT_START, VENT_END, END = PICK_STARTS[1]+PICK_LENGTH+4, care.POWER_DONE, closing.END
+LID_THICK = .22
+VENT_RISE = .03+LID_THICK+EXHAUST_H
 LID = care.LID
-LID_SITE = (-40.,-4.)
-LID_R, LID_THICK = s.RO+.14, .22
+LID_SITE = (-46.,-30.)
+LID_R = s.RO+.14
 LID_Z = s.WALL_HEIGHT+.03
-LID_GROUND, LID_TRANSIT, LID_APEX = .30, s.WALL_HEIGHT+VENT_RISE+3.6, 7.0
-PICK_SITES = ((-21.5,-8.0),(-21.5,4.0))
+LID_GROUND, LID_TRANSIT, LID_APEX = .30, s.WALL_HEIGHT+4.5, EXHAUST_H+3.6
+PICK_SITES = ((-26.,-12.),(-26.,8.))
 CRANE_BASE = (-20.,-23.,0.)
 TRANSIT = 35.
 GROUND = .36
-APEX = HEIGHT+3.9
+APEX = SET_H+5.5
 ON, OFF = (1.,1.,1.), (0.,0.,0.)
 STRUCT, SILVER = "4c6266", "c4c9be"
 AMBER, DARK = "db9955", "32484e"
@@ -58,57 +82,83 @@ def both(m,points,color):
 
 PAINT=("748d83","9e927a")
 RIB=("9cada1","bbad94")
-# The lower module's side toward the crew wedge is a separate panel hinged at floor level.
-HINGE_Y,HINGE_Z=-(WIDTH/2-.105),.15
-PANEL_HEIGHT=HEIGHT-.30
+# The outer side of turbine set A is hinged at floor level over part of its length.
+PANEL_X=(-4.9,.5)
+HINGE_Y,HINGE_Z=SET_Y+SET_W/2-.06,.14
+PANEL_HEIGHT=2.5
 PANEL_POSES=13
 
 
+def turned(x,y,z=0.):
+    """Level coordinates to silo coordinates."""
+    c,q=math.cos(POWER_YAW),math.sin(POWER_YAW)
+    return (x*c-y*q,x*q+y*c,z)
+
+
+def deck_steel(m,lines):
+    """Girders under the machines and a ring beam at the wall, open at the access wedge."""
+    for a,b in lines:
+        s.bar(m,(*a,-DECK/2),(*b,-DECK/2),.28,STRUCT,DECK-.10)
+    r=s.RI-.22
+    s.sector(m,r-.14,r+.14,-DECK+.05,-.05,math.pi/2+ACCESS_HALF,math.pi/2+s.TAU-ACCESS_HALF,40,[STRUCT]*4,caps=True)
+
+
+def chord(y,r=None):
+    r=r or s.RI-.3
+    half=math.sqrt(r*r-y*y)
+    return (-half,y),(half,y)
+
+
+def diesel_set(m,cx,cy,deg):
+    """One backup diesel generator set: skid, engine, alternator, cooler and exhaust riser."""
+    def box(x0,y0,x1,y1,z0,z1,col):
+        if deg:x0,y0,x1,y1=-y1,x0,-y0,x1
+        closed(m,cx+x0,cy+y0,cx+x1,cy+y1,z0,z1,col)
+    l,w=GEN_L/2,GEN_W/2
+    box(-l,-w+.35,l,w-.35,0,.32,DARK)
+    box(-l+.55,-.82,.75,.82,.32,2.35,"c2a548")
+    box(-l+.75,-.60,.55,.60,2.35,2.75,"8d7a3c")
+    box(.95,-.78,l-.55,.78,.32,2.05,"7d8c96")
+    box(l-.55,-.5,l-.05,.5,.5,1.7,"c9cdc8")
+    box(-l+.05,-w+.2,-l+.5,w-.2,.32,GEN_H-.35,"9aa39f")
+    x,y=(-l+1.4,0) if not deg else (0,-l+1.4)
+    services.pipe(m,(cx+x,cy+y,2.75),(cx+x,cy+y,LEVEL[0]-DECK),DIESEL_STACK_R,"8b9591",DIESEL_STACK_R-.04,n=12)
+
+
 def power_mesh(index):
-    m=mesh("Closed corrugated power module "+str(index+1)+" | frame, end plenums and docking collars")
-    l,w=LENGTH/2,WIDTH/2
-    paint=PAINT[index]
-    rib=RIB[index]
-    if index:
-        closed(m,-l+.08,-w+.105,l-.08,w-.105,.07,HEIGHT-.08,paint)
-    else:
-        # An open shell: floor, roof, far wall and end bulkheads. The near side is the hinged panel.
-        inside="5f6f6a"
-        closed(m,-l+.08,-w+.105,l-.08,w-.105,.07,.13,inside)
-        closed(m,-l+.08,-w+.105,l-.08,w-.105,HEIGHT-.14,HEIGHT-.08,paint)
-        closed(m,-l+.08,w-.165,l-.08,w-.105,.13,HEIGHT-.14,paint)
-        for x0,x1 in ((-l+.08,-l+.14),(l-.14,l-.08)):
-            closed(m,x0,-w+.105,x1,w-.165,.13,HEIGHT-.14,paint)
-    # Folded corrugations have a raised ridge with two sloping flanks.
+    if index==0:
+        m=mesh(f"Power level 1 | {len(GEN_AT)} backup diesel sets, {len(DAY_TANKS)} day tanks and deck steel")
+        deck_steel(m,[chord(y) for y in (.3,-1.5,-4.0,-5.8)]+[((x,-4.4),(x,3.0)) for x in (-6.55,-4.75,4.75,6.55)])
+        for cx,cy,deg in GEN_AT:
+            diesel_set(m,cx,cy,deg)
+        r,l=D["day_tank_diameter_m"]/2,D["day_tank_length_m"]
+        for x,y in DAY_TANKS:
+            services.pipe(m,(x,y-l/2,r+.45),(x,y+l/2,r+.45),r,"b5553c",n=16)
+            for yy in (y-l/2+.3,y+l/2-.3):
+                closed(m,x-r*.8,yy-.08,x+r*.8,yy+.08,0,.5,DARK)
+        return m
+    m=mesh("Power level 2 | two in-line gas turbine generator sets and deck steel")
+    l,w=SET_L/2,SET_W/2
+    deck_steel(m,[chord(y) for y in (1.2,3.4,-1.2,-3.4)])
+    # Set B is closed. Set A is an open shell so the turbine can be seen when its side is down.
+    closed(m,-l,-SET_Y-w,l,-SET_Y+w,0,SET_H,PAINT[1])
+    y0,y1=SET_Y-w,SET_Y+w
+    closed(m,-l,y0,l,y1,0,.14,DARK)
+    closed(m,-l,y0,l,y1,SET_H-.08,SET_H,PAINT[1])
+    closed(m,-l,y0,l,y0+.06,.14,SET_H-.08,PAINT[1])
+    closed(m,-l,y0+.06,-l+.06,y1,.14,SET_H-.08,PAINT[1])
+    closed(m,l-.06,y0+.06,l,y1,.14,SET_H-.08,PAINT[1])
+    closed(m,-l+.06,y1-.06,PANEL_X[0],y1,.14,SET_H-.08,PAINT[1])
+    closed(m,PANEL_X[1],y1-.06,l-.06,y1,.14,SET_H-.08,PAINT[1])
+    closed(m,PANEL_X[0],y1-.06,PANEL_X[1],y1,HINGE_Z+PANEL_HEIGHT,SET_H-.08,PAINT[1])
     for sign in (-1,1):
-        for k in range(41):
-            if index==0 and sign<0:break
-            x=-l+.29+k*(LENGTH-.58)/40
-            profile=[(x-.074,sign*(w-.102)),(x-.038,sign*(w-.042)),
-                     (x+.035,sign*(w-.042)),(x+.073,sign*(w-.102))]
-            for a,b in zip(profile,profile[1:]):
-                face=[(*a,.15),(*b,.15),(*b,HEIGHT-.15),(*a,HEIGHT-.15)]
-                m.face(face if sign<0 else face[::-1],rib if a==profile[1] else paint)
-        closed(m,-l,sign*w-(.13 if sign>0 else 0),l,sign*w+(.13 if sign<0 else 0),0,.15,STRUCT)
-        closed(m,-l,sign*w-(.13 if sign>0 else 0),l,sign*w+(.13 if sign<0 else 0),HEIGHT-.15,HEIGHT,SILVER)
-        for xx in (-l,l-.16):
-            y=w-.16 if sign>0 else -w
-            closed(m,xx,y,xx+.16,y+.16,0,HEIGHT,STRUCT)
-        x=l-.11 if sign>0 else -l+.11
-        for j in range(8):
-            y=-.99+j*.28
-            closed(m,x-.075,y-.035,x+.075,y+.035,.22,HEIGHT-.22,rib)
-        closed(m,l-.15 if sign>0 else -l,-w,l if sign>0 else -l+.15,w,0,.16,STRUCT)
-        closed(m,l-.15 if sign>0 else -l,-w,l if sign>0 else -l+.15,w,HEIGHT-.15,HEIGHT,SILVER)
-    # Each end plenum turns the exhaust upward inside the body's corner envelope.
-    for x in (-STACK_X,STACK_X):
-        closed(m,x-.60,-.61,x+.60,.61,HEIGHT-.082,HEIGHT-.018,DARK)
-        services.pipe(m,(x,0,HEIGHT-.02),(x,0,HEIGHT+.115),STACK_R+.08,SILVER,STACK_R-.025,n=20)
-        services.pipe(m,(x,0,HEIGHT-.017),(x,0,HEIGHT-.009),STACK_R-.027,DARK,n=20)
-    services.pipe(m,(0,0,-BASE_STUB),(0,0,-.19),.57,AMBER,.40,n=24)
-    services.pipe(m,(0,0,-.19),(0,0,.01),.51,STRUCT,.40,n=24)
-    services.pipe(m,(0,0,HEIGHT-.005),(0,0,HEIGHT+.08),.61,STRUCT,n=24)
-    services.pipe(m,(0,0,HEIGHT+.08),(0,0,HEIGHT+ROOF_STUB),.53,AMBER,n=24)
+        yc=sign*SET_Y
+        for k in range(24):
+            x=-l+.3+k*(SET_L-.6)/23
+            closed(m,x-.05,yc-w+.2,x+.05,yc+w-.2,SET_H,SET_H+.05,RIB[1])
+    for k in range(36):
+        x=-l+.25+k*(SET_L-.5)/35
+        both(m,[(x-.07,-SET_Y-w-.004,.2),(x+.07,-SET_Y-w-.004,.2),(x+.07,-SET_Y-w-.004,SET_H-.2),(x-.07,-SET_Y-w-.004,SET_H-.2)],RIB[1])
     return m
 
 
@@ -118,82 +168,80 @@ def enclosure_angle(t):
 
 
 def panel_mesh(theta):
-    """The hinged side of the lower module, turned down by theta about its bottom edge.
+    """The hinged side of turbine set A, turned down by theta about its bottom edge.
 
-    Closed it is the corrugated wall. Fully open it lies flat at floor level and is the work floor.
+    Closed it is part of the enclosure wall. Fully open it lies flat at floor level and is the work floor.
     """
-    m=mesh(f"Power module 1 | hinged side at {math.degrees(theta):.1f} degrees")
-    l=LENGTH/2;co,si=math.cos(theta),math.sin(theta)
+    m=mesh(f"Turbine set A | hinged side at {math.degrees(theta):.1f} degrees")
+    co,si=math.cos(theta),math.sin(theta)
     def at(x,v,n):
-        return (x,HINGE_Y-(v*si+n*co),HINGE_Z+v*co-n*si)
-    x0,x1=-l+.17,l-.17
+        return (x,HINGE_Y+v*si+n*co,HINGE_Z+v*co-n*si)
+    x0,x1=PANEL_X[0]+.03,PANEL_X[1]-.03
     both(m,[at(x0,0,0),at(x1,0,0),at(x1,PANEL_HEIGHT,0),at(x0,PANEL_HEIGHT,0)],"c9ccc3")
-    for k in range(41):
-        x=-l+.29+k*(LENGTH-.58)/40
-        profile=[(x-.074,.003),(x-.038,.063),(x+.035,.063),(x+.073,.003)]
-        for a,b in zip(profile,profile[1:]):
-            m.face([at(a[0],0,a[1]),at(b[0],0,b[1]),at(b[0],PANEL_HEIGHT,b[1]),at(a[0],PANEL_HEIGHT,a[1])],
-                   RIB[0] if a==profile[1] else PAINT[0])
+    both(m,[at(x0,0,.06),at(x1,0,.06),at(x1,PANEL_HEIGHT,.06),at(x0,PANEL_HEIGHT,.06)],PAINT[1])
+    for k in range(14):
+        x=x0+.2+k*(x1-x0-.4)/13
+        both(m,[at(x-.07,.05,.064),at(x+.07,.05,.064),at(x+.07,PANEL_HEIGHT-.05,.064),at(x-.07,PANEL_HEIGHT-.05,.064)],RIB[1])
     for v in (0,PANEL_HEIGHT):
         s.bar(m,at(x0,v,.03),at(x1,v,.03),.07,STRUCT)
     if theta>.02:
-        # Two stays hold the free edge from the roof rail.
-        for x in (-l*.62,l*.62):
-            s.bar(m,(x,HINGE_Y,HEIGHT-.16),at(x,PANEL_HEIGHT-.05,0),.035,"80765c")
+        for x in (x0+.4,x1-.4):
+            s.bar(m,(x,HINGE_Y,HINGE_Z+PANEL_HEIGHT+.5),at(x,PANEL_HEIGHT-.05,0),.035,"80765c")
     return m
 
 
 def turbine_mesh():
-    """A 25 MW class aeroderivative gas turbine and its generator on one skid, in module coordinates."""
-    m=mesh("Power module 1 | aeroderivative gas turbine, exhaust collector and generator")
-    y,z=.18,1.20
+    """A 25 MW class aeroderivative gas turbine and its generator in line, inside set A."""
+    m=mesh("Turbine set A | aeroderivative gas turbine, exhaust collector and generator")
+    k=1.22;y=SET_Y-.08;z=.14+1.07*k
+    def box(x0,ya,x1,yb,z0,z1,col):
+        closed(m,x0,y+ya*k,x1,y+yb*k,.14+z0*k,.14+z1*k,col)
     def drum(x0,x1,r,col,n=20):
-        services.pipe(m,(x0,y,z),(x1,y,z),r,col,n=n)
-    closed(m,-5.45,-.80,5.45,1.02,.13,.26,DARK)
-    # Inlet filter house and bellmouth
-    closed(m,-5.35,-.74,-3.95,.98,.26,2.22,"d5d8cf")
-    for k in range(6):
-        zz=.50+k*.29
-        both(m,[(-5.25,-.745,zz),(-4.05,-.745,zz),(-4.05,-.745,zz+.13),(-5.25,-.745,zz+.13)],"8d9690")
-    drum(-3.95,-3.74,.92,"aab4b2");drum(-3.74,-3.52,.78,"9aa6a5")
+        services.pipe(m,(x0,y,z),(x1,y,z),r*k,col,n=n)
+    box(-6.9,-.98,6.9,.84,0,.13,DARK)
+    # Inlet plenum and bellmouth
+    box(-6.75,-.92,-5.35,.80,.13,2.09,"d5d8cf")
+    for j in range(6):
+        zz=.14+(.37+j*.29)*k
+        both(m,[(-6.65,y+.81*k,zz),(-5.45,y+.81*k,zz),(-5.45,y+.81*k,zz+.16),(-6.65,y+.81*k,zz+.16)],"8d9690")
+    drum(-5.35,-5.10,.92,"aab4b2");drum(-5.10,-4.85,.78,"9aa6a5")
     # Compressor with flanges
-    drum(-3.52,-1.36,.60,"8fa3a8")
-    for k in range(7):
-        x=-3.42+k*.33
+    drum(-4.85,-2.66,.60,"8fa3a8")
+    for j in range(7):
+        x=-4.75+j*.33
         drum(x,x+.05,.67,"6c7f86")
-    # Combustor, fuel manifold and nozzles
-    drum(-1.36,-.52,.80,"c98a4b")
-    drum(-1.10,-1.02,.90,"d9b13c");drum(-.82,-.74,.90,"d9b13c")
+    # Combustor and fuel manifolds
+    drum(-2.66,-1.82,.80,"c98a4b")
+    drum(-2.40,-2.32,.90,"d9b13c");drum(-2.12,-2.04,.90,"d9b13c")
     # Turbines
-    drum(-.52,.06,.70,"8a8f8c")
-    for k,r in enumerate((.76,.86,.96)):
-        drum(.06+k*.42,.48+k*.42,r,"7d8a8a")
+    drum(-1.82,-1.24,.70,"8a8f8c")
+    for j,r in enumerate((.76,.86,.96)):
+        drum(-1.24+j*.42,-.82+j*.42,r,"7d8a8a")
     # Exhaust collector rising to the roof
-    closed(m,1.32,-.78,2.52,1.00,.26,2.28,"9aa09a")
-    both(m,[(1.40,-.785,.50),(2.44,-.785,.50),(2.44,-.785,2.05),(1.40,-.785,2.05)],"868c86")
+    box(.02,-.90,1.22,.78,.13,2.9,"9aa09a")
+    both(m,[(.10,y+.79*k,.6),(1.14,y+.79*k,.6),(1.14,y+.79*k,3.4),(.10,y+.79*k,3.4)],"868c86")
     # Coupling and generator
-    drum(2.52,3.12,.13,"5c6468",12);drum(2.66,2.98,.25,"d6a23a",14)
-    closed(m,3.12,-.70,5.30,.96,.30,2.02,"5f7f9a")
-    for k in range(5):
-        x=3.36+k*.42
-        closed(m,x,-.72,x+.16,.98,2.02,2.12,"4d6a84")
-    closed(m,3.9,-.86,4.6,-.70,.9,1.6,"c9cdc8")
+    drum(1.22,1.82,.13,"5c6468",12);drum(1.36,1.68,.25,"d6a23a",14)
+    box(1.82,-.88,6.6,.74,.17,1.89,"5f7f9a")
+    for j in range(9):
+        x=2.1+j*.5
+        box(x,-.90,x+.18,.76,1.89,1.99,"4d6a84")
     # Gas supply to the manifold
-    services.pipe(m,(-2.6,-.70,.46),(-1.06,-.70,.46),.055,"d9b13c",n=8)
-    services.pipe(m,(-1.06,-.70,.46),(-1.06,-.70,z-.2),.055,"d9b13c",n=8)
+    services.pipe(m,(-3.9,y+.72*k,.6),(-2.36,y+.72*k,.6),.06,"d9b13c",n=8)
+    services.pipe(m,(-2.36,y+.72*k,.6),(-2.36,y+.72*k,z-.2),.06,"d9b13c",n=8)
     return m
 
 
 def bridle():
     m=mesh("Four-leg power-unit lifting bridle")
-    for x in (-LENGTH/2+.52,LENGTH/2-.52):
-        for y in (-1.14,1.14):
-            s.bar(m,(x,y,HEIGHT-.07),(0,0,APEX),.064,"726952")
+    for x in (-5.6,5.6):
+        for y in (-4.2,4.2):
+            s.bar(m,(x,y,-DECK/2),(0,0,APEX),.07,"726952")
     return m
 
 
 def power_base(crown,idx):
-    return crown+BASE_STUB+idx*(HEIGHT+ROOF_STUB+BASE_STUB)
+    return crown+DECK+idx*LEVEL[0]
 
 
 def body_position(crown,idx,t):
@@ -240,17 +288,37 @@ def lid_position(t):
 
 
 def lid_mesh():
-    m=mesh("Silo lid | steel deck over the bore and the liquid, with four vent openings")
+    m=mesh("Silo lid | steel deck with turbine exhaust stacks, air inlet houses and diesel vents")
     s.sector(m,0,LID_R,0,LID_THICK,0,s.TAU,48,["9aa39f","9aa39f","b9beb8","9aa39f"],caps=False)
     s.sector(m,LID_R-.16,LID_R,LID_THICK,LID_THICK+.10,0,s.TAU,48,["8b9591","8b9591","a7aeaa","8b9591"],caps=False)
     for k in range(8):
         a=k*s.TAU/8+.2
         s.bar(m,s.polar(1.2,a,LID_THICK+.05),s.polar(LID_R-.3,a,LID_THICK+.05),.16,"a3aaa5",.10)
-    for j in (0,1):
-        yaw=POWER_YAW+j*math.pi/2
-        for sign in (-1,1):
-            x,y,_=s.polar(sign*STACK_X,yaw,0)
-            services.pipe(m,(x,y,LID_THICK),(x,y,LID_THICK+.16),STACK_R+.16,"7f8a86",STACK_R+.03,n=16)
+    top=LID_THICK
+    # Turbine exhaust: one stack over each exhaust collector.
+    for x,y in EXHAUST_AT:
+        a=turned(x,y)
+        services.pipe(m,(a[0],a[1],top),(a[0],a[1],top+EXHAUST_H),EXHAUST_R,"a8b8b5",EXHAUST_R-.08,n=24)
+        for z in (top,top+EXHAUST_H*.5,top+EXHAUST_H-.14):
+            services.pipe(m,(a[0],a[1],z),(a[0],a[1],z+.14),EXHAUST_R+.07,"7f8a86",EXHAUST_R-.08,n=24)
+    # Turbine air: a filter house over each inlet plenum, lower than the exhaust and away from it.
+    hl,hw,hh=INLET_HOUSE
+    for x,y in INLET_AT:
+        s.bar(m,turned(x-hl/2,y,top+hh/2),turned(x+hl/2,y,top+hh/2),hw,"d5d8cf",hh)
+        s.bar(m,turned(x-hl/2-.1,y,top+hh+.06),turned(x+hl/2+.1,y,top+hh+.06),hw+.2,"8e9690",.12)
+        for side in (-1,1):
+            for j in range(5):
+                z=top+.35+j*.42
+                s.bar(m,turned(x-hl/2+.15,y+side*(hw/2+.012),z),turned(x+hl/2-.15,y+side*(hw/2+.012),z),.03,"6f7c7a",.22)
+    # Diesel exhausts and the diesel room air vents.
+    for x,y in DIESEL_STACKS:
+        a=turned(x,y)
+        services.pipe(m,(a[0],a[1],top),(a[0],a[1],top+DIESEL_STACK_H),DIESEL_STACK_R,"8b9591",DIESEL_STACK_R-.04,n=14)
+        services.pipe(m,(a[0],a[1],top+DIESEL_STACK_H-.1),(a[0],a[1],top+DIESEL_STACK_H),DIESEL_STACK_R+.06,"6f7c7a",DIESEL_STACK_R-.04,n=14)
+    vl,vw,vh=ROOM_VENT
+    for x,y in ROOM_VENTS:
+        s.bar(m,turned(x-vl/2,y,top+vh/2),turned(x+vl/2,y,top+vh/2),vw,"c2c6c0",vh)
+        s.bar(m,turned(x-vl/2-.1,y,top+vh+.05),turned(x+vl/2+.1,y,top+vh+.05),vw+.2,"8e9690",.10)
     return m
 
 
@@ -266,17 +334,17 @@ def camera_power(p,frame,old,cam,blend):
     # Start at the same eye as the preceding shot. Follow the lift vertically,
     # then move to a steeper view to expose the central bearing and both roof ducts.
     wide=cam((-7,-2,22),-60,15,108)
-    first=cam((-.5,0,24.8),-52,33,49)
-    second=cam((0,0,24.7),-45,40,43)
-    finished=cam((0,0,24.5),-39,53,41)
+    first=cam((-.5,0,26.5),-52,33,58)
+    second=cam((0,0,28.5),-45,40,52)
+    finished=cam((0,0,27.5),-39,53,50)
     if t<75:return blend(old,wide,s.step(0,44,t))
     if t<177:return blend(wide,first,s.step(123,173,t))
     if t<260:return blend(first,wide,s.step(220,258,t))
     if t<421:return blend(wide,second,s.step(360,421,t))
-    if t<VENT_END:return blend(second,finished,s.step(447,VENT_END-1,t))
+    if t<VENT_END:return blend(second,finished,s.step(VENT_START,VENT_END-1,t))
     # Pull back for the lid, then look down on it as it closes the silo.
     lift=cam((-9,-1,24),-64,22,104)
-    closed_view=cam((0,0,28.5),-52,38,66)
+    closed_view=cam((0,0,31.5),-52,38,74)
     if t<LID[0]+60:lid_view=blend(finished,lift,s.step(VENT_END,LID[0]+18,t))
     else:lid_view=blend(lift,closed_view,s.step(LID[0]+62,LID[1]-8,t))
     return care.service_camera(t,lid_view,cam,blend)
@@ -293,17 +361,17 @@ def add(scene,node,p):
         return [(0,vals[0])]+[(p.FILLED+f,v) for f,v in p.flat_keys(vals)] if len(set(vals))>1 else [(0,vals[0])]
     rig=addmesh(bridle())
     crib=mesh("Power-unit ground crib | bearing strips")
-    for x in (-4.35,4.35):
-        closed(crib,x-.19,-1.22,x+.19,1.22,0,GROUND,"93846b")
+    for x in (-5.2,0,5.2):
+        closed(crib,x-.25,-6.0,x+.25,6.0,0,GROUND-DECK+.05,"93846b")
     crib_id=addmesh(crib)
     for j in (0,1):
-        y=POWER_YAW+j*math.pi/2
-        label=f"Power unit {j+1:02}"
+        y=POWER_YAW
+        label=f"Power level {j+1:02}"
         node(label+" | ground crib",crib_id,"Power laydown",ang=y,t=(*PICK_SITES[j],0),
              tracks={"scale":hide_after(p.FILLED+1,p.FILLED+VENT_END+12)})
-        base=node(label+" | closed container body",addmesh(power_mesh(j)),"Power modules",ang=y,
+        base=node(label+(" | diesel deck assembly" if j==0 else " | turbine deck assembly"),addmesh(power_mesh(j)),"Power modules",ang=y,
              tracks={"translation":compact_relative(lambda t:body_position(p.CROWN,j,t)),"scale":show(p.FILLED+1)})
-        if j==0:
+        if j==1:
             # Bake the hinged side at a set of angles and show the one nearest the current angle.
             poses=[round(enclosure_angle(t)/(math.pi/2)*(PANEL_POSES-1)) for t in range(END)]
             for k in range(PANEL_POSES):
@@ -311,38 +379,11 @@ def add(scene,node,p):
                 for t in range(1,END):
                     if (poses[t-1]==k)!=(poses[t]==k):
                         keys.extend([(p.FILLED+t-.02,ON if poses[t-1]==k else OFF),(p.FILLED+t,ON if poses[t]==k else OFF)])
-                node(label+f" | hinged side, pose {k+1:02}",addmesh(panel_mesh(k/(PANEL_POSES-1)*math.pi/2)),"Power modules",base,
+                node(f"Turbine set A | hinged side, pose {k+1:02}",addmesh(panel_mesh(k/(PANEL_POSES-1)*math.pi/2)),"Power modules",base,
                      tracks={"scale":keys})
-            node(label+" | gas turbine and generator",addmesh(turbine_mesh()),"Power modules",base,
-                 tracks={"scale":hide_after(p.FILLED+clock.ENCLOSURE_OPEN[0]-2,p.FILLED+clock.ENCLOSURE_CLOSE[1]+2)})
+            node("Turbine set A | gas turbine and generator",addmesh(turbine_mesh()),"Power modules",base)
         node(label+" | four-leg rigging",rig,"Power picks",base,
              tracks={"scale":hide_after(p.FILLED+PICK_STARTS[j],p.FILLED+PICK_STARTS[j]+PICK_LENGTH+3)})
-        roof=power_base(p.CROWN,j)+HEIGHT
-        for sign in (-1,1):
-            dx=sign*STACK_X
-            run=s.WALL_HEIGHT+VENT_RISE-roof
-            joint=.12
-            # Nested stainless tubes extend from both end plenums after crane release.
-            # The socket lips overlap axially at each telescoping joint.
-            for k in range(3):
-                rr=STACK_R-.038*k
-                item=mesh(label+f" | exhaust sleeve {k+1}")
-                services.pipe(item,(0,0,0),(0,0,1),rr,"a8b8b5" if k%2==0 else "91aaa9",rr-.038,n=16)
-                extension=lambda t:s.step(VENT_START+3*j,VENT_END-3+3*j,t)
-                def origin(t,k=k):
-                    e=extension(t)
-                    return (dx,0,HEIGHT+.065+k*(.018+(run/3-.018)*e))
-                def length(t,k=k):
-                    e=extension(t)
-                    final=run/3+(.025 if k<2 else -.065)
-                    return (1,1,joint+(final-joint)*e)
-                name=label+(" | negative" if sign<0 else " | positive")+f" end stack {k+1}"
-                node(name,addmesh(item),"End exhausts",base,tracks={"translation":compact_relative(origin),
-                                                                  "scale":compact_relative(length)})
-                lip=mesh("Rolled exhaust collar")
-                services.pipe(lip,(0,0,-.068),(0,0,0),rr+.025,SILVER,rr-.038,n=16)
-                node(name+" lip",addmesh(lip),"End exhausts",base,tracks={"translation":compact_relative(
-                    lambda t:(dx,0,origin(t)[2]+length(t)[2]))})
     # The lid is the retained crawler's last lift of the build.
     cover=node("Silo lid | crane placement",addmesh(lid_mesh()),"Silo lid",tracks={
         "translation":compact_relative(lid_position),
@@ -356,11 +397,11 @@ def add(scene,node,p):
         a=k*s.TAU/3
         s.bar(timber,s.polar(1.5,a,LID_GROUND/2),s.polar(LID_R-.5,a,LID_GROUND/2),.40,"8f8064",LID_GROUND)
     node(timber.name,addmesh(timber),"Power laydown",t=(*LID_SITE,0),tracks={"scale":hide_after(p.FILLED+1,p.FILLED+LID[1]+10)})
-    scene.project_info.update(powerBodies_m=[LENGTH,WIDTH,HEIGHT],powerCornerAllowance_m=RADIAL_CLEARANCE,
-        powerBodyBaseElevations_m=[power_base(p.CROWN,j) for j in (0,1)],powerYawDifference_deg=90,
-        exhaustStacks=4,exhaustVentElevation_m=s.WALL_HEIGHT+VENT_RISE,lidElevation_m=LID_Z,lidRadius_m=LID_R,
+    scene.project_info.update(turbineSet_m=[SET_L,SET_W,SET_H],dieselSet_m=[GEN_L,GEN_W,GEN_H],dieselSets=len(GEN_AT),
+        powerLevelFloors_m=[power_base(p.CROWN,j) for j in (0,1)],
+        exhaustStacks=len(EXHAUST_AT),exhaustStackTop_m=s.WALL_HEIGHT+VENT_RISE,lidElevation_m=LID_Z,lidRadius_m=LID_R,
         lidSeatedAt_s=(p.FILLED+LID[1])/p.FPS,firstLiquidAfter_s=p.C/p.FPS,
         powerModuleOutput_MW=cfg.POWER["module_output_mw"],primeMover=cfg.POWER["prime_mover"],
-        turbineEnclosureOpens_s=(p.FILLED+clock.ENCLOSURE_OPEN[0])/p.FPS,turbineWorkFloor_m=power_base(p.CROWN,0)+HINGE_Z,
-        powerScope="Each module is drawn as a container holding one aeroderivative gas turbine and generator. The package is not sized.")
-    assert abs(crew.POWER_FLOOR-power_base(p.CROWN,0)-HINGE_Z)<1e-9
+        turbineEnclosureOpens_s=(p.FILLED+clock.ENCLOSURE_OPEN[0])/p.FPS,turbineWorkFloor_m=power_base(p.CROWN,1)+HINGE_Z,
+        powerScope="Each level is lowered as one assembly. Real lifts would be made machine by machine.")
+    assert abs(crew.POWER_FLOOR-power_base(p.CROWN,1)-HINGE_Z)<1e-9

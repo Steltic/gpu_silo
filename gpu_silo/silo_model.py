@@ -241,8 +241,8 @@ def build_land():
     details = Mesh("Field boundaries, farm sheds and trees")
     rng = random.Random(9274)
     quad_xy(fields,-890,-890,890,890,-.06,"bbc093")
-    xs = [-650,-405,-285,-183,-119,-64,-22,24,71,130,202,292,452,650]
-    ys = [-590,-402,-268,-169,-105,-54,-17,22,71,125,206,318,460,630]
+    xs = [-650,-405,-285,-183,-119,-64,-26,28,71,130,202,292,452,650]
+    ys = [-590,-402,-268,-169,-105,-54,-24,26,71,125,206,318,460,630]
     palette = ["b9c090","c9b17b","adba89","b5bf91","d3c38e","b5bf89","c1c593","a9b28a"]
     for ix,(xa,xb) in enumerate(zip(xs,xs[1:])):
         for iy,(ya,yb) in enumerate(zip(ys,ys[1:])):

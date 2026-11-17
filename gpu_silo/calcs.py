@@ -87,14 +87,15 @@ def compute():
         return math.sqrt(4 * lpm / 60000 / (math.pi * speed)) * 1000
     c["cooler_bore_mm"] = bore(c["flow_cooler"][1])
     c["pod_bore_mm"] = bore(c["flow_pod"][1])
-    # The store against the load, compared with the earlier 20 m, 32 MW design
-    def store(od, mw):
-        volume = math.pi * ((od / 2 - silo["outer_wall_m"])**2 - c["tank_r_in"]**2) * c["liquid_top"]
+    # The store against the load, through the three versions of the design
+    def store(od, bore, height, mw):
+        volume = math.pi * ((od / 2 - silo["outer_wall_m"])**2 - (bore / 2 + silo["inner_wall_m"])**2) * (height - fl["freeboard_m"])
         return volume, volume * rho * cp / 1000 / mw / 60 * c["swing"]
-    c["store_cases"] = [(20.0, 32.0, *store(20.0, 32.0)), (20.0, c["heat_mw"], *store(20.0, c["heat_mw"])),
-                        (silo["outside_diameter_m"], c["heat_mw"], c["tank_m3"], c["ride_min"])]
-    want = c["store_cases"][0][3] * c["heat_mw"] * 60 / c["swing"] / (rho * cp / 1000)
-    c["od_same_ride"] = 2 * (math.sqrt(want / (math.pi * c["liquid_top"]) + c["tank_r_in"]**2) + silo["outer_wall_m"])
+    c["store_cases"] = [(od, bore, height, mw, *store(od, bore, height, mw)) for od, bore, height, mw in
+                        ((20.0, 13.0, 30.0, 32.0), (22.0, 13.0, 30.0, 50.0),
+                         (silo["outside_diameter_m"], silo["inside_diameter_m"], silo["height_m"], c["heat_mw"]))]
+    same_bore = store(silo["outside_diameter_m"], 13.0, silo["height_m"], c["heat_mw"])[0]
+    c["bore_cost_m3"] = same_bore - c["tank_m3"]
     c["one_out_mw"] = c["reject_mw"] - co["cooler_capacity_mw"]
     deficit = c["heat_mw"] - c["one_out_mw"]
     c["one_out_h_per_k"] = c["store_mj_k"] / deficit / 3600 if deficit > 0 else float("inf")
@@ -120,28 +121,60 @@ def compute():
     c["fuel_gal"]=c["fuel_m3"]/US_GAL
     c["fuel_mwh_th"]=c["fuel_m3"]*1000*fu["energy_mj_per_litre"]/3600
     c["fuel_mwh_e"]=c["fuel_mwh_th"]*fu["generation_efficiency"]
-    # Power modules
+    # Power: two in-line turbine sets on one level
     pw=cfg.POWER
     c["gen_mw"]=pw["modules"]*pw["module_output_mw"]
     c["gen_margin"]=c["gen_mw"]/c["heat_mw"]-1
+    c["set_diagonal"]=math.hypot(pw["set_length_m"],pw["set_width_m"])
+    c["pair_corner_r"]=math.hypot(pw["set_length_m"]/2,pw["aisle_m"]/2+pw["set_width_m"])
+    c["pair_clear"]=cfg.BORE_R-c["pair_corner_r"]
     c["turbine_air_m3s"]=pw["inlet_air_kg_s"]/air_rho
     c["exhaust_rho"]=353/(pw["exhaust_temperature_c"]+273.15)
     c["exhaust_m3s"]=pw["exhaust_flow_kg_s"]/c["exhaust_rho"]
-    c["vent_area"]=pw["vents_per_module"]*math.pi*(pw["vent_diameter_m"]/2)**2
-    c["vent_ms"]=c["exhaust_m3s"]/c["vent_area"]
-    c["vent_need_m"]=math.sqrt(4*c["exhaust_m3s"]/pw["vents_per_module"]/30/math.pi)
+    c["stack_area"]=math.pi*(pw["exhaust_stack_diameter_m"]/2)**2
+    c["stack_ms"]=c["exhaust_m3s"]/c["stack_area"]
+    c["filter_face_need"]=c["turbine_air_m3s"]/pw["inlet_filter_velocity_m_s"]
+    hl,hw,hh=pw["inlet_house_m"]
+    c["filter_face_have"]=2*hl*hh
+    c["filter_ms"]=c["turbine_air_m3s"]/c["filter_face_have"]
     c["turbine_heat_mw"]=pw["module_output_mw"]/fu["generation_efficiency"]-pw["module_output_mw"]
     c["fuel_hours"]=c["fuel_mwh_e"]/c["gen_mw"]
-    # Natural convection in the bore: in through the door plug, out through the roof vents
-    ve=cfg.PROJECT["ventilation"]
-    c["door_fan_area"]=ve["door_fans"]*math.pi*(ve["door_fan_diameter_m"]/2)**2
-    c["roof_vent_area"]=ve["roof_air_vents"]*math.pi*(ve["roof_air_vent_diameter_m"]/2)**2
-    c["stack_height"]=silo["height_m"]-cfg.DOOR_HEIGHT/2
-    c["stack_pa"]=air_rho*G*c["stack_height"]*ve["air_rise_k"]/300
-    c["stack_ms"]=math.sqrt(2*c["stack_pa"]/(air_rho*ve["loss_coefficient"]))
-    c["stack_m3s"]=c["stack_ms"]*c["door_fan_area"]
-    c["stack_kw"]=c["stack_m3s"]*air_rho*air_cp*ve["air_rise_k"]
-    c["both_turbines_air_m3s"]=pw["modules"]*c["turbine_air_m3s"]
+    # Height above the pods
+    di=cfg.PROJECT["diesel"]
+    c["levels_need"]=di["set_height_m"]+pw["set_height_m"]+2*pw["floor_structure_m"]
+    c["levels_have"]=silo["height_m"]-cfg.CROWN
+    # Propane line: both turbines at full load
+    c["fuel_mw_th"]=c["gen_mw"]/fu["generation_efficiency"]
+    c["propane_kg_s"]=c["fuel_mw_th"]/fu["lhv_mj_per_kg"]
+    c["propane_l_s"]=c["propane_kg_s"]/fu["liquid_density_kg_m3"]*1000
+    c["line_area"]=math.pi*(fu["line_diameter_m"]/2)**2
+    c["line_liquid_ms"]=c["propane_l_s"]/1000/c["line_area"]
+    c["line_liquid_need_mm"]=math.sqrt(4*c["propane_l_s"]/1000/(math.pi*fu["liquid_velocity_m_s"]))*1000
+    # Vapour at tank pressure and at turbine supply pressure, as an ideal gas with a compressibility of 0.8
+    def vapour(bar,temp_c,z=.8):
+        return bar*1e5*.0441/(z*8.314*(temp_c+273.15))
+    c["vapour_cases"]=[]
+    for label,bar,temp in (("Vapour at tank pressure",9.5,25.),(f"Vapour at turbine pressure",pw["fuel_supply_pressure_bar"],90.)):
+        rho_v=vapour(bar,temp);flow=c["propane_kg_s"]/rho_v
+        c["vapour_cases"].append((label,bar,temp,rho_v,flow,flow/c["line_area"],math.sqrt(4*flow/(math.pi*fu["vapour_velocity_m_s"]))*1000))
+    c["vaporise_mw"]=c["propane_kg_s"]*.43
+    # Backup diesel
+    c["diesel_mw"]=di["sets"]*di["set_output_mw"]
+    c["diesel_share"]=c["diesel_mw"]/c["heat_mw"]
+    c["diesel_m3_h"]=di["sets"]*di["fuel_l_per_h_per_set"]/1000
+    c["day_tank_m3"]=math.pi*(di["day_tank_diameter_m"]/2)**2*di["day_tank_length_m"]
+    c["day_m3"]=di["day_tanks"]*c["day_tank_m3"]
+    c["day_hours"]=c["day_m3"]/c["diesel_m3_h"]
+    c["bulk_m3"]=math.pi*(di["bulk_tank_diameter_m"]/2)**2*di["bulk_tank_length_m"]*di["bulk_fill_fraction"]
+    c["bulk_hours"]=c["bulk_m3"]/c["diesel_m3_h"]
+    c["diesel_line_ms"]=c["diesel_m3_h"]/3600/(math.pi*(di["line_diameter_m"]/2)**2)
+    c["diesel_room_kw"]=di["sets"]*di["heat_to_room_kw_per_set"]
+    c["diesel_room_m3s"]=c["diesel_room_kw"]/(air_rho*air_cp*di["room_air_rise_k"])
+    vl,vw,vh=di["room_vent_m"]
+    c["room_vent_area"]=vl*vw
+    c["room_vent_ms"]=c["diesel_room_m3s"]/c["room_vent_area"]
+    c["diesel_stack_ms"]=di["exhaust_m3_s_per_set"]/(math.pi*(di["exhaust_stack_diameter_m"]/2)**2)
+    c["top_weight_t"]=pw["modules"]*pw["set_weight_t"]+di["sets"]*di["set_weight_t"]
     c["fuel_burn_m3_h"]=c["fuel_m3"]/c["fuel_hours"]
     # Pod fit
     longest = cfg.BODY_LENGTH + max([cfg.SECTION, *cfg.SECTIONS.values()])
@@ -206,19 +239,19 @@ def panel():
                   ("Target", f"{C['target_gal']/1e6:.2f} M US gal"),
                   ("Heat buffer", f"{C['min_per_k']:.1f} min / K")],
         "fuel": [("Tanks", f"{cfg.PROJECT['fuel']['tanks']} × {cfg.PROJECT['fuel']['tank_length_m']:g} m"),
-                 ("Tank diameter", f"{cfg.PROJECT['fuel']['tank_diameter_m']:g} m"),
                  ("Stored propane", f"{n(C['fuel_m3'])} m³"),
-                 ("Heat in the fuel", f"{n(C['fuel_mwh_th'])} MWh"),
-                 ("Electricity", f"{n(C['fuel_mwh_e'])} MWh"),
-                 (f"Run time at {C['heat_mw']:.0f} MW", f"{C['fuel_hours']:.0f} h")],
+                 (f"Run time at {C['heat_mw']:.0f} MW", f"{C['fuel_hours']:.0f} h"),
+                 ("Propane line", f"{cfg.PROJECT['fuel']['line_diameter_m']*1000:.0f} mm"),
+                 ("Bulk diesel", f"{C['bulk_m3']:.0f} m³"),
+                 (f"Backup at {C['diesel_mw']:.0f} MW", f"{C['bulk_hours']:.0f} h")],
         "plan": [("Liquid heat", f"{C['heat_mw']:.0f} MW"), ("Loop flow", f"{n(C['flow_total'][1]/1000,1)} m³/min"),
                  ("Rise across the pods", f"{C['dt']:g} K"), ("Store", f"{n(C['tank_m3'])} m³"),
                  ("Store turnover", f"{C['turnover_min']:.0f} min")],
         "turbine": [("Output", f"{cfg.POWER['module_output_mw']:g} MW"), ("Type", "Aeroderivative"),
                     ("Class", "GE LM2500"), ("Air", f"{cfg.POWER['inlet_air_kg_s']:.0f} kg/s"),
                     ("Exhaust", f"{cfg.POWER['exhaust_temperature_c']:.0f} °C")],
-        "air": [("Door plug", f"{cfg.PROJECT['ventilation']['door_fans']} fans"), ("Roof vents", f"{cfg.PROJECT['ventilation']['roof_air_vents']}"),
-                ("Natural convection", f"{C['stack_m3s']:.1f} m³/s"), ("Heat carried", f"{C['stack_kw']:.0f} kW")],
+        "backup": [("Diesel sets", f"{cfg.PROJECT['diesel']['sets']} × {cfg.PROJECT['diesel']['set_output_mw']:g} MW"),
+                   ("Backup", f"{C['diesel_mw']:.0f} MW"), ("Day tanks", f"{C['day_hours']:.1f} h"), ("Bulk diesel", f"{C['bulk_hours']:.0f} h")],
         "section": [("Power modules", f"{cfg.POWER['modules']} × {cfg.POWER['module_output_mw']:g} MW"), ("Electrical load", f"{C['heat_mw']:.0f} MW"),
                     (f"{cfg.NAME} pods on the shaft", f"{C['pods']}"), ("Dry coolers", f"{C['coolers']} × {cfg.COOL['cooler_capacity_mw']:g} MW"),
                     ("Propane stored", f"{n(C['fuel_m3'])} m³"), ("Run time", f"{C['fuel_hours']:.0f} h")],
@@ -232,7 +265,10 @@ def panel():
 
 def markdown():
     c, s, co, fl, fu = C, cfg.SILO, cfg.COOL, cfg.FLUID, cfg.PROJECT["fuel"]
-    pw, ve = cfg.POWER, cfg.PROJECT["ventilation"]
+    pw, di = cfg.POWER, cfg.PROJECT["diesel"]
+    hl, hw, hh = pw["inlet_house_m"]
+    vl, vw, vh = di["room_vent_m"]
+    vapour_rows = "\n".join(f"| {label}, {bar:g} bar, {temp:g} °C | {rho_v:.0f} kg/m³ | {flow*1000:.0f} L/s | {speed:.1f} m/s | {need:.0f} mm for {fu['vapour_velocity_m_s']:g} m/s |" for label,bar,temp,rho_v,flow,speed,need in c["vapour_cases"])
     kg, lpm, gpm = c["flow_total"]
     short = c["target_m3"] - c["tank_m3"]
     if short > 0:
@@ -240,8 +276,8 @@ def markdown():
                    f"{c['tank_gal']/1e6:.2f} M gal. Keeping the other inputs, the target needs a silo {c['need_height']:.1f} m high or {c['need_od']:.2f} m in outside diameter.")
     else:
         verdict = (f"**This geometry holds {c['tank_gal']/1e6:.2f} million US gallons, {c['tank_of_target']*100-100:.0f}% more than the {c['target_gal']/1e6:.1f} M target.**")
-    cases = "\n".join(f"| {od:g} m{' (earlier design)' if i==0 else ' (this design)' if i==2 else ''} | {mw:.0f} MW | {n(vol)} m³ | {ride:.0f} min |"
-                      for i,(od,mw,vol,ride) in enumerate(c["store_cases"]))
+    cases = "\n".join(f"| {od:g} m | {bore:g} m | {height:g} m | {mw:.0f} MW | {n(vol)} m³ | {ride:.0f} min{' (this design)' if i==2 else ''} |"
+                      for i,(od,bore,height,mw,vol,ride) in enumerate(c["store_cases"]))
     def outage(mw):
         deficit = c["heat_mw"] - mw
         if deficit <= 1e-9: return "still carries the full load"
@@ -298,11 +334,11 @@ The water-glycol fills the gap between the two concrete skins to {c['liquid_top'
 
 The store's job is to carry the load while heat rejection is reduced. The measure is how long the full load takes to warm the store through the usable {c['swing']:g} K.
 
-| Silo outside diameter | Load | Store | Ride-through on {c['swing']:g} K |
-| --- | ---: | ---: | ---: |
+| Outside diameter | Bore | Height | Load | Store | Ride-through on {c['swing']:g} K |
+| ---: | ---: | ---: | ---: | ---: | ---: |
 {cases}
 
-Going from 20 m to {s['outside_diameter_m']:g} m adds {n(c['tank_m3']-c['store_cases'][0][2])} m³ and brings the ride-through at {c['heat_mw']:.0f} MW from {c['store_cases'][1][3]:.0f} to {c['ride_min']:.0f} minutes. The earlier 32 MW design had {c['store_cases'][0][3]:.0f} minutes. Matching that at {c['heat_mw']:.0f} MW needs an outside diameter of {c['od_same_ride']:.1f} m, or a silo {c['store_cases'][0][3]/c['ride_min']*c['liquid_top']+fl['freeboard_m']:.1f} m high at {s['outside_diameter_m']:g} m.
+Widening the bore from 13 m to {s['inside_diameter_m']:g} m for the in-line turbine sets takes {n(c['bore_cost_m3'])} m³ out of the store. The {s['outside_diameter_m']:g} m outer wall and the {s['height_m']:g} m height more than give it back.
 
 ## 3. Loop flows
 
@@ -373,61 +409,87 @@ At full flow the store turns over once every {c['turnover_min']:.0f} minutes.
 | **Radial clearance** | **{c['pod_clearance']*1000:.0f} mm** | bore − corner |
 | Storage height | {c['store_height']:.1f} m | {cfg.LEVELS} levels × {cfg.STORE['pitch_m']:g} m |
 
-## 6. Power and fuel
+## 6. Power
+
+Two in-line gas turbine generator sets stand side by side on the top level, under the lid. The backup diesel sets are on the level below.
 
 | Quantity | Value | Basis |
 | --- | ---: | --- |
-| Power modules | {pw['modules']} × {pw['module_output_mw']:g} MW | {pw['prime_mover']} |
+| Turbine sets | {pw['modules']} × {pw['module_output_mw']:g} MW | {pw['prime_mover']} |
 | **Generating capacity** | **{c['gen_mw']:.0f} MW** | |
-| Margin over the load | {c['gen_margin']*100:.0f}% | no spare module |
-| Combustion air, one turbine | {pw['inlet_air_kg_s']:g} kg/s, {c['turbine_air_m3s']:.0f} m³/s | published figure for a 25 MW LM2500 |
-| Exhaust, one turbine | {pw['exhaust_flow_kg_s']:g} kg/s at {pw['exhaust_temperature_c']:.0f} °C, {c['exhaust_m3s']:.0f} m³/s | published figure |
-| Exhaust vents as drawn | {pw['vents_per_module']} × {pw['vent_diameter_m']:g} m per module | {c['vent_ms']:.0f} m/s in the vent |
-| Vent diameter for 30 m/s | {c['vent_need_m']:.1f} m | each of {pw['vents_per_module']} per module |
-| Heat rejected by one turbine | {c['turbine_heat_mw']:.0f} MW | at {fu['generation_efficiency']*100:.0f}% efficiency, mostly in the exhaust |
+| Margin over the load | {c['gen_margin']*100:.0f}% | no spare turbine |
+| One set | {pw['set_length_m']:g} × {pw['set_width_m']:g} × {pw['set_height_m']:g} m, {pw['set_weight_t']:g} t | published figures for an LM2500+ generator set |
+| Diagonal of one set | {c['set_diagonal']:.2f} m | the bore is {s['inside_diameter_m']:g} m |
+| Two sets side by side | {c['pair_clear']:.2f} m clear of the wall | {pw['aisle_m']:g} m aisle between them |
+| Height needed above the pods | {c['levels_need']:.2f} m | diesel level and turbine level, each with {pw['floor_structure_m']:g} m of floor structure |
+| Height available | {c['levels_have']:.2f} m | crown at {cfg.CROWN:g} m, lid at {s['height_m']:g} m |
+| Weight at the top of the silo | {c['top_weight_t']:.0f} t | {pw['modules']} turbine sets and {di['sets']} diesel sets |
 
-The modules burn {fu['gas'].lower()} from tanks beside the silo. One gas line runs along the ground, up the outside wall, over the lid and down to the modules.
+### Roof vents
+
+The lid carries everything that breathes. There is no general ventilation of the bore.
+
+| Vent | Flow | Size on the roof | Speed |
+| --- | ---: | --- | ---: |
+| Turbine exhaust, each of {pw['modules']} | {pw['exhaust_flow_kg_s']:g} kg/s at {pw['exhaust_temperature_c']:.0f} °C, {c['exhaust_m3s']:.0f} m³/s | stack {pw['exhaust_stack_diameter_m']:g} m in diameter, {pw['exhaust_stack_height_m']:g} m high | {c['stack_ms']:.0f} m/s |
+| Turbine air inlet, each of {pw['modules']} | {pw['inlet_air_kg_s']:g} kg/s, {c['turbine_air_m3s']:.0f} m³/s | filter house {hl:g} × {hw:g} × {hh:g} m, {c['filter_face_have']:.0f} m² of filter on two faces | {c['filter_ms']:.1f} m/s |
+| Diesel exhaust, each of {di['sets']} | {di['exhaust_m3_s_per_set']:g} m³/s | stack {di['exhaust_stack_diameter_m']:g} m in diameter, {di['exhaust_stack_height_m']:g} m high | {c['diesel_stack_ms']:.0f} m/s |
+| Diesel room air, in and out | {c['diesel_room_m3s']:.0f} m³/s | {di['room_vents']} cowls of {vl:g} × {vw:g} m | {c['room_vent_ms']:.1f} m/s |
+
+The turbine filter face needed at {pw['inlet_filter_velocity_m_s']:g} m/s is {c['filter_face_need']:.0f} m². GE's nominal ducts for this engine are 4.5 m² for the inlet and 2.8 m² for the exhaust, so the {c['stack_area']:.1f} m² stack is larger than nominal. The diesel room air removes {c['diesel_room_kw']:.0f} kW radiated by the running sets at a {di['room_air_rise_k']:g} K rise. The diesel flows are typical figures for a 2.5 MW set, not datasheet values.
+
+## 7. Fuel
+
+### Propane for the turbines
 
 | Quantity | Value | Basis |
 | --- | ---: | --- |
 | Tanks | {fu['tanks']} | {fu['tank_length_m']:g} m long × {fu['tank_diameter_m']:g} m diameter, {fu['distance_m']:g} m from the silo axis |
-| Volume of one tank | {c['tank_each_m3']:.0f} m³ | cylinder with hemispherical ends |
 | Stored liquid | {n(c['fuel_m3'])} m³ = {n(c['fuel_gal'])} US gal | {fu['fill_fraction']*100:.0f}% fill |
 | Stored energy | {n(c['fuel_mwh_th'])} MWh thermal | {fu['energy_mj_per_litre']:g} MJ per litre, lower heating value |
 | Electricity generated | {n(c['fuel_mwh_e'])} MWh | {fu['generation_efficiency']*100:.0f}% generation efficiency |
 | **Run time at full load** | **{c['fuel_hours']:.0f} h ({c['fuel_hours']/24:.1f} days)** | {c['gen_mw']:.0f} MW |
-| Burn rate at full load | {c['fuel_burn_m3_h']:.1f} m³/h | one {fu['tank_length_m']:g} m tank every {c['tank_each_m3']*fu['fill_fraction']/c['fuel_burn_m3_h']:.1f} h |
+| Burn rate at full load | {c['fuel_burn_m3_h']:.1f} m³/h | one tank every {c['tank_each_m3']*fu['fill_fraction']/c['fuel_burn_m3_h']:.1f} h |
 
-## 7. Air in the bore
+### Is one propane line big enough?
 
-A panel with {ve['door_fans']} fans plugs the ground door and {ve['roof_air_vents']} vents sit in the lid. Air warmed by the pods rises, leaves through the roof and draws cool air in at the bottom.
+Yes. Both turbines at full load burn {c['fuel_mw_th']:.0f} MW of fuel, which is {c['propane_kg_s']:.2f} kg/s of propane.
+
+| How the propane travels | Density | Flow | Speed in the {fu['line_diameter_m']*1000:.0f} mm line | Bore needed |
+| --- | ---: | ---: | ---: | ---: |
+| Liquid, pumped | {fu['liquid_density_kg_m3']:g} kg/m³ | {c['propane_l_s']:.1f} L/s | {c['line_liquid_ms']:.2f} m/s | {c['line_liquid_need_mm']:.0f} mm for {fu['liquid_velocity_m_s']:g} m/s |
+{vapour_rows}
+
+One {fu['line_diameter_m']*1000:.0f} mm line carries the full flow in any of the three ways with room to spare. A 100 mm line would also do. The turbines need gas at about {pw['fuel_supply_pressure_bar']:g} bar, and propane at that pressure is liquid below about 70 °C. The practical arrangement is to pump liquid up the line and vaporise it beside the turbines. Vaporising takes {c['vaporise_mw']:.1f} MW of heat. The store at 45 to 55 °C is too cool to do it at that pressure, so the vaporiser needs a hotter source such as turbine exhaust heat. The supply pressure is a typical figure for this class of turbine, not a datasheet value.
+
+### Diesel for the backup sets
 
 | Quantity | Value | Basis |
 | --- | ---: | --- |
-| Height of the air column | {c['stack_height']:.1f} m | door centre to the lid |
-| Driving pressure | {c['stack_pa']:.1f} Pa | {ve['air_rise_k']:g} K warmer inside, ρ g h ΔT / T |
-| Inlet area | {c['door_fan_area']:.2f} m² | {ve['door_fans']} fans of {ve['door_fan_diameter_m']:g} m in the door plug |
-| Outlet area | {c['roof_vent_area']:.1f} m² | {ve['roof_air_vents']} roof vents of {ve['roof_air_vent_diameter_m']:g} m |
-| Air speed at the inlet | {c['stack_ms']:.1f} m/s | loss coefficient {ve['loss_coefficient']:g} |
-| Air flow by natural convection | {c['stack_m3s']:.1f} m³/s | |
-| **Heat carried away** | **{c['stack_kw']:.0f} kW** | {c['stack_kw']/c['heat_mw']/10:.2f}% of the {c['heat_mw']:.0f} MW load |
-| Combustion air for both turbines | {c['both_turbines_air_m3s']:.0f} m³/s | {c['both_turbines_air_m3s']/c['stack_m3s']:.0f} times the convection flow |
+| Backup sets | {di['sets']} × {di['set_output_mw']:g} MW | {di['set_length_m']:g} × {di['set_width_m']:g} × {di['set_height_m']:g} m, {di['set_weight_t']:g} t each |
+| **Backup capacity** | **{c['diesel_mw']:.0f} MW** | {c['diesel_share']*100:.0f}% of the load |
+| Fuel burn, all sets at full load | {c['diesel_m3_h']:.2f} m³/h | {di['fuel_l_per_h_per_set']:g} L/h per set |
+| Day tanks inside | {di['day_tanks']} × {c['day_tank_m3']:.1f} m³ | {c['day_hours']:.1f} h at full load |
+| Bulk tank outside | {c['bulk_m3']:.0f} m³ | {di['bulk_tank_length_m']:g} m × {di['bulk_tank_diameter_m']:g} m at the propane tanks, {di['bulk_fill_fraction']*100:.0f}% fill |
+| **Run time on the bulk tank** | **{c['bulk_hours']:.0f} h** | all sets at full load |
+| Diesel line | {di['line_diameter_m']*1000:.0f} mm | {c['diesel_line_ms']:.2f} m/s at full burn |
 
-Natural convection through a door-sized inlet moves tens of kilowatts. That suits pods that put all of their heat into the liquid. It cannot supply the turbines, which need their own air inlets.
+The backup covers black start, controls, the cooling plant and about a fifth of the racks. It does not cover the loss of a turbine.
 
 ## 8. Open questions raised by these numbers
 
 1. **Store size.** {c['tank_gal']/1e6:.2f} M US gal gives {c['ride_min']:.0f} minutes of ride-through at {c['heat_mw']:.0f} MW. Decide the ride-through the site needs. See section 2.
 2. **Rack heat.** {c['rack_kw']:.0f} kW per rack is {c['heat_mw']:.0f} MW over {c['racks']} racks. Published figures for the Vera Rubin NVL72 run from about 190 to 230 kW, so the upper end would be {c['racks']*.23:.0f} MW.
-3. **Generation.** Two {pw['module_output_mw']:g} MW modules match the {c['heat_mw']:.0f} MW load with no spare, and pumps, fans and conversion losses add to that load. A 25 MW aeroderivative package with its generator, inlet filter and exhaust silencer is far larger than the 2.5 × 2.5 m section drawn.
-4. **Turbine air and exhaust.** Each turbine needs about {c['turbine_air_m3s']:.0f} m³/s of air and discharges about {c['exhaust_m3s']:.0f} m³/s of exhaust at {pw['exhaust_temperature_c']:.0f} °C. The vents as drawn would run at {c['vent_ms']:.0f} m/s. Inlets, vent sizes and the heat next to the pods and the store are not designed.
+3. **Generation.** Two {pw['module_output_mw']:g} MW sets match the {c['heat_mw']:.0f} MW load with no spare, and pumps, fans and conversion losses add to that load. The diesels cover {c['diesel_share']*100:.0f}%.
+4. **Fit of the power levels.** The two levels need {c['levels_need']:.2f} m and have {c['levels_have']:.2f} m, so the turbine sets stand {(c['levels_have']-c['levels_need'])*1000:.0f} mm under the lid. The floor structure for {c['top_weight_t']:.0f} t is an allowance, not a design.
 5. **Wall design.** {c['head_kpa']:.0f} kPa at the base puts about {c['outer_hoop_mpa']:.0f} MPa of hoop tension in a {s['outer_wall_m']*1000:.0f} mm outer skin. That needs post-tensioning or a thicker wall, and the inner skin needs a buckling check under external pressure.
-6. **Pod clearance.** {c['pod_clearance']*1000:.0f} mm between the rotating pod and the bore is tight for a {c['pod_length']:.1f} m cantilever.
-7. **Cooler air path.** Three coolers stacked vertically discharge outward at {c['cooler_face_ms']:.1f} m/s. Recirculation between rows and between the two tiers has not been checked.
-8. **Frame weight.** A frame of three 12 m coolers is a heavy pick at {cfg.SITE['crane_track_radius_m']-cfg.OUTSIDE_R-co['wall_standoff_m']-co['frame_depth_m']/2:.0f} m radius. The crane and the cast-in anchors are not sized.
-9. **Fuel.** {n(c['fuel_m3'])} m³ of propane runs the site for about {c['fuel_hours']:.0f} hours. Separation distances, bunding and the resupply rate have not been checked.
-10. **Power in the shaft.** {c['heat_mw']:.0f} MW passes down the steel shaft to {c['pods']} pods, {c['pod_kw']:.0f} kW each. The busbar, its cooling and the connection at each level are not designed.
-11. **Pod spacing.** The levels are {cfg.STORE['pitch_m']:g} m apart, which leaves {(cfg.STORE['pitch_m']-cfg.FRAME_HEIGHT)*1000:.0f} mm between pods. A full 0.5 m needs {(cfg.FRAME_HEIGHT+.5-cfg.STORE['pitch_m'])*(cfg.LEVELS-1):.1f} m more height than the two power modules leave under the lid.
+6. **Air in the bore.** There is no general ventilation. The bore is surrounded by a store at 45 to 55 °C, so it will sit near that temperature. Work inside needs cooled air or short shifts, and this is not designed.
+7. **Heat next to the pods.** Each turbine rejects about {c['turbine_heat_mw']:.0f} MW, mostly up the stack at {pw['exhaust_temperature_c']:.0f} °C. Insulation of the stacks and the turbine level above the pods and the store is not designed.
+8. **Cooler air path.** Three coolers stacked vertically discharge outward at {c['cooler_face_ms']:.1f} m/s. Recirculation between rows and between the two tiers has not been checked.
+9. **Lifts.** Each power level is shown lowered as one assembly. The crane, the lifting sequence and the removal route for a turbine or generator are not designed.
+10. **Fuel.** {n(c['fuel_m3'])} m³ of propane runs the site for about {c['fuel_hours']:.0f} hours. Separation distances, bunding, the vaporiser and the resupply rate have not been checked. Fuel stored inside is limited to the day tanks, and the limit that applies has not been checked.
+11. **Power in the shaft.** {c['heat_mw']:.0f} MW passes down the steel shaft to {c['pods']} pods, {c['pod_kw']:.0f} kW each. The busbar, its cooling and the connection at each level are not designed.
+12. **Pod support.** The pods now hang {cfg.STORE['root_radius_m']-cfg.STORE['shaft_radius_m']:.1f} m out from the shaft with a walkway ring between. The carrier ring and its arms are not designed.
 
 ## Fluid properties used
 

@@ -44,9 +44,9 @@ class Data {
     // Cooler service during the pod exchange, and the closing scenes.
     public int ServiceFrame,ServiceRow,ServiceArrive,ServiceRigged,ServiceDown,ServiceOut,ServiceIn,ServiceReleased,ServiceDone;
     public int Fuel,Tanks,TankStep,FuelEnd,Plan,PlanFrames,Section,SectionFrames,Fade,TankCount;
-    public int Enc0,Enc1,Enc2,Enc3,DoorBegin,DoorEnd,RoofBegin,RoofEnd,FinalBegin,FinalEnd,DoorFans,RoofVents,PlugOut,PlugIn;
-    public float RoofVentRadius,RoofVentSize,ModuleMW;
-    public Row[] TurbineRows,AirRows;
+    public int Enc0,Enc1,Enc2,Enc3,FinalBegin,FinalEnd,DieselSets;
+    public float ModuleMW,SetY,GenL,GenH,Level0,ExhaustR,InletL,InletH,InletX,DieselStackH,DieselEnd,DropR,ShaftCore;
+    public Row[] TurbineRows,BackupRows;
     public int[] Line=new int[10];
     public float FuelBearing,FarmRadius,TankLength,TankDiameter,TankPitch,RiserRadius,GasTop,DropRadius,DropEnd;
     public Row[] FuelRows,PlanRows,SectionRows;public Caption[] Captions;
@@ -79,7 +79,7 @@ class Data {
     }
     public Data(string file){
         using(var r=new BinaryReader(File.OpenRead(file))){
-            if (System.Text.Encoding.ASCII.GetString(r.ReadBytes(8))!="GSILO03\0") throw new InvalidDataException("Unknown scene");
+            if (System.Text.Encoding.ASCII.GetString(r.ReadBytes(8))!="GSILO04\0") throw new InvalidDataException("Unknown scene");
             int nm=r.ReadInt32(),nn=r.ReadInt32(),nf=r.ReadInt32(); Fps=r.ReadInt32();
             Outer=r.ReadSingle();OuterInside=r.ReadSingle();InnerOutside=r.ReadSingle();Inner=r.ReadSingle();
             Height=r.ReadSingle();Lift=r.ReadSingle();
@@ -117,12 +117,11 @@ class Data {
             Fade=r.ReadInt32();TankCount=r.ReadInt32();
             FuelBearing=r.ReadSingle();FarmRadius=r.ReadSingle();TankLength=r.ReadSingle();TankDiameter=r.ReadSingle();TankPitch=r.ReadSingle();
             RiserRadius=r.ReadSingle();GasTop=r.ReadSingle();DropRadius=r.ReadSingle();DropEnd=r.ReadSingle();
-            Enc0=r.ReadInt32();Enc1=r.ReadInt32();Enc2=r.ReadInt32();Enc3=r.ReadInt32();DoorBegin=r.ReadInt32();DoorEnd=r.ReadInt32();
-            RoofBegin=r.ReadInt32();RoofEnd=r.ReadInt32();FinalBegin=r.ReadInt32();FinalEnd=r.ReadInt32();
-            DoorFans=r.ReadInt32();RoofVents=r.ReadInt32();PlugOut=r.ReadInt32();PlugIn=r.ReadInt32();
-            RoofVentRadius=r.ReadSingle();RoofVentSize=r.ReadSingle();ModuleMW=r.ReadSingle();
+            Enc0=r.ReadInt32();Enc1=r.ReadInt32();Enc2=r.ReadInt32();Enc3=r.ReadInt32();FinalBegin=r.ReadInt32();FinalEnd=r.ReadInt32();DieselSets=r.ReadInt32();
+            ModuleMW=r.ReadSingle();SetY=r.ReadSingle();GenL=r.ReadSingle();GenH=r.ReadSingle();Level0=r.ReadSingle();ExhaustR=r.ReadSingle();InletL=r.ReadSingle();
+            InletH=r.ReadSingle();InletX=r.ReadSingle();DieselStackH=r.ReadSingle();DieselEnd=r.ReadSingle();DropR=r.ReadSingle();ShaftCore=r.ReadSingle();
             Title=Str(r);Strip=Rows(r);Summary=Rows(r);StoreRows=Rows(r);FrameRows=Rows(r);
-            FuelRows=Rows(r);PlanRows=Rows(r);SectionRows=Rows(r);TurbineRows=Rows(r);AirRows=Rows(r);
+            FuelRows=Rows(r);PlanRows=Rows(r);SectionRows=Rows(r);TurbineRows=Rows(r);BackupRows=Rows(r);
             Captions=new Caption[r.ReadInt32()];
             for(int i=0;i<Captions.Length;i++){Captions[i]=new Caption();Captions[i].First=r.ReadInt32();Captions[i].Last=r.ReadInt32();Captions[i].Text=Str(r);}
             Meshes=new Mesh[nm];Nodes=new Node[nn];Frames=new Frame[nf];
@@ -689,28 +688,27 @@ partial class Shot {
         g.FillRectangle(accent,x,33,25,3);
         Text(g,"POWER INSTALLATION",section,muted,x,46);
         Heading(g,"Power plant",x-2,73);
-        Text(g,"Crossed steel modules",title2,muted,x,126);
+        Text(g,"Diesel level, then turbine level",title2,muted,x,126);
         Rule(g,x,164,xr,164,cLine,1);
-        Text(g,"UNITS DOCKED",section,muted,x,182);
+        Text(g,"LEVELS SEATED",section,muted,x,182);
         g.DrawString(count+" / 2",numbers,ink,new PointF(xr,169),rightText);
         for(int i=0;i<2;i++){g.FillRectangle(i<count?ink:light,x+101*i,212,97,5);}
-        string phase=t>=d.LidEnd?"Silo closed":t>=d.LidBegin+8?"Lower the lid":done?"Rig the lid":vents?"Extend exhaust vents":
-            count==2?"Release the rigging":t>=firstSeat && !second?"Hook the upper unit":
-            elapsed<5?"Rig the module":elapsed<55?"Hoist above rim":elapsed<91?"Slew over bore":
-            second?"Dock at 90 degrees":"Dock on shaft";
+        string phase=t>=d.LidEnd?"Silo closed":t>=d.LidBegin+8?"Lower the lid and its vents":done?"Rig the lid":vents?"Release the rigging":
+            count==2?"Release the rigging":t>=firstSeat && !second?"Hook the turbine level":
+            elapsed<5?"Rig the level":elapsed<55?"Hoist above rim":elapsed<91?"Slew over bore":
+            second?"Seat the turbine sets":"Seat the diesel sets";
         Text(g,phase,strong,done?ink:accent,x,236);
-        Text(g,"Body length",title2,muted,x,275);
-        g.DrawString(d.PowerLength.ToString("0.00")+" m",mono,ink,new PointF(xr,275),rightText);
+        Text(g,"Turbine set",title2,muted,x,275);
+        g.DrawString(d.PowerLength.ToString("0.0")+" x "+d.PowerWidth.ToString("0.0")+" m",mono,ink,new PointF(xr,275),rightText);
         Rule(g,x,312,xr,312,cLine,1);
-        Text(g,"POWER MODULE PLAN",section,muted,x,333);
-        PowerPlan(g,count,done);
-        Text(g,"MODULE SECTION",section,muted,x,578);
-        g.DrawString(d.PowerWidth.ToString("0.##")+" x "+d.PowerHeight.ToString("0.##")+" m",mono,ink,new PointF(xr,577),rightText);
-        Rule(g,x,605,xr,605,cLine,1);
-        Text(g,"Cooler frames",title2,muted,x,629);
-        g.DrawString(d.CoolerFrames+" connected",mono,ink,new PointF(xr,628),rightText);
-        Text(g,"Exhaust vents",title2,muted,x,661);
-        g.DrawString(done?"4 at "+d.VentTop.ToString("0.#")+" m":"4 risers",mono,ink,new PointF(xr,660),rightText);
+        Text(g,"TURBINE LEVEL",section,muted,x,333);
+        Rows(g,d.TurbineRows,x,xr,356,22);
+        Rule(g,x,478,xr,478,cLine,1);
+        Text(g,"DIESEL LEVEL",section,muted,x,497);
+        Rows(g,d.BackupRows,x,xr,520,22);
+        Rule(g,x,620,xr,620,cLine,1);
+        Text(g,"Roof stacks",title2,muted,x,640);
+        g.DrawString("to "+d.VentTop.ToString("0.#")+" m",mono,ink,new PointF(xr,639),rightText);
         Text(g,"Lid",title2,muted,x,693);
         g.DrawString(t>=d.LidEnd?"Closed":"Open",mono,ink,new PointF(xr,692),rightText);
     }
@@ -767,7 +765,7 @@ partial class Shot {
             g.DrawString(d.WorkLevels[j]==0?"P":d.WorkLevels[j].ToString(),section,z>1?white:ink,new PointF(mark.X,mark.Y-6),middleText);
         }
         using(var br=new SolidBrush(cInk))g.FillEllipse(br,cx-8,cy-8,16,16);
-        g.DrawString("P  LOWER POWER UNIT",section,muted,new PointF(cx,544),middleText);
+        g.DrawString("P  TURBINE LEVEL",section,muted,new PointF(cx,544),middleText);
     }
     void CrewOverlay(Graphics g,int frame){
         int w=frame-d.Full-d.Crew;
@@ -777,7 +775,7 @@ partial class Shot {
         Rule(g,x,164,xr,164,cLine,1);
         int at=0;
         for(int j=0;j<d.Bays;j++){
-            double set=d.WorkLevels[j]==0?d.PowerBase0+.064:d.BaseZ-.025+d.Pitch*(d.WorkLevels[j]-1);
+            double set=d.WorkLevels[j]==0?d.PowerBase1+.054:d.BaseZ-.025+d.Pitch*(d.WorkLevels[j]-1);
             if(Math.Abs(d.Nodes[decks[j]].WorldPose.T.Z-set)<.03)at++;
         }
         Text(g,"DECKS AT WORK",section,muted,x,182);g.DrawString(at+" / "+d.Bays,numbers,ink,new PointF(xr,169),rightText);
@@ -804,7 +802,7 @@ partial class Shot {
         }
         if(w>449 && w<535){
             V pt=World(new V(3.68,.10,1.64),d.Nodes[decks[1]],d.Nodes[decks[1]].WorldPose);
-            WorkLeader(g,pt,"Lower power unit");
+            WorkLeader(g,pt,"Gas turbine set A");
         }
     }
     string RepairPhase(int w){
@@ -900,8 +898,7 @@ partial class Shot {
                 if(t>=d.FinalBegin)DesignOverlay(g,frame);
                 else if(t>=d.Repair){SwapOverlay(g,frame);ServicePanel(g,frame);}
                 else if(t>=d.Fuel)FuelOverlay(g,frame);
-                else if(t>=d.OrbitBegin-24)DesignOverlay(g,frame);
-                else if(t>=d.SealBegin)VentOverlay(g,frame);
+                else if(t>=d.SealBegin)DesignOverlay(g,frame);
                 else if(t>=d.Crew)CrewOverlay(g,frame);
                 else if(frame>=d.Full)PowerOverlay(g,frame);
                 else if(frame>=d.FrameTimes[0,0] && frame<d.FrameTimes[0,7])CoolerFrameOverlay(g,frame);

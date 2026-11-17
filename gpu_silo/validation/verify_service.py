@@ -33,11 +33,11 @@ def check(p,doc,names,parents,get,points,ids,overlap):
         prefix=f"Wedge {b+1:02} | "
         deck=names[prefix+"solid lift platform"];root=parents[deck]
         assert parents[root]==rack and abs(wrap(yaw(root)[begin]-p.ENTRY-b*p.UNIFORM))<.00002
-        sample=rotate(np.array([3.98,.13]),p.ENTRY+b*p.UNIFORM)
+        sample=rotate(np.array([crew.PLATE_IN+1.5,.13]),p.ENTRY+b*p.UNIFORM)
         delta=sample-planar[:,:,:2]
         signs=edges[:,:,0]*delta[:,:,1]-edges[:,:,1]*delta[:,:,0]
         covered=((signs.min(axis=1)>-.0001)|(signs.max(axis=1)<.0001))&(areas>.00001)
-        assert np.isclose(planar[covered,:,2].max(),crew.WELL_FLOOR,atol=.00004)
+        assert np.isclose(planar[covered,:,2].max(),crew.WELL_FLOOR,atol=.00004),(b,planar[covered,:,2].max(),sample)
         z=xyz(deck)[:,2]
         assert np.isclose(z[begin],crew.STOW) and np.isclose(z[begin+300],crew.target(b))
         turbine=crew.LEVELS[b]==0;tw=[v-p.clock.CREW for v in p.clock.TURBINE_WORK]
@@ -80,14 +80,15 @@ def check(p,doc,names,parents,get,points,ids,overlap):
                 a=p.plant;at=begin+(tw[1]+tw[2])//2
                 assert p.FILLED+p.clock.ENCLOSURE_OPEN[1]<begin+tw[0] and begin+tw[3]<p.FILLED+p.clock.ENCLOSURE_CLOSE[0]
                 place=rotate(t[at,:2],yaw(root)[at]-a.POWER_YAW)
-                assert abs(place[0])<a.LENGTH/2-.3 and a.WIDTH/2+.2<abs(place[1])<a.WIDTH/2+a.PANEL_HEIGHT-.2
+                edge=a.SET_Y+a.SET_W/2
+                assert a.PANEL_X[0]+.2<place[0]<a.PANEL_X[1]-.2 and edge+.2<place[1]<edge+a.PANEL_HEIGHT-.2,place
                 assert abs(z[at]+t[at,2]-crew.POWER_FLOOR)<.02
                 for i in active:
-                    assert z[at]+t[at,2]+points(i)[:,2].max()<a.power_base(p.CROWN,1)-.3
+                    assert z[at]+t[at,2]+points(i)[:,2].max()<a.LID_Z-.3
                 # Before and after, they wait on the deck clear of the swinging side.
                 for f in (begin+tw[0]-1,begin+tw[3]+12):
                     wait=rotate(t[f,:2],yaw(root)[f]-a.POWER_YAW)
-                    assert abs(wait[1])>a.WIDTH/2+a.PANEL_HEIGHT+.2
+                    assert wait[1]>a.SET_Y+a.SET_W/2+a.PANEL_HEIGHT+.2
     # The camera-facing equipment has a faint real material in the GLB.
     cooler_names=[n for n in names if re.fullmatch(r"Cooler frame \d\d \| cooler \d",n)]
     ghost_ids=[names[n+" | inspection finish"] for n in cooler_names]

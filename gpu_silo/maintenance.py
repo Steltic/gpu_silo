@@ -125,8 +125,7 @@ def service_camera(t,section,cam,blend):
     ext=cam(EXTERIOR,-62+360*u,15+6*math.sin(math.pi*u)**2,92.0)
     start=cam(EXTERIOR,-62,15,92.0)
     if t<CREW:return section
-    if t<SOLID_BEGIN+8:return crew_camera(t-CREW,cam,blend,section)
-    if t<ORBIT:return vent_camera(t,cam,blend,start)
+    if t<ORBIT:return crew_camera(t-CREW,cam,blend,section,start)
     if t<REPAIR:return ext
     return repair_camera(t-REPAIR,cam,blend,start)
 
@@ -134,30 +133,17 @@ def service_camera(t,section,cam,blend):
 EXTERIOR=(0,0,14.6)
 
 
-def door_view(cam):
-    return cam(s.polar(s.RO+.4,s.ENTRY,1.5),math.degrees(s.ENTRY)+38,9,13.5)
-
-
-def vent_camera(t,cam,blend,start):
-    """Close on the door plug, rise to the roof vents, then pull back for the orbit."""
-    door=door_view(cam)
-    roof=cam((0,0,s.WALL_HEIGHT+.6),math.degrees(s.ENTRY)+20,36,31)
-    if t<clock.DOOR[1]+26:return door
-    if t<clock.ROOF[1]+4:return blend(door,roof,step(clock.DOOR[1]+26,clock.ROOF[0]-6,t))
-    return blend(roof,start,step(clock.ROOF[1]+4,ORBIT-2,t))
-
-
-def crew_camera(w,cam,blend,section):
+def crew_camera(w,cam,blend,section,exterior):
     entry=cam(s.polar(3.10,s.ENTRY,.92),-48,31,13.6)
     lift=cam((.55,-.7,10.7),-70,17,47)
     pod=cam(s.polar(3.64,s.ENTRY,8.57),-46,10,12.6)
-    power=cam(s.polar(2.3,s.ENTRY+crew.POWER_BAY*2*math.pi/cfg.BAYS,crew.POWER_FLOOR+1.05),math.degrees(s.ENTRY)+crew.POWER_BAY*360/cfg.BAYS-34,9,13.4)
+    power=cam(s.polar(4.4,s.ENTRY+crew.POWER_BAY*2*math.pi/cfg.BAYS,crew.POWER_FLOOR+1.2),math.degrees(s.ENTRY)+crew.POWER_BAY*360/cfg.BAYS-30,10,14.5)
     down=cam((0,0,10.1),-58,18,48)
     if w<62:return blend(section,entry,step(0,53,w))
     if w<225:return blend(entry,lift,step(106,205,w))
     if w<352:return blend(lift,pod,step(248,295,w))
     if w<clock.ENCLOSURE_CLOSE[0]-CREW+6:return blend(pod,power,step(352,404,w))
-    return blend(power,door_view(cam),step(clock.ENCLOSURE_CLOSE[0]-CREW+6,SOLID_BEGIN-CREW+4,w))
+    return blend(power,exterior,step(clock.ENCLOSURE_CLOSE[0]-CREW+6,ORBIT-CREW-2,w))
 
 
 def repair_camera(w,cam,blend,exterior):
@@ -282,7 +268,7 @@ def install(scene,node,p):
     scene.inspection_windows=((p.FILLED+CREW,p.FILLED+(SOLID_BEGIN+SOLID_END)//2),(p.FILLED+REPAIR,p.FILLED+sum(FINAL)//2))
     scene.power_detail=(p.FILLED+CREW+384,p.FILLED+clock.ENCLOSURE_CLOSE[1]+30)
     scene.project_info.update(servicePlatforms=cfg.BAYS,serviceCrewCount=sum(crew.SIZES),crewByWedge=list(crew.SIZES),
-        crewDestinations=["Lower power unit" if n==0 else f"Level {n}" for n in crew.LEVELS],
+        crewDestinations=["Turbine level" if n==0 else f"Level {n}" for n in crew.LEVELS],
         powerServiceDeckElevation_m=crew.POWER_DECK,crewSceneStart_s=(p.FILLED+CREW)/p.FPS,
         replacementSceneStart_s=(p.FILLED+REPAIR)/p.FPS,
         finalExteriorSweep_deg=360,exteriorSweepStart_s=(p.FILLED+ORBIT)/p.FPS,defectivePod=BAD+1,serviceLevel=LEVEL,

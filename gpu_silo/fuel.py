@@ -1,8 +1,8 @@
-"""Propane storage beside the silo and the gas line to the power modules.
+"""Fuel beside the silo: propane for the turbines and bulk diesel for the backup sets.
 
-The tanks stand side by side with their long axes pointing at the silo. One line
-runs along the ground, up the outside wall behind a cooler frame, over the lid
-and down to the two power modules.
+The propane tanks stand side by side with their long axes pointing at the silo. One propane line
+runs along the ground, up the outside wall behind a cooler frame, over the lid and down to the
+turbine level. A small diesel line follows it and carries on down to the day tanks.
 """
 import math
 
@@ -20,17 +20,27 @@ BEARING=fr.BEARINGS[F["riser_behind_frame"]-1]+math.asin(F["riser_offset_m"]/s.R
 FARM_R=F["distance_m"]
 HEADER_R=FARM_R-LENGTH/2-1.4
 RISER_R=s.RO+.22
-PIPE=.14
+PIPE=F["line_diameter_m"]/2
+D=cfg.PROJECT["diesel"]
+DIESEL_PIPE=.04
+DIESEL="b5553c"
+BULK_D,BULK_L=D["bulk_tank_diameter_m"],D["bulk_tank_length_m"]
+SIDE=.34
 LOW=.45
 TOP=s.WALL_HEIGHT+.80
-DROP_R=2.6
+# The drops come down beside the turbine sets, clear of the roof equipment.
+DROP_R=4.6
 GAS="d9b13c"
 SHELL="e9e7dc"
 OFF,ON=(0,0,0),(1,1,1)
 
 
 def drop_end(crown):
-    return plant.power_base(crown,0)+plant.HEIGHT/2
+    return plant.power_base(crown,1)+1.2
+
+
+def diesel_end(crown):
+    return plant.power_base(crown,0)+1.6
 
 
 def offsets():
@@ -51,10 +61,25 @@ def tank_mesh():
     return m
 
 
-def unit_pipe(name,axis):
-    """A one-metre length of gas line from the origin. Scaling the node along the axis lays the pipe."""
+def unit_pipe(name,axis,gas=True,diesel=True):
+    """A one-metre length of line from the origin. Scaling the node along the axis lays the pipe.
+
+    The diesel line runs beside the gas line, offset along local Y.
+    """
     m=plant.mesh(name)
-    services.pipe(m,(0,0,0),axis,PIPE,GAS,n=10)
+    if gas:services.pipe(m,(0,0,0),axis,PIPE,GAS,n=10)
+    if diesel:services.pipe(m,(0,SIDE,0),(axis[0],SIDE+axis[1],axis[2]),DIESEL_PIPE,DIESEL,n=8)
+    return m
+
+
+def bulk_tank_mesh():
+    m=plant.mesh(f"Diesel bulk tank | {BULK_L:g} m horizontal tank on two saddles")
+    r=BULK_D/2;body=BULK_L/2-.3;z=r+.55
+    services.pipe(m,(-body,0,z),(body,0,z),r,DIESEL,n=18)
+    for sign in (-1,1):
+        services.pipe(m,(sign*body,0,z),(sign*BULK_L/2,0,z),r*.8,"9c4a36",n=18)
+        plant.closed(m,sign*BULK_L*.3-.4,-r*.82,sign*BULK_L*.3+.4,r*.82,0,z-r*.55,"a9aea4")
+    services.pipe(m,(0,0,z+r-.05),(0,0,z+r+.4),.22,"8f9892",n=10)
     return m
 
 
@@ -97,9 +122,16 @@ def install(scene,node,p):
             return site(FARM_R,y,6.5*(1-s.step(land,land+closing.TANK_STEP-2,t)))
         node(f"Propane tank {j+1:02}",tank,"Fuel storage",ang=BEARING,
              tracks={"translation":curve((land,land+closing.TANK_STEP),lower),"scale":window(land)})
-    line=scene.mesh(unit_pipe("Gas line | one metre of pipe along local X",(1,0,0)))
-    rise=scene.mesh(unit_pipe("Gas line | one metre of riser",(0,0,1)))
-    fall=scene.mesh(unit_pipe("Gas line | one metre of drop",(0,0,-1)))
+    # Bulk diesel for the backup sets stands at the end of the propane row.
+    beside=-(COUNT*PITCH/2+BULK_D/2+2.5)
+    landed=closing.TANKS+(COUNT-1)*closing.TANK_STEP
+    node("Diesel bulk tank",scene.mesh(bulk_tank_mesh()),"Fuel storage",ang=BEARING,
+         tracks={"translation":curve((landed,landed+closing.TANK_STEP),lambda t:site(FARM_R-LENGTH/2+BULK_L/2,beside,6.5*(1-s.step(landed,landed+closing.TANK_STEP-2,t)))),
+                 "scale":window(landed)})
+    line=scene.mesh(unit_pipe("Fuel lines | one metre of gas and diesel pipe along local X",(1,0,0)))
+    rise=scene.mesh(unit_pipe("Fuel lines | one metre of gas and diesel riser",(0,0,1)))
+    fall=scene.mesh(unit_pipe("Gas line | one metre of drop",(0,0,-1),diesel=False))
+    oil=scene.mesh(unit_pipe("Diesel line | one metre of drop",(0,0,-1),gas=False))
     width=(COUNT-1)*PITCH
     header=plant.mesh("Gas line | tank header")
     services.pipe(header,(0,-.5,0),(0,.5,0),PIPE,GAS,n=10)
@@ -116,5 +148,6 @@ def install(scene,node,p):
     lay("Gas line | riser on the outside wall",rise,site(RISER_R,0,LOW),0,closing.RISER,TOP-LOW,"z")
     lay("Gas line | run across the lid",line,site(RISER_R,0,TOP),BEARING+math.pi,closing.ROOF,RISER_R-DROP_R,"x")
     lay("Gas line | drop to the power modules",fall,site(DROP_R,0,TOP),0,closing.DROP,TOP-drop_end(p.CROWN),"z")
-    scene.project_info.update(propaneTanks=COUNT,propaneTank_m=[LENGTH,DIA],propaneStorageDistance_m=FARM_R,
+    lay("Diesel line | drop to the day tanks",oil,site(DROP_R,0,TOP),BEARING+math.pi,closing.DROP,TOP-diesel_end(p.CROWN),"z")
+    scene.project_info.update(dieselBulkTank_m=[BULK_L,BULK_D],propaneTanks=COUNT,propaneTank_m=[LENGTH,DIA],propaneStorageDistance_m=FARM_R,
         gasRiserBearing_deg=math.degrees(BEARING),gasLineTop_m=TOP,fuelSceneStart_s=(base+closing.FUEL)/p.FPS)
