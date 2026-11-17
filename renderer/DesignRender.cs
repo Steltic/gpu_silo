@@ -6,7 +6,7 @@ using System.Drawing.Drawing2D;
 partial class Shot {
     void DesignStrip(Graphics g,int frame) {
         int since=frame-d.Full;
-        if(d.Strip.Length==0 || since>=d.OrbitBegin-24 && since<d.Fuel || since>=d.FinalBegin)return;
+        if(d.Strip.Length==0 || since>=d.SealBegin && since<d.Fuel || since>=d.FinalBegin)return;
         const float height=40,right=1280-22;
         float left=UiLeft+22,top=720-22-height;
         using(var back=new SolidBrush(Color.FromArgb(238,245,244,236)))g.FillRectangle(back,left,top,right-left,height);
@@ -27,31 +27,9 @@ partial class Shot {
         const int x=927,y=36,wide=325,high=150;
         using(var bg=new SolidBrush(Color.FromArgb(247,246,239)))g.FillRectangle(bg,x,y,wide,high);
         Rule(g,x,y,x+wide,y,cLine,1);Rule(g,x,y+high,x+wide,y+high,cLine,1);
-        g.DrawString("LOWER POWER MODULE",section,muted,new PointF(x+14,y+12),leftText);
+        g.DrawString("TURBINE SET A",section,muted,new PointF(x+14,y+12),leftText);
         g.DrawString(d.ModuleMW.ToString("0.#")+" MW gas turbine",strong,accent,new PointF(x+14,y+34),leftText);
         Rows(g,d.TurbineRows,x+14,x+wide-14,y+66,16);
-    }
-
-    // The door plug and the roof vents, placed before the closing orbit.
-    void VentOverlay(Graphics g,int frame) {
-        const float x=24,xr=222;
-        int t=frame-d.Full,roof=0;
-        for(int k=0;k<d.RoofVents;k++)if(t>=d.RoofBegin+k*(d.RoofEnd-d.RoofBegin-16)/Math.Max(1,d.RoofVents-1)+16)roof++;
-        bool plugged=t>=d.DoorEnd;
-        string phase=t<d.DoorBegin?"Finished silo":!plugged?"Plug the ground door":t<d.RoofBegin?"Door plugged":roof<d.RoofVents?"Set the roof vents":"Air path complete";
-        g.FillRectangle(accent,x,33,25,3);g.DrawString("VENTILATION",section,muted,new PointF(x,46),leftText);
-        Heading(g,"Air path",x-2,73);g.DrawString("In at the door, out at the roof",title2,muted,new PointF(x,126),leftText);
-        Rule(g,x,164,xr,164,cLine,1);g.DrawString("ROOF VENTS",section,muted,new PointF(x,183),leftText);
-        g.DrawString(roof+" / "+d.RoofVents,numbers,ink,new PointF(xr,169),rightText);
-        float bar=(xr-x-4*(d.RoofVents-1))/d.RoofVents;
-        for(int i=0;i<d.RoofVents;i++)g.FillRectangle(i<roof?waterBrush:light,x+(bar+4)*i,212,bar,5);
-        g.DrawString(phase,strong,roof==d.RoofVents?ink:accent,new PointF(x,239),leftText);
-        Rule(g,x,311,xr,311,cLine,1);g.DrawString("GROUND DOOR",section,muted,new PointF(x,329),leftText);
-        g.FillRectangle(plugged?waterBrush:light,x,360,8,8);
-        g.DrawString("Fan plug, "+d.DoorFans+" fans",title2,plugged?ink:muted,new PointF(x+19,354),leftText);
-        g.DrawString("Removed for a pod exchange",monoSmall,muted,new PointF(x+19,376),leftText);
-        Rule(g,x,430,xr,430,cLine,1);g.DrawString("NATURAL CONVECTION",section,muted,new PointF(x,448),leftText);
-        Rows(g,d.AirRows,x,xr,470,24);
     }
 
     // Cooler service card shown beside the pod exchange.
@@ -77,16 +55,16 @@ partial class Shot {
         for(int k=0;k<d.TankCount;k++)if(t>=d.Tanks+(k+1)*d.TankStep-2)landed++;
         string phase=t<d.Tanks?"Clear the pad":landed<d.TankCount?"Place the tanks":
             t<d.Line[3]?"Run the line to the silo":t<d.Line[5]?"Up the outside wall":
-            t<d.Line[7]?"Across the lid":t<d.Line[9]?"Down to the power modules":"Fuel connected";
+            t<d.Line[7]?"Across the lid":t<d.Line[9]?"Down to the power levels":"Fuel connected";
         g.FillRectangle(accent,x,33,25,3);g.DrawString("FUEL SUPPLY",section,muted,new PointF(x,46),leftText);
-        Heading(g,"Propane",x-2,73);g.DrawString("Gas for the power modules",title2,muted,new PointF(x,126),leftText);
+        Heading(g,"Fuel",x-2,73);g.DrawString("Propane and backup diesel",title2,muted,new PointF(x,126),leftText);
         Rule(g,x,164,xr,164,cLine,1);g.DrawString("TANKS PLACED",section,muted,new PointF(x,183),leftText);
         g.DrawString(landed+" / "+d.TankCount,numbers,ink,new PointF(xr,169),rightText);
         float bar=(xr-x-4*(d.TankCount-1))/d.TankCount;
         for(int i=0;i<d.TankCount;i++)g.FillRectangle(i<landed?waterBrush:light,x+(bar+4)*i,212,bar,5);
         g.DrawString(phase,strong,t>=d.Line[9]?ink:accent,new PointF(x,239),leftText);
-        Rule(g,x,311,xr,311,cLine,1);g.DrawString("GAS LINE",section,muted,new PointF(x,329),leftText);
-        string[] legs={"Tank header","Ground run","Riser on the wall","Across the lid","Drop to the modules"};
+        Rule(g,x,311,xr,311,cLine,1);g.DrawString("FUEL LINES",section,muted,new PointF(x,329),leftText);
+        string[] legs={"Tank header","Ground run","Riser on the wall","Across the lid","Drops to the power levels"};
         for(int i=0;i<5;i++){
             float y=356+i*30;bool done=t>=d.Line[2*i+1],live=t>=d.Line[2*i] && !done;
             g.FillRectangle(done?waterBrush:live?accent:light,x,y+4,8,8);

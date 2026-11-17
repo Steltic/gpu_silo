@@ -17,7 +17,6 @@ from . import closing
 from . import crane
 from . import fuel
 from . import service
-from . import vents
 from . import crew
 from . import cargo
 from . import yard
@@ -277,6 +276,16 @@ def cage_mesh():
         end_box(m,x-.039,y-.039,x+.039,y+.039,-.05,.13,DARK)
     for level in range(1,LEVELS+1):
         z=level_z(level)
+        # A walkway ring between the shaft and the pod roots lets people pass from sector to sector.
+        # It sits just under the pods, with a gangway out to each wedge deck.
+        annulus(m,SHAFT+.22,INNER-.10,z-.13,z-.09,"cfd3c8",n=40)
+        annulus(m,INNER-.12,INNER-.04,z-.20,z-.06,STEEL,n=40)
+        annulus(m,INNER-.12,INNER-.08,z+.95,z+1.0,"ddb477",n=40)
+        for j in range(BAYS):
+            a=ENTRY+j*UNIFORM
+            if level>1 or j:
+                s.bar(m,s.polar(INNER-.1,a,z-.11),s.polar(crew.PLATE_IN-.06,a,z-.11),.80,"cfd3c8",.04)
+            s.bar(m,s.polar(.78,a+UNIFORM/2,z-.17),s.polar(INNER-.08,a+UNIFORM/2,z-.17),.12,STEEL,.10)
         annulus(m,.48,.792,z+cargo.FRAME_HEIGHT-.125,z+cargo.FRAME_HEIGHT-.03,STEEL,n=28)
         annulus(m,.46,.77,z-.18,z-.045,STEEL,n=28)
         annulus(m,.685,.79,z-.11,z-.025,MINT,n=28)
@@ -590,7 +599,6 @@ def build():
     care.install(scene,node,sys.modules[__name__])
     service.install(scene,node,sys.modules[__name__])
     fuel.install(scene,node,sys.modules[__name__])
-    vents.install(scene,node,sys.modules[__name__])
     scene.storage_inspection=(FIRST_POD,FILLED+plant.VENT_END)
     yard.install_terminal(scene,node,sys.modules[__name__])
     return scene
@@ -602,7 +610,7 @@ def render_data(scene,path):
         def floats(*v): file.write(struct.pack("<"+"f"*len(v),*v))
         def string(txt):
             b=txt.encode("utf8");ints(len(b));file.write(b)
-        file.write(b"GSILO03\0")
+        file.write(b"GSILO04\0")
         ints(len(scene.meshes),len(scene.nodes),FRAMES,FPS)
         floats(s.RO,s.RI_OUTER,s.RO_INNER,s.RI,s.WALL_HEIGHT,s.LIFT)
         ints(s.COUNT,s.LAST_POUR,s.LAST_POUR+s.REVEAL//2,s.LAST_POUR+s.REVEAL,
@@ -629,14 +637,14 @@ def render_data(scene,path):
         ints(closing.FUEL,closing.TANKS,closing.TANK_STEP,*closing.HEADER,*closing.RUN,*closing.RISER,*closing.ROOF,*closing.DROP,
              closing.FUEL_END,closing.PLAN,closing.PLAN_FRAMES,closing.SECTION,closing.SECTION_FRAMES,closing.FADE,fuel.COUNT)
         floats(fuel.BEARING,fuel.FARM_R,fuel.LENGTH,fuel.DIA,fuel.PITCH,fuel.RISER_R,fuel.TOP,fuel.DROP_R,fuel.drop_end(CROWN))
-        # Turbine enclosure, door plug, roof vents and the last cutaway.
-        ints(*clock.ENCLOSURE_OPEN,*clock.ENCLOSURE_CLOSE,*clock.DOOR,*clock.ROOF,*closing.FINAL,
-             vents.FANS,vents.ROOF,vents.PLUG_OUT[1],vents.PLUG_IN[0])
-        floats(vents.ROOF_RADIUS,vents.ROOF_R,cfg.POWER["module_output_mw"])
+        # Turbine enclosure, the last cutaway and the two power levels.
+        ints(*clock.ENCLOSURE_OPEN,*clock.ENCLOSURE_CLOSE,*closing.FINAL,len(plant.GEN_AT))
+        floats(cfg.POWER["module_output_mw"],plant.SET_Y,plant.GEN_L,plant.GEN_H,plant.LEVEL[0],plant.EXHAUST_R,plant.INLET_HOUSE[0],
+               plant.INLET_HOUSE[2],plant.INLET_AT[0][0],plant.DIESEL_STACK_H,fuel.diesel_end(CROWN),fuel.DROP_R,cfg.STORE["shaft_radius_m"])
         string(cfg.TITLE)
         panels=calcs.panel()
         for rows in (calcs.strip(),calcs.summary(),panels["store"],panels["frames"],panels["fuel"],panels["plan"],panels["section"],
-                     panels["turbine"],panels["air"]):
+                     panels["turbine"],panels["backup"]):
             ints(len(rows))
             for left,right in rows:string(left);string(right)
         lines=closing.captions()
@@ -654,7 +662,6 @@ def render_data(scene,path):
             if node['group']=="Crew decks":typ=6
             if node['group']=="Replacement pod":typ=7
             if node['group']=="Silo lid":typ=16
-            if node['group']=="Roof vents":typ=17
             if node['group']=="Crew poses":typ=9
             if node['group']=="Structure":typ=13
             if node['group']=="Hoist":typ=10+int(node['name']=="Twin self-releasing pickup heads")

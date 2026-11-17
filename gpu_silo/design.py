@@ -74,7 +74,7 @@ def check_inputs():
     if math.hypot(STORE["root_radius_m"] + longest, FRAME_WIDTH/2) >= BORE_R - .12:
         raise ValueError("The rotating pod reaches the perimeter steel. Increase the inside diameter or shorten the pod.")
     if len(SERVICE["wedge_destinations"]) != BAYS or len(SERVICE["crew_by_wedge"]) != BAYS:
-        raise ValueError("Give each storage bay a crew size and a platform destination (0 = lower power unit).")
+        raise ValueError("Give each storage bay a crew size and a platform destination (0 = turbine level).")
     if not all(isinstance(size,int) and 0 <= size <= 3 for size in SERVICE["crew_by_wedge"]):
         raise ValueError("Each animated deck has three boarding positions. Use 0 to 3 technicians per wedge.")
     if LEVELS < 3 or BAYS < 3 or not 0 < STORE["packed_pitch_degrees"] < 360 / BAYS:
@@ -106,14 +106,16 @@ def check_inputs():
         raise ValueError("The model has two power modules, one above the other. Give each a positive output.")
     if POWER["modules"] * POWER["module_output_mw"] < heat - 1e-6:
         raise ValueError("The power modules generate less than the cluster's load.")
-    stack = CROWN + 2 * (POWER["height_m"] + .49)
+    diesel = PROJECT["diesel"]
+    stack = CROWN + 2 * POWER["floor_structure_m"] + diesel["set_height_m"] + POWER["set_height_m"]
     if stack > SILO["height_m"] + .03:
-        raise ValueError(f"The pod store and two power modules reach {stack:.2f} m, above the lid. Reduce storage.pitch_m or crown_m, or raise the silo.")
+        raise ValueError(f"The pod store and the two power levels reach {stack:.2f} m, above the lid. Reduce storage.pitch_m or crown_m, or raise the silo.")
+    if math.hypot(POWER["set_length_m"]/2, POWER["aisle_m"]/2 + POWER["set_width_m"]) > BORE_R - .25:
+        raise ValueError("Two turbine sets side by side do not fit in the bore with 0.25 m to the wall.")
+    if diesel["sets"] > 4 or diesel["day_tanks"] > 2 or diesel["room_vents"] > 2:
+        raise ValueError("The diesel level is laid out for up to four sets, two day tanks and two room vents.")
     if CROWN < STORE["lowest_berth_m"] + (LEVELS-1)*STORE["pitch_m"] + FRAME_HEIGHT + 1.5 - 1e-6:
         raise ValueError("Leave 1.5 m between the top pod and the crown for the hoist.")
-    vent = PROJECT["ventilation"]
-    if vent["door_fans"] < 1 or vent["roof_air_vents"] < 1 or vent["door_fan_diameter_m"] > DOOR_WIDTH - .1:
-        raise ValueError("The door plug needs at least one fan narrower than the door, and the lid at least one air vent.")
     if not 0 <= SITE["first_frame"] < FRAMES:
         raise ValueError("installation.first_frame is a zero-based frame number.")
     if SITE["direction"] not in ("clockwise", "anticlockwise"):

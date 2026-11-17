@@ -11,12 +11,12 @@
     "pumps_per_cdu": 1
   },
   "silo": {
-    "outside_diameter_m": 22.0,
-    "inside_diameter_m": 13.0,
-    "height_m": 30.0,
+    "outside_diameter_m": 25.0,
+    "inside_diameter_m": 17.0,
+    "height_m": 32.0,
     "outer_wall_m": 0.25,
     "inner_wall_m": 0.25,
-    "concrete_lift_m": 3.0
+    "concrete_lift_m": 3.2
   },
   "pod": {
     "name": "4SU",
@@ -24,28 +24,28 @@
     "cdu_pump_section_m": 0.5,
     "cdu_pump_section_m_by_unit": {},
     "cdu_pump_section_colour": "#CFD2D2",
-    "body_width_m": 0.60,
-    "body_height_m": 2.30,
+    "body_width_m": 0.6,
+    "body_height_m": 2.3,
     "frame_extra_width_m": 0.16,
-    "frame_extra_height_m": 0.10,
+    "frame_extra_height_m": 0.1,
     "intake_clearance_each_side_m": 0.05,
-    "intake_clearance_overhead_m": 0.10
+    "intake_clearance_overhead_m": 0.1
   },
   "storage": {
     "levels": 8,
     "bays": 8,
-    "pitch_m": 2.8,
-    "lowest_berth_m": 0.20,
+    "pitch_m": 2.77,
+    "lowest_berth_m": 0.2,
     "shaft_radius_m": 0.58,
-    "root_radius_m": 0.86,
-    "crown_m": 23.70,
+    "root_radius_m": 2.86,
+    "crown_m": 23.49,
     "packed_pitch_degrees": 40.0
   },
   "thermal_store": {
     "fluid": "Water + propylene glycol",
     "glycol_fraction": 0.25,
     "density_kg_m3": 1020.0,
-    "specific_heat_kj_kgk": 3.90,
+    "specific_heat_kj_kgk": 3.9,
     "freeboard_m": 0.25,
     "target_volume_us_gal": 1500000,
     "loop_delta_t_k": 10.0,
@@ -63,43 +63,60 @@
     "cooler_length_m": 12.0,
     "cooler_section_m": 2.5,
     "pump_unit_length_m": 1.0,
-    "wall_standoff_m": 0.20,
-    "tier_base_m": [12.3, 21.2],
-    "anchor_columns_m": [-5.5, -2.0, 2.0, 5.5],
+    "wall_standoff_m": 0.2,
+    "tier_base_m": [
+      13.2,
+      22.2
+    ],
+    "anchor_columns_m": [
+      -5.5,
+      -2.0,
+      2.0,
+      5.5
+    ],
     "conduits_per_cooler": 2,
     "air_rise_k": 12.0,
     "pump_colour": "#A3A8A8"
   },
   "installation": {
-    "crane_track_radius_m": 46.0,
-    "laydown_radius_m": 32.0,
+    "crane_track_radius_m": 48.0,
+    "laydown_radius_m": 34.0,
     "first_frame": 0,
     "direction": "anticlockwise",
-    "laydown_offset_degrees_by_frame": {"1": 11, "10": -11},
+    "laydown_offset_degrees_by_frame": {
+      "1": 11,
+      "10": -11
+    },
     "first_cycle_frames": 160,
     "repeat_cycle_frames": 96,
     "boom_lifts": 2,
     "workers_per_basket": 2,
-    "boom_lift_track_radius_m": 21.5
+    "boom_lift_track_radius_m": 23.0
   },
   "power": {
-    "width_m": 2.50, "height_m": 2.50, "first_heading_degrees": 98.0,
+    "first_heading_degrees": -82.0,
     "modules": 2,
     "module_output_mw": 25.0,
     "prime_mover": "Aeroderivative gas turbine, GE LM2500 class",
+    "arrangement": "Two in-line generator sets side by side on one level under the lid",
+    "set_length_m": 14.38,
+    "set_width_m": 3.12,
+    "set_height_m": 3.98,
+    "set_weight_t": 94.5,
+    "aisle_m": 1.5,
+    "floor_structure_m": 0.6,
     "inlet_air_kg_s": 69.4,
     "exhaust_flow_kg_s": 70.3,
     "exhaust_temperature_c": 566.0,
-    "vents_per_module": 2,
-    "vent_diameter_m": 0.89
-  },
-  "ventilation": {
-    "door_fans": 2,
-    "door_fan_diameter_m": 0.70,
-    "roof_air_vents": 4,
-    "roof_air_vent_diameter_m": 1.2,
-    "loss_coefficient": 2.0,
-    "air_rise_k": 10.0
+    "exhaust_stack_diameter_m": 2.4,
+    "exhaust_stack_height_m": 4.5,
+    "inlet_house_m": [
+      5.0,
+      2.6,
+      2.5
+    ],
+    "inlet_filter_velocity_m_s": 2.5,
+    "fuel_supply_pressure_bar": 30.0
   },
   "fuel": {
     "gas": "Propane",
@@ -107,14 +124,76 @@
     "tank_diameter_m": 3.0,
     "tank_length_m": 20.0,
     "tank_spacing_m": 4.6,
-    "distance_m": 64.0,
+    "distance_m": 66.0,
     "fill_fraction": 0.85,
     "energy_mj_per_litre": 23.5,
     "generation_efficiency": 0.36,
     "riser_behind_frame": 7,
-    "riser_offset_m": -2.6
+    "riser_offset_m": -2.6,
+    "line_diameter_m": 0.2,
+    "liquid_density_kg_m3": 493.0,
+    "lhv_mj_per_kg": 46.35,
+    "liquid_velocity_m_s": 1.5,
+    "vapour_velocity_m_s": 20.0
   },
-  "service": {"fault_level": 6, "fault_bay": 5, "wedge_destinations": [4,0,7,3,6,2,5,8], "crew_by_wedge": [3,3,2,2,2,2,2,3],
-              "cooler_service_frame": 9, "cooler_service_row": 2},
-  "movie": {"width_px": 1280, "height_px": 720, "lower_tier_speed": 3}
+  "service": {
+    "fault_level": 6,
+    "fault_bay": 5,
+    "wedge_destinations": [
+      4,
+      0,
+      7,
+      3,
+      6,
+      2,
+      5,
+      8
+    ],
+    "crew_by_wedge": [
+      3,
+      3,
+      2,
+      2,
+      2,
+      2,
+      2,
+      3
+    ],
+    "cooler_service_frame": 9,
+    "cooler_service_row": 2
+  },
+  "movie": {
+    "width_px": 1280,
+    "height_px": 720,
+    "lower_tier_speed": 3
+  },
+  "diesel": {
+    "sets": 4,
+    "set_output_mw": 2.5,
+    "set_length_m": 6.87,
+    "set_width_m": 2.92,
+    "set_height_m": 3.3,
+    "set_weight_t": 23.5,
+    "fuel_l_per_h_per_set": 654.0,
+    "heat_to_room_kw_per_set": 295.0,
+    "exhaust_heat_kw_per_set": 2130.0,
+    "exhaust_stack_diameter_m": 0.6,
+    "exhaust_stack_height_m": 3.0,
+    "exhaust_m3_s_per_set": 8.5,
+    "combustion_air_m3_s_per_set": 3.3,
+    "room_air_rise_k": 20.0,
+    "room_vents": 2,
+    "room_vent_m": [
+      2.5,
+      2.0,
+      1.4
+    ],
+    "day_tanks": 2,
+    "day_tank_diameter_m": 1.2,
+    "day_tank_length_m": 2.4,
+    "bulk_tank_diameter_m": 3.0,
+    "bulk_tank_length_m": 10.0,
+    "bulk_fill_fraction": 0.9,
+    "line_diameter_m": 0.05
+  }
 }

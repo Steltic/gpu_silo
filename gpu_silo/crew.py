@@ -7,20 +7,21 @@ import math
 from . import silo_model as s
 
 
-LEVELS=tuple(cfg.SERVICE["wedge_destinations"])  # 0 is the underside of the lower power unit.
+LEVELS=tuple(cfg.SERVICE["wedge_destinations"])  # 0 is the turbine level.
 SIZES=tuple(cfg.SERVICE["crew_by_wedge"])
 DISPATCH=(2,11,23,4,18,12,8,20)
-# The side of the lower power module folds down to floor level beside this wedge.
+# The side of turbine set A folds down to floor level beside this wedge.
 # The deck stops just under it and the crew step across onto the folded side.
-POWER_FLOOR=cfg.CROWN+.27+.15
+POWER_FLOOR=cfg.CROWN+2*cfg.POWER["floor_structure_m"]+cfg.PROJECT["diesel"]["set_height_m"]+.14
 POWER_DECK=POWER_FLOOR-.086
 PANEL_STEP=.080
 POWER_BAY=LEVELS.index(0) if 0 in LEVELS else -1
-TURBINE_POINTS=((2.05,1.55),(2.05,-1.45),(2.05,.05))
+TURBINE_POINTS=((4.65,2.3),(4.65,1.3),(4.65,.3))
 STOW=-.004
 WELL_RADIUS=s.RI-.06
 WELL_FLOOR=-.42
-PLATE_IN,PLATE_OUT=2.44,s.RI-.40
+# The decks start outside the footprint of the turbine sets, so one can rise to the turbine level.
+PLATE_IN,PLATE_OUT=cfg.POWER["aisle_m"]/2+cfg.POWER["set_width_m"]+.13,s.RI-.40
 HALF=math.pi/cfg.BAYS
 EDGE=cfg.FRAME_WIDTH/2+.06
 ON,OFF=(1.,1.,1.),(0.,0.,0.)
@@ -256,8 +257,8 @@ def technician(style,mode,index):
 def workpoint(bay,worker):
     if LEVELS[bay]==0:
         # Clear of the folding side until it is down.
-        return ((5.30,.55),(4.75,-.50),(4.20,.15))[worker]
-    x=(4.58,3.85,3.06)[worker]
+        return ((7.60,.60),(7.20,-.55),(6.80,.10))[worker]
+    x=(6.9,6.0,5.0)[worker]
     sign=(1,-1,1)[worker]
     y=sign*(x*math.sin(HALF)-(cfg.FRAME_WIDTH/2+.415))/math.cos(HALF)
     return x,y

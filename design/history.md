@@ -30,6 +30,12 @@ Add a dated entry when a choice changes. Say what the viewer should see, the dim
 | 2026-11-16 | Door fan plug and roof vents | Before the closing sweep the ground door is plugged with a fan vent with two visible fans, and four air vents are set in the lid. Natural convection from the heat of the pods draws air in at the bottom and out at the top. | Open ground door, no air path | 2:53 to 3:03, section at 4:14 |
 | 2026-11-16 | Plan view flows | The hot and cold lines no longer run from a cooler into a pod. Each stream enters the store and disperses into the stored liquid. | Continuous lines from each cooler to a pod | 3:40 |
 | 2026-11-16 | Replacement scene last | The pod and cooler replacement moves to the end of the film. | Replacement between the crew scene and the closing orbit | 4:40 to 5:31 |
+| 2026-11-17 | In-line turbine sets | The power units stay inside the silo as standard in-line sets. The inside diameter grows to fit them. | Two short containers crossed at 90°, drawn far smaller than a real package | 2:04, section at 4:04 |
+| 2026-11-17 | Silo size | 17 m inside, 25 m outside, 32 m high. | 13 m inside, 22 m outside, 30 m high | Wall plan at 0:05 |
+| 2026-11-17 | Backup diesel | Four backup diesel sets on the level below the turbines. Day tanks inside, bulk tank outside. | No backup generation | 1:52, fuel at 3:12 |
+| 2026-11-17 | No room venting | The fan plug in the ground door and the roof air fans are removed. The room venting idea does not work. The roof vents are sized for the turbines and the diesel sets. | Fan plug in the door and four roof air vents | Lid at 2:12 |
+| 2026-11-17 | Walkway at the shaft | The gap left by the wider bore goes next to the central shaft, so people can move between sectors. | Pods rooted at the shaft | Cage at 0:25, crew at 2:19 |
+| 2026-11-17 | Propane line | One propane line has to be big enough to feed both power units. Checked: 3.0 kg/s needs about 100 mm, and the line is 200 mm. | Line drawn without a size | [Calculations](calcs.md#is-one-propane-line-big-enough), fuel at 3:12 |
 
 ## Assumptions made while applying these decisions
 
@@ -64,7 +70,19 @@ These were needed to draw the decisions. Each one is an input in [project.json](
 | 2026-11-16 | The four roof vents are separate air vents with fans, between the four turbine exhaust vents. | The air path needs its own outlets. The exhaust vents carry combustion gas. | `ventilation` |
 | 2026-11-16 | The crawler drives off after placing the lid and returns for the cooler exchange. It works from its track and the frame is set down 6 m from the wall. | The exchange now happens after the tanks are in. Frame 09 keeps the crane clear of the tank farm. | `service.cooler_service_frame` |
 | 2026-11-16 | The laydown ring moves out to 32 m and the crane track to 46 m. | Thirteen-metre frames need more room round a 22 m silo. | `installation` |
+| 2026-11-17 | The bore is 17 m, not the 16 m that one in-line set needs. | At 17 m both sets fit side by side on one level, which leaves the level below for the diesels. | `silo.inside_diameter_m`, `power.aisle_m` |
+| 2026-11-17 | The outer diameter is 25 m. | The wider bore takes plan area from the store. At 25 m the store is 1.94 M gal and 97 minutes. | `silo.outside_diameter_m` |
+| 2026-11-17 | Pod levels are 2.77 m apart, which leaves 0.37 m between pods. | The pods and the two power levels then fit under the lid with 30 mm to spare. | `storage.pitch_m`, `crown_m` |
+| 2026-11-17 | A turbine set is 14.38 × 3.12 × 3.98 m and 94.5 t. | Published figures for an LM2500+ marine generator set. | `power.set_*` |
+| 2026-11-17 | Each power level has 0.6 m of floor structure and is lowered as one assembly. | An allowance. Real lifts would be made machine by machine. | `power.floor_structure_m` |
+| 2026-11-17 | Turbine exhaust stacks are 2.4 m in diameter and 4.5 m high. Each air inlet house is 5 × 2.6 × 2.5 m. | 37 m/s in the stack and 2.3 m/s at the filters. The stacks discharge 2 m above the inlets. | `power.exhaust_stack_*`, `inlet_house_m` |
+| 2026-11-17 | Four diesel sets of 2.5 MW, each 6.87 × 2.92 × 3.30 m and 23.5 t, burning 654 L/h. | Datasheet figures for a 2.5 MW standby set. Four fit on a 17 m level and leave the crew's access wedge clear. | `diesel` |
+| 2026-11-17 | Two 2.7 m³ day tanks inside and one 64 m³ bulk tank beside the propane tanks. | Two hours inside and one day outside at full backup load. | `diesel.day_tank_*`, `bulk_tank_*` |
+| 2026-11-17 | Diesel exhaust and air flows are typical figures for a 2.5 MW set. | Not taken from a datasheet. | `diesel.exhaust_m3_s_per_set`, `combustion_air_m3_s_per_set` |
+| 2026-11-17 | The turbines need gas at about 30 bar, so propane is pumped as liquid and vaporised beside them. | Typical for this class of turbine. Not a datasheet value. | `power.fuel_supply_pressure_bar` |
+| 2026-11-17 | The walkway ring is 2 m wide with a gangway to each wedge deck, and the wedge decks start 4.0 m from the axis. | The decks have to clear the turbine sets so one can rise to the turbine level. | [pod_scene.py](../gpu_silo/pod_scene.py), [crew.py](../gpu_silo/crew.py) |
+| 2026-11-17 | The reveal is on turbine set A, on the top level. The crew's wedge deck rises past the diesel level to reach it. | The turbines are on the top level, under their stacks. | [plant.py](../gpu_silo/plant.py) |
 
 ## Open questions
 
-The [calculations](calcs.md#8-open-questions-raised-by-these-numbers) list the questions these decisions raise. The largest are air and exhaust for two 25 MW turbines inside the silo, the size of a real turbine package, and no spare generation.
+The [calculations](calcs.md#8-open-questions-raised-by-these-numbers) list the questions these decisions raise. The largest are the wall design at this size, no spare turbine, turbine heat next to the pods and the store, and air for people working in the bore.
