@@ -24,6 +24,10 @@ from . import site
 from . import jumpform
 from . import logistics
 from . import programme
+from . import film
+from . import cagebuild
+from . import coating
+from . import shortfilm
 from . import traffic
 from . import maintenance as care
 import sys
@@ -92,7 +96,10 @@ RESTORE=FILLED+(care.SOLID_BEGIN+care.SOLID_END)//2
 # The concrete is see-through a second time for the replacement scene that ends the film.
 REGHOST=FILLED+care.REPAIR
 RESTORE2=FILLED+sum(care.FINAL)//2
-CUTAWAY=[(RESTORE-.01,0),(RESTORE,1),(REGHOST-.01,1),(REGHOST,0),(RESTORE2-.01,0),(RESTORE2,1)]
+CUTAWAY=[(RESTORE-.01,0),(RESTORE,1)]
+if not film.SHORT:CUTAWAY+=[(REGHOST-.01,1),(REGHOST,0),(RESTORE2-.01,0),(RESTORE2,1)]
+elif FILLED-FIRST_POD!=film.LOADING:
+    raise ValueError(f"Pod loading takes {FILLED-FIRST_POD} frames. Set film.LOADING to match and review the short film's cuts.")
 if frames.END>FILLED-8:
     raise ValueError("The cooler frames finish after the pods. Shorten installation.repeat_cycle_frames.")
 SOURCE_END=SOURCE_STARTS[-1]
@@ -186,6 +193,9 @@ def rack_pose(frame):
 
 def liquid_level(frame):
     """Water-glycol rises behind the cage lift and reaches the rim before the pods arrive."""
+    if film.SHORT:
+        # The fill is left to the end of the build.
+        return cfg.LIQUID_TOP*s.clamp((frame-FILLED-clock.WATER[0])/(clock.WATER[1]-clock.WATER[0]))
     rising=.55*smooth(frame,C,clock.CAGE_END)+.45*smooth(frame,*clock.STORE_FILL)
     return cfg.LIQUID_TOP*rising
 
@@ -213,6 +223,9 @@ def frames_camera(frame):
 
 
 def construction_camera(frame):
+    if film.SHORT:
+        from . import shortfilm
+        return shortfilm.camera(frame,sys.modules[__name__])
     if frame<C: return s.camera_at(frame)
     t=frame-C
     cam=camera
@@ -261,9 +274,29 @@ def newsteel(name):
     m=s.Mesh(name);m.material=3;return m
 
 
-def cage_mesh():
-    m=newsteel("Steel module | shaft, bearings, rim girders and braced columns")
-    annulus(m,0,SHAFT,-.08,CROWN,"617b79",n=28)
+CAGE_TOP=LEVELS+1
+
+
+def cage_bounds():
+    """Elevations at which the cage divides into modules: one for each pod level, then the crown."""
+    cuts=[-.30]+[level_z(level)-.21 for level in range(2,LEVELS+2)]
+    return cuts+[CROWN+.2]
+
+
+def cage_parts():
+    """The cage as it is built: a module for each pod level and one for the crown. Together they are the whole cage."""
+    cuts=cage_bounds()
+    parts=[newsteel(f"Steel module | level {k+1:02}" if k<LEVELS else "Steel module | crown and hoist beams") for k in range(CAGE_TOP)]
+    def part(z):
+        return parts[max(0,min(CAGE_TOP-1,bisect.bisect_right(cuts,z)-1))]
+    perimeter_posts=24
+    for k,m in enumerate(parts):
+        z0,z1=max(-.08,cuts[k]),min(CROWN,cuts[k+1])
+        annulus(m,0,SHAFT,z0,z1,"617b79",n=28)
+        for j in range(perimeter_posts):
+            a=ENTRY+(j+.5)*TAU/perimeter_posts
+            s.bar(m,s.polar((s.RI-0.065),a,max(0,cuts[k])),s.polar((s.RI-0.065),a,z1),.078,STEEL)
+    m=parts[0]
     annulus(m,0,.78,-.08,.18,DARK,n=24)
     for a in [j*TAU/12 for j in range(12)]:
         x,y,_=s.polar(.69,a,0)
@@ -272,16 +305,13 @@ def cage_mesh():
     for j in range(BAYS):
         a=ENTRY+(j+.5)*UNIFORM
         for z in (-.22,CROWN-.18):
-            s.bar(m,s.polar(.48,a,z),s.polar(RIM,a,z),.20,STEEL,.25)
-    perimeter_posts=24
+            s.bar(part(z),s.polar(.48,a,z),s.polar(RIM,a,z),.20,STEEL,.25)
     for j in range(perimeter_posts):
         a=ENTRY+(j+.5)*TAU/perimeter_posts
-        p=s.polar((s.RI-0.065),a,0)
-        s.bar(m,p,s.polar((s.RI-0.065),a,CROWN),.078,STEEL)
-        x,y,z=p
-        end_box(m,x-.039,y-.039,x+.039,y+.039,-.05,.13,DARK)
+        x,y,z=s.polar((s.RI-0.065),a,0)
+        end_box(parts[0],x-.039,y-.039,x+.039,y+.039,-.05,.13,DARK)
     for level in range(1,LEVELS+1):
-        z=level_z(level)
+        z=level_z(level);m=parts[level-1]
         # A walkway ring between the shaft and the pod roots lets people pass from sector to sector.
         # It sits just under the pods, with a gangway out to each wedge deck.
         annulus(m,SHAFT+.22,INNER-.10,z-.13,z-.09,"cfd3c8",n=40)
@@ -310,13 +340,20 @@ def cage_mesh():
             # The narrow radial allowance requires a curved brace laid against
             # the envelope. Short faceted segments follow the ring between posts.
             for segment in range(5):
-                t=segment/5;u=(segment+1)/5
-                s.bar(m,s.polar((s.RI-0.045),mix(a,b,t),z+.01+t*(PITCH-.27)),
+                u0=segment/5;u=(segment+1)/5
+                s.bar(m,s.polar((s.RI-0.045),mix(a,b,u0),z+.01+u0*(PITCH-.27)),
                         s.polar((s.RI-0.045),mix(a,b,u),z+.01+u*(PITCH-.27)),.048,"678078")
+    m=parts[-1]
     annulus(m,(s.RI-.105),(s.RI-.026),HEAD_BEAM-.19,HEAD_BEAM-.03,MINT)
     annulus(m,(s.RI-0.110),(s.RI-.024),CROWN-.32,CROWN-.10,STEEL)
     annulus(m,.48,.88,HEAD_BEAM-.12,HEAD_BEAM+.07,DARK,n=28)
     annulus(m,.45,.74,CROWN-.31,CROWN-.02,STEEL,n=24)
+    return parts
+
+
+def cage_mesh():
+    m=newsteel("Steel module | shaft, bearings, rim girders and braced columns")
+    for part in cage_parts():m.tris.extend(part.tris)
     return m
 
 
@@ -490,7 +527,7 @@ def build():
     node(dock.name,mesh(dock),"Intake",ang=ENTRY,tracks={'scale':show(PORTAL_VIEW+17)})
     # This single parent carries the entire empty module during both crane picks.
     rack=node("Preassembled steel store",-1,"Rotating pod store",tracks={
-        'translation':flat_keys([rack_pose(f) for f in range(FRAMES)]),'scale':show(STEEL_START)})
+        'translation':flat_keys([rack_pose(f) for f in range(FRAMES)]),'scale':show(cagebuild.swap() if film.SHORT else STEEL_START)})
     m=cage_mesh();node(m.name,mesh(m),"Structure",rack)
     for sign in (-1,1):
         base=(-11.5,sign*19.3,0)
@@ -505,6 +542,9 @@ def build():
             path,(leaves,returns,departs)=crane.poses(sys.modules[__name__])
             for f,(place,(x,y,z),facing) in path.items():
                 foot[f]=place;hx[f],hy[f],hook[f]=x,y,z;heading[f]=facing
+            if film.SHORT:
+                # The same crawler builds the cage beside the silo while the walls go up.
+                for f in range(C):hx[f],hy[f],hook[f]=cagebuild.hook(sys.modules[__name__],f)
         a=[math.atan2(y-b[1],x-b[0])-h for x,y,b,h in zip(hx,hy,foot,heading)]
         for f in range(1,FRAMES):
             a[f]-=TAU*round((a[f]-a[f-1])/TAU)
@@ -513,7 +553,8 @@ def build():
         side="North" if sign>0 else "South"
         lower=crane_lower()
         seen=interval(STEEL_START,leaves)
-        if sign<0:seen=seen+[(returns-1,OFF),(returns,ON),(departs-1,ON),(departs,OFF)]
+        if sign<0 and film.SHORT:seen=[(0,ON),(leaves-1,ON),(leaves,OFF)]
+        elif sign<0:seen=seen+[(returns-1,OFF),(returns,ON),(departs-1,ON),(departs,OFF)]
         tracks={'scale':seen}
         if sign<0:tracks.update(translation=flat_keys(foot),yaw=flat_keys([(h,) for h in heading]))
         car=node(side+" crawler",mesh(lower),"Tandem crane lift",t=base,tracks=tracks)
@@ -604,13 +645,18 @@ def build():
         node(f"L{level:02}B{j+1:02} shaft root lock",mi,"Steel shoes",slot,t=(0,0,seat),tracks={'scale':seat_ext})
     frames.add(scene,node,sys.modules[__name__])
     plant.add(scene,node,sys.modules[__name__])
-    crew.install(scene,node,sys.modules[__name__],FILLED+care.CREW)
-    care.install(scene,node,sys.modules[__name__])
-    service.install(scene,node,sys.modules[__name__])
+    if film.SHORT:
+        scene.counts["cage"]=cagebuild.install(scene,node,sys.modules[__name__])
+        coating.install(scene,node,sys.modules[__name__])
+    else:
+        crew.install(scene,node,sys.modules[__name__],FILLED+care.CREW)
+        care.install(scene,node,sys.modules[__name__])
+        service.install(scene,node,sys.modules[__name__])
     fuel.install(scene,node,sys.modules[__name__])
     scene.storage_inspection=(FIRST_POD,FILLED+plant.VENT_END)
     traffic.install(scene,node,sys.modules[__name__])
     yard.install_terminal(scene,node,sys.modules[__name__])
+    scene.project_info.update(film=film.NAME,countersAtEnd={name:int(values[-1]) for name,values in scene.counts.items()})
     return scene
 
 
@@ -620,7 +666,7 @@ def render_data(scene,path):
         def floats(*v): file.write(struct.pack("<"+"f"*len(v),*v))
         def string(txt):
             b=txt.encode("utf8");ints(len(b));file.write(b)
-        file.write(b"GSILO05\0")
+        file.write(b"GSILO06\0")
         ints(len(scene.meshes),len(scene.nodes),FRAMES,FPS)
         floats(s.RO,s.RI_OUTER,s.RO_INNER,s.RI,s.WALL_HEIGHT,s.LIFT)
         ints(s.COUNT,s.LAST_POUR,s.LAST_POUR+s.REVEAL//2,s.LAST_POUR+s.REVEAL,
@@ -668,10 +714,26 @@ def render_data(scene,path):
         chart=logistics.gantt()
         ints(len(chart))
         for name,first,last in chart:string(name);ints(first,last)
-        marks=programme.tags(sys.modules[__name__])
+        me=sys.modules[__name__]
+        marks=shortfilm.tags(me) if film.SHORT else programme.tags(me)
         ints(len(marks))
         for first,last,day,title,note,which in marks:
             ints(first,last);string(day);string(title);string(note);ints(len(which),*which)
+        # Which film this is, and for the short film the panel to draw in each scene.
+        counters=shortfilm.COUNTERS if film.SHORT else programme.COUNTERS
+        ints(int(film.SHORT),closing.TANK_SETTLE,len(counters))
+        shots=shortfilm.scenes(me) if film.SHORT else []
+        ints(len(shots))
+        for shot in shots:ints(*shot)
+        cards=shortfilm.cards(me) if film.SHORT else []
+        ints(len(cards))
+        for kicker,heading,sub,rows,steps in cards:
+            string(kicker);string(heading);string(sub)
+            ints(len(rows))
+            for left,right in rows:string(left);string(right)
+            ints(len(steps))
+            for at,text in steps:ints(at);string(text)
+        string(cfg.PROJECT["coating"]["colour"])
         for m in scene.meshes:
             ints(len(m.tris),int(m.terrain),getattr(m,"material",0))
             for a,b,c,col in m.tris:
@@ -684,6 +746,8 @@ def render_data(scene,path):
             if node['group']=="Crew decks":typ=6
             if node['group']=="Replacement pod":typ=7
             if node['group']=="Silo lid":typ=16
+            if node['group'] in ("Cast-in conduits","Door blockout","Cooler embeds","Cooler conduits"):typ=18
+            if film.SHORT and node['group']=="Frame anchors":typ=18
             if node['group']=="Crew poses":typ=9
             if node['group']=="Structure":typ=13
             if node['group']=="Hoist":typ=10+int(node['name']=="Twin self-releasing pickup heads")
@@ -714,7 +778,7 @@ def render_data(scene,path):
                 connected=sum(care.extent(w,j)>.995 for j in range(TOTAL))+int(care.extent(w,care.BAD,True)>.995)
             ints(installed,connected)
             ints(bisect.bisect_right(fixings,frame))
-            ints(*[scene.counts[name][frame] for name in programme.COUNTERS])
+            ints(*[scene.counts[name][frame] for name in (shortfilm.COUNTERS if film.SHORT else programme.COUNTERS)])
 
 
 if __name__=="__main__":

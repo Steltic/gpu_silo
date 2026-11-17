@@ -1,5 +1,6 @@
 """Parametric, metre-based low-poly double-wall silo and jumpform sequence, with a glTF 2.0 exporter."""
 from . import design as cfg
+from . import film
 
 
 import argparse
@@ -22,7 +23,8 @@ FPS = 24
 SECTORS = 24
 INTRO = 36
 SLOW_CYCLE = 108
-FAST_CYCLE = 39
+# The short film gives each day of the jumpform long enough to watch the pod cage go up beside it.
+FAST_CYCLE = 84 if film.SHORT else 39
 REVEAL = 19
 HOLD = 85
 TAU = 2 * math.pi

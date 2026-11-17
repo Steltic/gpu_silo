@@ -13,6 +13,30 @@ from .. import service
 from .verify_motion import open_glb
 
 
+def exchange(p,ids,parents,at,zup,points,car,hook):
+    # Cooler exchange: the frame comes down outside the wall, one cooler is changed, and the frame goes back to its seat.
+    k=service.K;label=f"Cooler frame {k+1:02}";begin=p.FILLED+p.care.REPAIR
+    root=ids[label+f" | {fr.ROWS} dry coolers, {fr.ROWS} pumps and steel"]
+    seat=zup(at(root,"translation",begin+service.LIFT[0]-1))
+    down=zup(at(root,"translation",begin+service.DOWN[1]))
+    assert abs(math.hypot(down[0],down[1])-service.LAND_R)<.01 and abs(down[2]-fr.GROUND)<.01
+    for f in range(begin+service.LIFT[0],begin+service.SEAT[1]+1):
+        pos=zup(at(root,"translation",f));radius=math.hypot(pos[0],pos[1])
+        assert radius>=fr.BACK-1e-4 and pos[2]>=fr.GROUND-1e-4
+        if radius<fr.BACK+fr.OVER-.01:assert pos[2]>=fr.base(k)-1e-4
+    assert np.allclose(zup(at(root,"translation",begin+service.SEAT[1])),seat,atol=.0003)
+    old=ids[label+f" | cooler {service.ROW+1}"];new=ids[label+f" | cooler {service.ROW+1} | replacement in its bay"]
+    assert parents[new]==root and np.allclose(points(new),points(old))
+    assert at(old,"scale",begin+service.SLIDE[0])[0]>.999 and at(old,"scale",p.FRAMES-1)[0]<.001
+    assert at(new,"scale",begin+service.INSERT[1]-1)[0]<.001 and at(new,"scale",p.FRAMES-1)[0]>.999
+    assert np.allclose(at(new,"translation",p.FRAMES-1),at(old,"translation",0),atol=.0003)
+    assert at(ids[label+" | pipe spools"],"scale",begin+service.DOWN[0])[0]<.01 and at(ids[label+" | pipe spools"],"scale",p.FRAMES-1)[0]>1
+    for f in range(begin+service.OUT[0],begin+service.IN[1]+1,4):
+        foot=zup(at(car,"translation",f));block=zup(at(hook,"translation",f));reach=np.linalg.norm(block[:2]-foot[:2])
+        assert 10<reach<fr.BOOM_LENGTH*.6 and block[2]<2.45+math.sqrt(fr.BOOM_LENGTH**2-reach**2)-2,(f,reach)
+    print(f"Frame {k+1:02} comes down for a cooler change during the pod exchange and returns to its seat.")
+
+
 def check(path):
     doc,access=open_glb(path);nodes=doc["nodes"];ids={}
     for i,node in enumerate(nodes):ids.setdefault(node["name"],i)
@@ -113,12 +137,13 @@ def check(path):
     # One crawler stays from the steel cage until the lid is on. It is away for the closing scenes and returns for the cooler exchange.
     assert at(car,"scale",fr.START)[0]>.999 and at(car,"scale",p.FILLED+p.plant.LID[1])[0]>.999
     assert at(car,"scale",p.FILLED+p.care.ORBIT)[0]<.001 and at(car,"scale",p.FILLED+p.closing.FUEL_END)[0]<.001
-    assert at(car,"scale",p.FILLED+p.care.REPAIR+service.ARRIVE)[0]>.999 and at(car,"scale",p.FILLED+p.care.REPAIR+service.DONE)[0]>.999
     assert at(car,"scale",p.FRAMES-1)[0]<.001
-    # The crawler's working position for the exchange is clear of the propane tanks and the gas line.
-    spot=zup(at(car,"translation",p.FILLED+p.care.REPAIR+service.DOWN[1]))
-    apart=abs((math.atan2(spot[1],spot[0])-p.fuel.BEARING+math.pi)%(2*math.pi)-math.pi)
-    assert apart*fr.TRACK_R>p.fuel.COUNT*p.fuel.PITCH/2+fr.WIDTH,"the cooler service is too close to the tank farm"
+    if not p.film.SHORT:
+        assert at(car,"scale",p.FILLED+p.care.REPAIR+service.ARRIVE)[0]>.999 and at(car,"scale",p.FILLED+p.care.REPAIR+service.DONE)[0]>.999
+        # The crawler's working position for the exchange is clear of the propane tanks and the gas line.
+        spot=zup(at(car,"translation",p.FILLED+p.care.REPAIR+service.DOWN[1]))
+        apart=abs((math.atan2(spot[1],spot[0])-p.fuel.BEARING+math.pi)%(2*math.pi)-math.pi)
+        assert apart*fr.TRACK_R>p.fuel.COUNT*p.fuel.PITCH/2+fr.WIDTH,"the cooler service is too close to the tank farm"
     # The boom lift is beside each frame end, with its crew at the working rows while the spools are made up.
     basket=ids["Boom lift | work basket"];chassis=ids["Boom lift | chassis"]
     assert sum(1 for n in ids if re.fullmatch(r"Boom lift \| fitter \d",n))==p.cfg.SITE["workers_per_basket"]
@@ -131,27 +156,7 @@ def check(path):
             assert fr.base(k)<pos[2]<fr.base(k)+fr.HEIGHT
         ground=zup(at(chassis,"translation",(e+g)//2))
         assert abs(math.hypot(ground[0],ground[1])-fr.LIFT_R)<.001 and abs(ground[2])<1e-6
-    # Cooler exchange: the frame comes down outside the wall, one cooler is changed, and the frame goes back to its seat.
-    k=service.K;label=f"Cooler frame {k+1:02}";begin=p.FILLED+p.care.REPAIR
-    root=ids[label+f" | {fr.ROWS} dry coolers, {fr.ROWS} pumps and steel"]
-    seat=zup(at(root,"translation",begin+service.LIFT[0]-1))
-    down=zup(at(root,"translation",begin+service.DOWN[1]))
-    assert abs(math.hypot(down[0],down[1])-service.LAND_R)<.01 and abs(down[2]-fr.GROUND)<.01
-    for f in range(begin+service.LIFT[0],begin+service.SEAT[1]+1):
-        pos=zup(at(root,"translation",f));radius=math.hypot(pos[0],pos[1])
-        assert radius>=fr.BACK-1e-4 and pos[2]>=fr.GROUND-1e-4
-        if radius<fr.BACK+fr.OVER-.01:assert pos[2]>=fr.base(k)-1e-4
-    assert np.allclose(zup(at(root,"translation",begin+service.SEAT[1])),seat,atol=.0003)
-    old=ids[label+f" | cooler {service.ROW+1}"];new=ids[label+f" | cooler {service.ROW+1} | replacement in its bay"]
-    assert parents[new]==root and np.allclose(points(new),points(old))
-    assert at(old,"scale",begin+service.SLIDE[0])[0]>.999 and at(old,"scale",p.FRAMES-1)[0]<.001
-    assert at(new,"scale",begin+service.INSERT[1]-1)[0]<.001 and at(new,"scale",p.FRAMES-1)[0]>.999
-    assert np.allclose(at(new,"translation",p.FRAMES-1),at(old,"translation",0),atol=.0003)
-    assert at(ids[label+" | pipe spools"],"scale",begin+service.DOWN[0])[0]<.01 and at(ids[label+" | pipe spools"],"scale",p.FRAMES-1)[0]>1
-    for f in range(begin+service.OUT[0],begin+service.IN[1]+1,4):
-        foot=zup(at(car,"translation",f));block=zup(at(hook,"translation",f));reach=np.linalg.norm(block[:2]-foot[:2])
-        assert 10<reach<fr.BOOM_LENGTH*.6 and block[2]<2.45+math.sqrt(fr.BOOM_LENGTH**2-reach**2)-2,(f,reach)
-    print(f"Frame {k+1:02} comes down for a cooler change during the pod exchange and returns to its seat.")
+    if not p.film.SHORT:exchange(p,ids,parents,at,zup,points,car,hook)
     print(f"{fr.N} cooler frames carry {p.cfg.COOLERS} dry coolers and pumps on {len(fr.TIERS)} tiers, to RL {max(fr.TIERS)+fr.HEIGHT:g} m.")
     print(f"{extras['castInFrameAnchors']} anchors and {extras['castInCoolerConduits']} conduits are cast before their pours. "
           "The crawler and boom lift reach every frame.")

@@ -43,6 +43,18 @@ Add a dated entry when a choice changes. Say what the viewer should see, the dim
 | 2026-11-17 | Fuel by truck | Each propane tank arrives on a heavy-haul trailer and is jacked down onto the pad. Transports then fill the tanks from a lay-by on the ring. | Tanks lowered from above | Fuel scene at 3:12 and 3:27 |
 | 2026-11-17 | 28-day programme | Day 0 is the last pour. Every later activity fits in 28 days. Each scene carries its days and a truck count, and the closing orbit shows the bar chart. | No programme | Tag at the top of every scene, chart at 2:50 |
 | 2026-11-17 | Jumpform detail | Pour decks, hung trailing platforms, climbing rails and jacks, starter bars, a placing boom on a centre mast, a pump at the ground opening, truck mixers and a crew of 22 that changes task with each step. | Bare form panels with one platform | 0:00 to 0:25 |
+| 2026-11-17 | Second film, silo_short | A second film shows only the build, in programme order. It keeps the finished-silo sweep with the design basis and ends on a new closing scene. It does not have to match the long film. | One film | `silo_short.mp4`, whole film |
+| 2026-11-17 | Pod cage built beside the silo | During the nine days of jumpforming after the first lift, the 4SU cage is built in the position it is lifted from. Each day a level arrives on several trucks, is welded together, is craned onto the level before and is welded on. | A finished cage appearing for the tandem lift | Short film 0:06 to 0:42 |
+| 2026-11-17 | Cutaways clear everything | When the silo is made see-through, everything in or on the walls goes too: the pod sleeves, the cast-in conduits and fittings, and the cooler units on the side facing the camera. It makes the pods easier to see going in. | Sleeves, anchors and front cooler frames drawn in the cutaway | Short film 1:13 to 2:38 |
+| 2026-11-17 | Open power levels | The roof and walls of the turbine sets are removed, like the diesel level, so the units can be seen. | Enclosed turbine sets with one hinged side | Short film 2:16 |
+| 2026-11-17 | No personnel access scene | After the power levels and lid the short film goes to the fuel lines, the control office and the finished-silo sweep. | Work decks and the turbine reveal | Short film 2:24 to 2:44 |
+| 2026-11-17 | Control office | Near the end of the build the pod loading station gets walls and a flat roof and becomes a control office. | Open receiving dock | Short film 2:38 |
+| 2026-11-17 | Water last | The store is filled over the last two weeks, days 15 to 28, when the concrete is drier. Tankers run from then to the end of the build. | Fill on days 3 to 12, before the pods | Short film from 2:04, [calculations](calcs.md#water-glycol-by-tanker) |
+| 2026-11-17 | Store liner | The inside of the concrete walls is spray-coated before the fill, to protect them from the water-glycol. | Bare concrete in contact with the liquid | Short film 1:44, [calculations](calcs.md#liner-inside-the-store) |
+| 2026-11-17 | Fuel tanks on day 8 | The fuel tank scene moves to its place in the programme, during pod loading. | Fuel scene after the finished-silo sweep | Short film 1:28 |
+| 2026-11-17 | Build spread over the 28 days | The activities are spread across the 28 days and commissioning is deleted. It goes to others after day 28. | A programme that finished early with a commissioning period | Programme chart at 2:44, [calculations](calcs.md#9-programme) |
+| 2026-11-17 | Site fabrication | The diesel level and the turbine level are fabricated on site: steel work and welding, then the sets landed on the decks. | Power levels arriving complete | Short film 1:52 |
+| 2026-11-17 | Plan and section together | The closing scene shows the plan and the section side by side with no voice-over. In the section the hot and cold streams disperse in the store as they do in the plan. The plan shows one level of cooler units. | Separate narrated plan and silent section | Short film 3:07 |
 
 ## Assumptions made while applying these decisions
 
@@ -99,6 +111,19 @@ These were needed to draw the decisions. Each one is an input in [project.json](
 | 2026-11-17 | The slab, the cranes, the cage steel, the turbine sets and the diesel sets are counted or noted in the calculations and not shown arriving. | They were not asked for in the film. | [calcs.md](calcs.md#8-trucking) |
 | 2026-11-17 | The laydown props are shortened and the boom lift works at the other end of frames 01 and 02. | To keep the stopping lane and the dock lanes clear. | [cooler_frames.py](../gpu_silo/cooler_frames.py) |
 | 2026-11-17 | The farm lane moves west and the barns move north of the public road. | They stood where the fuel farm, the access road and the water drive now are. | [silo_model.py](../gpu_silo/silo_model.py) |
+| 2026-11-17 | The cage is built in nine modules: one for each of the eight pod levels and one for the crown. | Nine days of jumpforming follow the first lift, so one module a day finishes with the walls. | [pod_scene.py](../gpu_silo/pod_scene.py), [cagebuild.py](../gpu_silo/cagebuild.py) |
+| 2026-11-17 | Three trucks and four welders for each cage module. | "Several trucks." Not sized from a steel take-off. | `logistics.cage` |
+| 2026-11-17 | The liner is a 2 mm spray-applied polyurea, put on by four sprayers at 28 m² an hour each from four stages hung in the gap. | A common tank liner. It has not been checked with a supplier for warm water-glycol or for concrete 11 days old. | `coating` |
+| 2026-11-17 | The liner is drawn as a tinted film that climbs both faces of the store, and is cleared when the scene ends. | The concrete is not drawn during that part of the film. | [coating.py](../gpu_silo/coating.py) |
+| 2026-11-17 | The liner goes on during pod loading, on days 11 to 14, and the water starts on day 15. | The liner has to be finished before the fill, and the fill needs 14 days. | `schedule.activities` |
+| 2026-11-17 | The fuel tanks, the liner and the fabrication are shown as cuts away from pod loading. | They happen on the same days as pod loading. | [film.py](../gpu_silo/film.py), [shortfilm.py](../gpu_silo/shortfilm.py) |
+| 2026-11-17 | The fabrication is shown after the liner although it starts two days earlier. | The power levels are built where two cooler frames stand until they are hung. | [film.py](../gpu_silo/film.py) |
+| 2026-11-17 | Each power deck is 38 t of steel, laid in strips and welded by four welders. | An allowance for the floor structure. | `logistics.power_fabrication` |
+| 2026-11-17 | The propane fill and the fuel lines stay near the end of the film, after the lid. | The lines run over the lid, and the tanks are filled on days 16 to 22. | [closing.py](../gpu_silo/closing.py) |
+| 2026-11-17 | The control office is 6.2 m high and keeps the gantry and the pod rail inside. | They are needed for later pod exchanges. | [yard.py](../gpu_silo/yard.py) |
+| 2026-11-17 | In the short film the store is dry while the pods load and reaches the rim in the last frames of the sweep. | Water last. | [pod_scene.py](../gpu_silo/pod_scene.py) |
+| 2026-11-17 | Days of jumpforming run at about twice the long film's pace in the short film. | A cage module has to arrive, be welded, be lifted and be welded on within each day. | [silo_model.py](../gpu_silo/silo_model.py) |
+| 2026-11-17 | The long film is not re-cut. It still fills the store before the pods and has no cage build, liner or site fabrication, so its day tags no longer run in order. | "No need for the short to match the long." | [programme.py](../gpu_silo/programme.py) |
 
 ## Open questions
 

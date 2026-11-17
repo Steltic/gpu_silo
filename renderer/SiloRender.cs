@@ -30,6 +30,9 @@ class Row {public string Left,Right;}
 class Caption {public int First,Last;public string Text;}
 class Tag {public int First,Last;public string Day,Title,Note;public int[] Counters;}
 class Bar {public string Name;public int First,Last;}
+class Scene {public int First,Last,Kind,Card;}
+class Step {public int At;public string Text;}
+class Card {public string Kicker,Heading,Sub;public Row[] Rows;public Step[] Steps;}
 class Data {
     public Mesh[] Meshes;public Node[] Nodes;public Frame[] Frames;public int Fps;
     public float Outer,OuterInside,InnerOutside,Inner,Height,Lift;
@@ -49,7 +52,8 @@ class Data {
     public int Enc0,Enc1,Enc2,Enc3,FinalBegin,FinalEnd,DieselSets;
     public float ModuleMW,SetY,GenL,GenH,Level0,ExhaustR,InletL,InletH,InletX,DieselStackH,DieselEnd,DropR,ShaftCore;
     public Row[] TurbineRows,BackupRows,CrewRows,DockRows;public Tag[] Tags;public Bar[] Programme;
-    public int ProgrammeDays,LiftCrew,Cradles,PodsPerTruck;
+    public int ProgrammeDays,LiftCrew,Cradles,PodsPerTruck,TankSettle,Counters;
+    public bool Short;public Scene[] Scenes;public Card[] Cards;public Color Liner;
     public int[] Line=new int[10];
     public float FuelBearing,FarmRadius,TankLength,TankDiameter,TankPitch,RiserRadius,GasTop,DropRadius,DropEnd;
     public Row[] FuelRows,PlanRows,SectionRows;public Caption[] Captions;
@@ -82,7 +86,7 @@ class Data {
     }
     public Data(string file){
         using(var r=new BinaryReader(File.OpenRead(file))){
-            if (System.Text.Encoding.ASCII.GetString(r.ReadBytes(8))!="GSILO05\0") throw new InvalidDataException("Unknown scene");
+            if (System.Text.Encoding.ASCII.GetString(r.ReadBytes(8))!="GSILO06\0") throw new InvalidDataException("Unknown scene");
             int nm=r.ReadInt32(),nn=r.ReadInt32(),nf=r.ReadInt32(); Fps=r.ReadInt32();
             Outer=r.ReadSingle();OuterInside=r.ReadSingle();InnerOutside=r.ReadSingle();Inner=r.ReadSingle();
             Height=r.ReadSingle();Lift=r.ReadSingle();
@@ -136,6 +140,16 @@ class Data {
                 Tag tag=Tags[i]=new Tag();tag.First=r.ReadInt32();tag.Last=r.ReadInt32();tag.Day=Str(r);tag.Title=Str(r);tag.Note=Str(r);
                 tag.Counters=new int[r.ReadInt32()];for(int k=0;k<tag.Counters.Length;k++)tag.Counters[k]=r.ReadInt32();
             }
+            Short=r.ReadInt32()!=0;TankSettle=r.ReadInt32();Counters=r.ReadInt32();
+            Scenes=new Scene[r.ReadInt32()];
+            for(int i=0;i<Scenes.Length;i++){Scenes[i]=new Scene();Scenes[i].First=r.ReadInt32();Scenes[i].Last=r.ReadInt32();Scenes[i].Kind=r.ReadInt32();Scenes[i].Card=r.ReadInt32();}
+            Cards=new Card[r.ReadInt32()];
+            for(int i=0;i<Cards.Length;i++){
+                Card card=Cards[i]=new Card();card.Kicker=Str(r);card.Heading=Str(r);card.Sub=Str(r);card.Rows=Rows(r);
+                card.Steps=new Step[r.ReadInt32()];
+                for(int k=0;k<card.Steps.Length;k++){card.Steps[k]=new Step();card.Steps[k].At=r.ReadInt32();card.Steps[k].Text=Str(r);}
+            }
+            Liner=ColorTranslator.FromHtml(Str(r));
             Meshes=new Mesh[nm];Nodes=new Node[nn];Frames=new Frame[nf];
             for(int i=0;i<nm;i++){
                 Mesh m=Meshes[i]=new Mesh();m.Ts=new Tri[r.ReadInt32()]; m.Land=r.ReadInt32()!=0;m.Mat=r.ReadInt32();
@@ -161,7 +175,7 @@ class Data {
                 f.Feed=r.ReadSingle();f.HookZ=r.ReadSingle();f.RackZ=r.ReadSingle();f.LoadPhase=Str(r);
                 f.Liquid=r.ReadSingle();f.Dock=r.ReadSingle();f.Ports=r.ReadInt32();f.Online=r.ReadInt32();
                 f.Fixings=r.ReadInt32();
-                f.Loads=new int[6];for(int k=0;k<6;k++)f.Loads[k]=r.ReadInt32();
+                f.Loads=new int[Counters];for(int k=0;k<Counters;k++)f.Loads[k]=r.ReadInt32();
             }
         }
     }
@@ -904,6 +918,7 @@ partial class Shot {
             g.ScaleTransform(Factor,Factor);
             g.SmoothingMode=SmoothingMode.AntiAlias;g.TextRenderingHint=TextRenderingHint.AntiAliasGridFit;
             g.FillRectangle(paper,0,0,UiLeft,H/Factor);
+            if(d.Short && frame>=d.BuildEnd){ShortOverlay(g,frame);return;}
             if(frame>=d.Terminal && frame<d.FirstPod-8){TerminalOverlay(g,frame);ProgrammeTag(g,frame);DesignStrip(g,frame);return;}
             if(frame>=d.BuildEnd){
                 int t=frame-d.Full;
@@ -1006,6 +1021,7 @@ partial class Shot {
     // The lid is shown while it is placed, cleared for the cutaways and solid again for the closing scenes.
     int LidAlpha(int frame){
         int t=frame-d.Full;
+        if(d.Short)return 255;
         if(t<d.Crew)return 255;
         if(t<d.Crew+30)return (int)(255*(1-(t-d.Crew)/30.0));
         return t<d.SealEnd?0:t<d.Repair?255:t<d.FinalEnd?0:255;
@@ -1022,7 +1038,7 @@ partial class Shot {
     void WorldFrame(int poseFrame,int wallMode=0){
         UpdateWorld(poseFrame);alpha=255;
         int t=poseFrame-d.Full;
-        bool access=t>=d.Crew && t<d.SealEnd || t>=d.Repair && t<d.FinalEnd;
+        bool access=!d.Short && (t>=d.Crew && t<d.SealEnd || t>=d.Repair && t<d.FinalEnd);
         softShadow=wallMode==2 || (wallMode==0 && Ghosted(poseFrame));
         Frame f=d.Frames[poseFrame];
         bool same=cachedFrame>=0 && siteColors!=null && softShadow==cachedSoft &&
@@ -1054,17 +1070,24 @@ partial class Shot {
             bool powerDetail=n.Kind==13 && t>=d.Enc0-58 && t<d.Enc3+30;
             if(access && softShadow && powerDetail){nearEquipment.Add(n);continue;}
             if(n.Kind==16 || n.Kind==17)continue;
+            if(d.Short && softShadow){
+                // In the short film a cutaway clears everything in or on the walls, and the cooler frames facing the camera.
+                if(n.Kind==18)continue;
+                if((n.Kind==4 || n.Kind==5) && n.WorldPose.S.X>.999 && Seated(n,poseFrame) &&
+                   new V(n.Cos,n.Sin,0).Dot(new V(eye.X,eye.Y,0).Unit())>.15)continue;
+            }
             if((n.Kind==4 || n.Kind==5) && (poseFrame>=d.FirstPod && poseFrame<d.Full+d.VentEnd || access && softShadow) && n.WorldPose.S.X>.999 && Seated(n,poseFrame)){
                 V az=new V(n.Cos,n.Sin,0);
                 if(az.Dot(new V(eye.X,eye.Y,0).Unit())>(access?-.12:.48) ){
                     nearEquipment.Add(n);continue;
                 }
             }
-            if(mat!=1 && mat!=2 && mat!=4 && mat!=5)DrawNode(n,poseFrame);
+            if(mat!=1 && mat!=2 && mat!=4 && mat!=5 && mat!=6)DrawNode(n,poseFrame);
         }
         foreach(Node n in d.Nodes){
             if(n.M<0)continue;int mat=d.Meshes[n.M].Mat;
             if(mat==4 || mat==5){alpha=mat==4?(access?17:42):(access?55:159);DrawNode(n,poseFrame);}
+            if(mat==6){alpha=104;DrawNode(n,poseFrame);}
         }
         alpha=wallMode==1?255:wallMode==2?0:LidAlpha(poseFrame);
         if(alpha>0)foreach(Node n in d.Nodes)if(n.Kind==16 && n.M>=0){
@@ -1088,6 +1111,14 @@ partial class Shot {
     // The closing schematics replace the 3-D view. Each one fades in over the picture before it.
     public Bitmap Render(int frame){
         int t=frame-d.Full;
+        if(d.Short){
+            // The short film closes on the plan and the section side by side.
+            if(t<d.Plan)return Render3D(frame);
+            int into=t-d.Plan;
+            if(into<d.Fade)Render3D(d.Full+d.Plan-1);
+            Closing(frame,into<d.Fade?(into+1f)/(d.Fade+1):1);
+            return bmp;
+        }
         if(t<d.Plan)return Render3D(frame);
         if(t>=d.Repair){
             // The replacement scene fades in over the section drawing.

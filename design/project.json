@@ -253,6 +253,14 @@
       "public_road_north_m": 116,
       "holding_lanes": 4,
       "water_fill_bearing_degrees": 107
+    },
+    "cage": {
+      "trucks_per_level": 3,
+      "welders": 4
+    },
+    "power_fabrication": {
+      "deck_steel_t": 38,
+      "welders": 4
     }
   },
   "jumpform": {
@@ -298,16 +306,16 @@
         "end": 0
       },
       {
+        "key": "cagebuild",
+        "name": "Pod cage built, a level a day",
+        "start": -8,
+        "end": 0
+      },
+      {
         "key": "strip",
         "name": "Strip forms, rig the cranes",
         "start": 1,
         "end": 2
-      },
-      {
-        "key": "frames",
-        "name": "Coolers into their frames",
-        "start": 2,
-        "end": 9
       },
       {
         "key": "cage",
@@ -316,28 +324,28 @@
         "end": 3
       },
       {
-        "key": "water",
-        "name": "Water-glycol fill",
-        "start": 3,
-        "end": 12
-      },
-      {
         "key": "dock",
         "name": "Build the receiving dock",
-        "start": 4,
+        "start": 3,
         "end": 5
+      },
+      {
+        "key": "frames",
+        "name": "Coolers into their frames",
+        "start": 3,
+        "end": 12
       },
       {
         "key": "pods",
         "name": "Pods delivered and loaded",
         "start": 6,
-        "end": 13
+        "end": 15
       },
       {
         "key": "hang",
         "name": "Cooler frames hung and piped",
-        "start": 7,
-        "end": 14
+        "start": 8,
+        "end": 17
       },
       {
         "key": "tanks",
@@ -346,35 +354,61 @@
         "end": 11
       },
       {
-        "key": "propane",
-        "name": "Propane and diesel fill",
-        "start": 12,
+        "key": "fabricate",
+        "name": "Power levels fabricated on site",
+        "start": 9,
         "end": 18
       },
       {
-        "key": "power",
-        "name": "Power levels and lid",
+        "key": "coating",
+        "name": "Spray-coat the inside of the store",
+        "start": 11,
+        "end": 14
+      },
+      {
+        "key": "water",
+        "name": "Water-glycol fill",
         "start": 15,
-        "end": 17
+        "end": 28
+      },
+      {
+        "key": "propane",
+        "name": "Propane and diesel fill",
+        "start": 16,
+        "end": 22
+      },
+      {
+        "key": "power",
+        "name": "Power levels and lid lifted in",
+        "start": 19,
+        "end": 21
       },
       {
         "key": "lines",
         "name": "Fuel lines and cabling",
-        "start": 17,
-        "end": 20
+        "start": 22,
+        "end": 26
       },
       {
-        "key": "commission",
-        "name": "Commissioning",
-        "start": 20,
+        "key": "office",
+        "name": "Dock enclosed as the control office",
+        "start": 24,
         "end": 27
       },
       {
         "key": "handover",
-        "name": "Full strength, crew leaves",
+        "name": "Full strength, handed over",
         "start": 28,
         "end": 28
       }
     ]
+  },
+  "coating": {
+    "system": "Spray-applied polyurea liner",
+    "thickness_mm": 2.0,
+    "sprayers": 4,
+    "m2_per_sprayer_hour": 28,
+    "stages": 4,
+    "colour": "#4f8f86"
   }
 }

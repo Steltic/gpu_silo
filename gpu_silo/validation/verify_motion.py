@@ -46,6 +46,7 @@ def planar_overlap(a,b):
 
 
 def main(path):
+    short=p.film.SHORT
     doc,acc=open_glb(path)
     nodes=doc["nodes"];names={}
     for i,n in enumerate(nodes):names[n["name"]]=i
@@ -82,7 +83,7 @@ def main(path):
     assert len(ids)==p.TOTAL
     ids.sort(key=lambda i:nodes[i]["name"])
     for unit,idx in enumerate(ids,1):
-        mesh_id=names[f"Original pod {unit:03} | bronze before fault"] if unit==p.care.BAD+1 else idx
+        mesh_id=names.get(f"Original pod {unit:03} | bronze before fault",idx) if unit==p.care.BAD+1 else idx
         cube=points(mesh_id)
         assert np.allclose(np.ptp(cube,axis=0),[p.cfg.length(unit),p.cargo.FRAME_WIDTH,p.cargo.FRAME_HEIGHT],atol=.000002)
         tip=cube[:,0]>p.OUTER+.00001
@@ -198,8 +199,12 @@ def main(path):
     heights=get(liquid,"translation",[0,0,0])[:,1]
     top=p.cfg.LIQUID_TOP
     assert np.diff(heights).min()>-.00005 and abs(heights[-1]-top)<1e-5 and top<=p.s.WALL_HEIGHT
-    assert np.max(np.abs(heights[:p.C+1]))<.00001 and heights[p.C+10]>0
-    assert heights[p.FIRST_POD]>l.port_height(p.LEVELS) and np.isclose(heights[p.clock.STORE_FILL[1]],top)
+    if short:
+        # The store stays dry until the last pod is in, then fills to the end of the build.
+        assert np.max(np.abs(heights[:p.FILLED+1]))<.00001 and heights[p.FILLED+24]>0 and heights[p.FILLED+p.clock.WATER[1]-1]<top
+    else:
+        assert np.max(np.abs(heights[:p.C+1]))<.00001 and heights[p.C+10]>0
+        assert heights[p.FIRST_POD]>l.port_height(p.LEVELS) and np.isclose(heights[p.clock.STORE_FILL[1]],top)
     for f in range(p.C): assert heights[f]<=p.s.display_info(f)['height']+.0001
     low=points(names["Water-glycol store | sealed doorway band"])
     # No triangle in the lower band crosses the blocked doorway strip.
@@ -216,7 +221,7 @@ def main(path):
         plug=names[f'Pod {j+1:03} | retractable service plug']
         tt,extent=curves[plug,"scale"]
         live=tt[extent[:,0]>.999]
-        final_link=0 if j==p.care.BAD else 1
+        final_link=0 if j==p.care.BAD and not short else 1
         assert len(live)>0 and math.isclose(get(plug,'scale',[1,1,1])[-1,0],final_link,abs_tol=1e-6)
         t0=p.SOURCE_STARTS[j]+.91*p.motion_ticks(j)
         t1=t0+p.dock_frames(j)
@@ -231,7 +236,7 @@ def main(path):
         assert np.abs(displacement[:,0]).max()<.00003
         assert np.abs(displacement[:,1]+p.POD_H/2-l.port_height(p.LEVELS-j//p.BAYS)).max()<.00004
         assert abs(p.OUTER+p.cfg.extension(j+1)+points(plug)[:,0].max()-l.WALL_FACE)<.00001
-    assert len([n for n in names if n.endswith(" | fluid and power online")])==p.TOTAL+1
+    assert len([n for n in names if n.endswith(" | fluid and power online")])==p.TOTAL+(0 if short else 1)
     a=p.plant
     def cleared(pts,x0,y0,x1,y1,gap):
         """True when no point of a level-coordinate box comes within gap of the access wedge."""
@@ -255,7 +260,7 @@ def main(path):
         while_crossing=(np.linalg.norm(xyz[:,[0,2]],axis=1)>1.e-4)&(np.linalg.norm(xyz[:,[0,2]],axis=1)<15.)
         assert np.min(xyz[while_crossing,1]+pts[:,2].min())>p.s.WALL_HEIGHT+2
         assert xyz[-1,1]+pts[:,2].min()>=p.CROWN-.001 and xyz[-1,1]+pts[:,2].max()<a.LID_Z
-        assert get(body,"scale",[1,1,1])[p.FILLED,0]<.001
+        assert get(body,"scale",[1,1,1])[p.FILLED+(a.FAB_DONE-1 if short else 0),0]<.001
     assert a.power_base(p.CROWN,1)-a.power_base(p.CROWN,0)>=a.GEN_H+a.DECK-1e-9
     assert a.power_base(p.CROWN,1)+a.SET_H<=a.LID_Z
     # Two turbine sets side by side clear the wall. The diesel sets clear each other, the wall and the crew's access wedge.
@@ -290,6 +295,13 @@ def main(path):
     assert abs(angles[-1]-angles[0]-2*math.pi)<.00003 and np.diff(angles).min()>0
     assert np.allclose(camera[0],camera[-1],atol=.0001)
     for name,i in names.items():
+        if short:
+            # The short film has one cutaway. The concrete is solid again from the orbit to the end.
+            if re.match(r"^(Inner|Outer) wall \| lift",name):
+                assert np.allclose(get(i,"scale",[1,1,1])[view0:],1,atol=.00002) and np.allclose(get(i,"scale",[1,1,1])[p.PORTAL_VIEW+17:p.RESTORE],0,atol=.00002)
+            if name.startswith("Ghosted concrete |"):
+                assert np.allclose(get(i,"scale",[1,1,1])[view0:],0,atol=.00002) and np.allclose(get(i,"scale",[1,1,1])[p.PORTAL_VIEW+17:p.RESTORE],1,atol=.00002)
+            continue
         if re.match(r"^(Inner|Outer) wall \| lift",name):
             # Solid for the orbit and the last shot, removed for the two cutaways.
             assert np.allclose(get(i,"scale",[1,1,1])[view0:p.REGHOST],1,atol=.00002)
@@ -306,6 +318,40 @@ def main(path):
     assert np.linalg.norm(deck[:,:2],axis=1).max()>=p.s.RO and p.s.WALL_HEIGHT<=a.LID_Z+deck[:,2].min()
     assert abs(a.LID_Z+deck[:,2].max()-p.s.WALL_HEIGHT-a.VENT_RISE)<.01 and a.LID[0]>a.VENT_END
     assert get(lid,"scale",[1,1,1])[p.FILLED+a.LID[0],0]>.999 and get(lid,"scale",[1,1,1])[-1,0]>.999
+    floor=a.power_base(p.CROWN,1)+a.HINGE_Z
+    if short:
+        # Both turbine sets stand open on their deck, with no enclosure and no hinged side.
+        assert not any("hinged side" in name for name in names)
+        for side,label in ((1,"A"),(-1,"B")):
+            machine=points(names[f"Turbine set {label} | gas turbine and generator"])
+            assert np.abs(machine[:,0]).max()<a.SET_L/2-.1 and (side*machine[:,1]).min()>a.SET_Y-a.SET_W/2+.05 and (side*machine[:,1]).max()<a.SET_Y+a.SET_W/2-.05
+        deck=points(names["Power level 02 | turbine deck assembly"])
+        assert deck[:,2].max()<=.001,"the turbine deck carries no enclosure in the short film"
+    else:
+        hinged(p,a,names,get,points,floor)
+    assert abs(p.crew.POWER_FLOOR-floor)<1e-9 and p.cfg.POWER["modules"]*p.cfg.POWER["module_output_mw"]>=p.calcs.C["heat_mw"]-1e-9
+    walkways_and_fuel(p,a,doc,names,parents,get,points,ids,planar_overlap,roof,floor,short)
+    fuel=p.fuel
+    if short:
+        from .verify_short import check
+        check(p,doc,names,parents,get,points)
+    else:
+        from .verify_service import check
+        check(p,doc,names,parents,get,points,ids,planar_overlap)
+    print(f"{p.TOTAL} ground-fed {p.cfg.NAME} pods on {p.LEVELS} levels. All framed dimensions, CDU section colours and dock strokes passed.")
+    print(f"Clear bore {2*p.s.RI:.2f} m. Steel cage radius {outer_r:.3f} m. Bunched inner-corner clearance {bunched_gap*1000:.1f} mm.")
+    print(f"Two {a.LENGTH:.2f} m power units seat at 90 degrees. Four vents stand through the lid to {p.s.WALL_HEIGHT+a.VENT_RISE:.2f} m.")
+    print((f"Both turbine sets stand open on their deck at {floor:.2f} m. " if short else f"Turbine set A's side folds to a work floor at {floor:.2f} m. ")+f"{len(a.GEN_AT)} diesel sets leave the access wedge clear. "
+          f"The lid carries {len(a.EXHAUST_AT)} exhaust stacks to {p.s.WALL_HEIGHT+a.VENT_RISE:.1f} m.")
+    print(f"Pod sleeves end in the store at radius {l.TANK_END:.2f} m. {fuel.COUNT} propane tanks at {fuel.FARM_R:g} m feed one gas line.")
+    print(f"Water-glycol reaches {top:.2f} m between the walls. Lower storage tiers run at {p.FAST_RATE:g}x.")
+
+
+if __name__=="__main__": main(sys.argv[1])
+
+
+def hinged(p,a,names,get,points,floor):
+    lid=names["Silo lid | crane placement"]
     assert np.allclose(get(lid,"scale",[1,1,1])[p.FILLED+p.care.CREW+16:p.RESTORE-1],0,atol=.00002)
     assert np.allclose(get(lid,"scale",[1,1,1])[p.REGHOST:p.RESTORE2-1],0,atol=.00002)
     # The lower power module holds a gas turbine. Its near side folds down to the crew's floor level and closes again.
@@ -316,14 +362,16 @@ def main(path):
     opened=p.FILLED+clock.ENCLOSURE_OPEN[1];closed=p.FILLED+clock.ENCLOSURE_CLOSE[1]
     assert shown[0,:p.FILLED+clock.ENCLOSURE_OPEN[0]].all() and shown[0,closed+1:].all()
     assert shown[-1,opened+1:p.FILLED+clock.ENCLOSURE_CLOSE[0]].all()
-    flat=points(poses[-1]);wall=points(poses[0]);floor=a.power_base(p.CROWN,1)+a.HINGE_Z
+    flat=points(poses[-1]);wall=points(poses[0])
     assert np.ptp(flat[:,1])>a.PANEL_HEIGHT-.01 and abs(flat[flat[:,1]>a.HINGE_Y+.3][:,2].max()-a.HINGE_Z)<.03
     assert np.linalg.norm(flat[:,:2],axis=1).max()<p.s.RI-.2,"the folded side must stay inside the bore"
     assert wall[:,1].max()<a.SET_Y+a.SET_W/2+.02 and np.ptp(wall[:,2])>a.PANEL_HEIGHT-.01
     turbine=names["Turbine set A | gas turbine and generator"];machine=points(turbine)
     assert np.abs(machine[:,0]).max()<a.SET_L/2-.1 and machine[:,1].min()>a.SET_Y-a.SET_W/2+.05 and machine[:,1].max()<a.SET_Y+a.SET_W/2-.05
     assert machine[:,2].min()>.1 and machine[:,2].max()<a.SET_H-.1
-    assert abs(p.crew.POWER_FLOOR-floor)<1e-9 and p.cfg.POWER["modules"]*p.cfg.POWER["module_output_mw"]>=p.calcs.C["heat_mw"]-1e-9
+
+
+def walkways_and_fuel(p,a,doc,names,parents,get,points,ids,planar_overlap,roof,floor,short):
     # A walkway ring at every level joins the sectors, between the shaft and the pod roots.
     cage=points(names["Steel module | shaft, bearings, rim girders and braced columns"])
     for level in range(1,p.LEVELS+1):
@@ -338,7 +386,7 @@ def main(path):
     assert np.isclose(shell[:,0].max(),fuel.LENGTH/2,atol=.01) and np.isclose(np.ptp(shell[:,1]),fuel.DIA,atol=.1)
     spots=[]
     for j,i in enumerate(tanks):
-        t=get(i,"translation",[0,0,0]);landed=p.FILLED+closing.TANKS+(j+1)*closing.TANK_STEP
+        t=get(i,"translation",[0,0,0]);landed=p.FILLED+closing.TANKS+j*closing.TANK_STEP+closing.TANK_SETTLE+1
         assert get(i,"scale",[1,1,1])[p.FILLED+closing.FUEL,0]<.001 and get(i,"scale",[1,1,1])[landed,0]>.999
         assert np.allclose(t[landed:],t[-1],atol=.0001) and abs(t[-1,1])<.0001
         spots.append(t[-1,[0,2]])
@@ -360,15 +408,3 @@ def main(path):
     assert abs(drop[1])>a.SET_Y+a.SET_W/2+.3 and math.hypot(*drop)<p.s.RI-.5
     for x,y,hx,hy in roof:
         assert abs(drop[0]-x)>hx+.4 or abs(drop[1]-y)>hy+.4
-    from .verify_service import check
-    check(p,doc,names,parents,get,points,ids,planar_overlap)
-    print(f"{p.TOTAL} ground-fed {p.cfg.NAME} pods on {p.LEVELS} levels. All framed dimensions, CDU section colours and dock strokes passed.")
-    print(f"Clear bore {2*p.s.RI:.2f} m. Steel cage radius {outer_r:.3f} m. Bunched inner-corner clearance {bunched_gap*1000:.1f} mm.")
-    print(f"Two {a.LENGTH:.2f} m power units seat at 90 degrees. Four vents stand through the lid to {p.s.WALL_HEIGHT+a.VENT_RISE:.2f} m.")
-    print(f"Turbine set A's side folds to a work floor at {floor:.2f} m. {len(a.GEN_AT)} diesel sets leave the access wedge clear. "
-          f"The lid carries {len(a.EXHAUST_AT)} exhaust stacks to {p.s.WALL_HEIGHT+a.VENT_RISE:.1f} m.")
-    print(f"Pod sleeves end in the store at radius {l.TANK_END:.2f} m. {fuel.COUNT} propane tanks at {fuel.FARM_R:g} m feed one gas line.")
-    print(f"Water-glycol reaches {top:.2f} m between the walls. Lower storage tiers run at {p.FAST_RATE:g}x.")
-
-
-if __name__=="__main__": main(sys.argv[1])

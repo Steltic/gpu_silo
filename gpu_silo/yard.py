@@ -11,6 +11,7 @@ import math
 
 from . import cargo
 from . import clock
+from . import film
 from . import logistics
 from . import site
 from . import traffic
@@ -247,7 +248,56 @@ def install_terminal(scene,node,p):
     landed=sorted(frame_at(t) for t in land)
     scene.counts["pod_trucks"]=[sum(1 for g in gone if f>=g) for f in range(total)]
     scene.counts["pods_landed"]=[sum(1 for g in landed if f>=g) for f in range(total)]
+    if film.SHORT:office(scene,node,yard,p)
     scene.project_info.update(podsPerTruck=PER,podTrucks=len(timetable["visits"]),dockLanes=LANES,dockCradles=CRADLES,terminalToIntake_m=RAIL_OFFSET)
+
+
+OFFICE_H=6.2
+OFFICE_X=(RUNWAY[0]-1.0,RUNWAY[1]+1.0)
+OFFICE_Y=SPAN+1.0
+ROOF_PANELS=6
+
+
+def office_walls():
+    """Walls round the dock: doors for the two truck lanes and the rail, and a band of windows."""
+    m=steel("Control office | wall panels round the receiving dock")
+    x0,x1=OFFICE_X;y=OFFICE_Y;wall="d9d6c6";glass="4b6971"
+    def panel(xa,ya,xb,yb,z0=0,z1=OFFICE_H,colour=wall):
+        box(m,min(xa,xb),min(ya,yb),max(xa,xb),max(ya,yb),z0,z1,colour)
+    for side in (-1,1):
+        panel(x0,side*y,x1,side*(y-.2))
+        panel(x0+1.5,side*(y+.02),x1-1.5,side*(y-.22),3.3,4.4,glass)
+    door=2.3;top=4.7
+    # Outer end: a door for each lane. Inner end: an opening for the rail.
+    spans=[-y]+[v for lane in sorted(LANE_Y) for v in (lane-door,lane+door)]+[y]
+    for a,b in zip(spans[::2],spans[1::2]):panel(x1-.2,a,x1,b)
+    panel(x1-.2,-y,x1,y,top,OFFICE_H)
+    panel(x1-.22,-1.6,x1+.02,1.6,3.3,4.4,glass)
+    for a,b in ((-y,-1.0),(1.0,y)):panel(x0,a,x0+.2,b)
+    panel(x0,-y,x0+.2,y,3.1,OFFICE_H)
+    return m
+
+
+def office_roof():
+    m=steel("Control office | one flat roof panel")
+    width=(OFFICE_X[1]-OFFICE_X[0])/ROOF_PANELS
+    box(m,0,-OFFICE_Y-.25,width+.02,OFFICE_Y+.25,OFFICE_H,OFFICE_H+.26,"b9beb6")
+    box(m,.1,-OFFICE_Y-.3,width-.08,-OFFICE_Y-.22,OFFICE_H+.26,OFFICE_H+.5,"8d9a95")
+    box(m,.1,OFFICE_Y+.22,width-.08,OFFICE_Y+.3,OFFICE_H+.26,OFFICE_H+.5,"8d9a95")
+    return m
+
+
+def office(scene,node,dock,p):
+    """Near the end of the build the dock is walled and roofed and becomes the control office."""
+    begin=p.FILLED+clock.OFFICE[0];stand=64
+    node("Control office | walls",scene.mesh(office_walls()),"Control office",dock,
+         tracks={"scale":[(0,OFF),(begin-.02,OFF)]+[(begin+k,(1.,1.,max(.01,s.step(0,stand,k)))) for k in range(stand+1)]})
+    roof=scene.mesh(office_roof());width=(OFFICE_X[1]-OFFICE_X[0])/ROOF_PANELS
+    for k in range(ROOF_PANELS):
+        at=begin+stand+6+8*k
+        node(f"Control office | roof panel {k+1}",roof,"Control office",dock,
+             tracks={"scale":[(0,OFF),(at-.02,OFF),(at,ON)],"translation":[(0,(OFFICE_X[0]+k*width,0,2.4)),(at,(OFFICE_X[0]+k*width,0,2.4)),(at+8,(OFFICE_X[0]+k*width,0,0))]})
+    scene.project_info.update(controlOffice="The receiving dock is roofed and walled at the end of the build",controlOfficeHeight_m=OFFICE_H)
 
 
 def delivery_camera(frame,p):
