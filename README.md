@@ -2,9 +2,11 @@
 
 [![The finished GPU Silo with its roof stacks, ten screened dry cooler frames, the haul ring and the fuel farm](docs/animation.jpg)](../../releases/latest/download/GPU_Silo.mp4)
 
-**[Watch the animation · MP4](../../releases/latest/download/GPU_Silo.mp4)** · [Animated 3D model · GLB](../../releases/latest/download/GPU_Silo.glb) · [All versions](../../releases)
+**[Watch the build · silo_short.mp4](../../releases/latest/download/silo_short.mp4)** (3:26) · **[Watch the full presentation · GPU_Silo.mp4](../../releases/latest/download/GPU_Silo.mp4)** (5:33) · Animated 3D models: [silo_short.glb](../../releases/latest/download/silo_short.glb), [GPU_Silo.glb](../../releases/latest/download/GPU_Silo.glb) · [All versions](../../releases)
 
 A 32 m concrete silo that houses, powers and liquid-cools 256 NVIDIA Vera Rubin GPU racks, a 50 MW cluster. The racks sit four to a pod in 64 **4SU** pods on eight levels around a central shaft. Each pod carries its own CDU and pump and plugs into a water-glycol store held between the silo's two concrete walls. Thirty 2 MW dry coolers on ten screened steel frames hang on the outside of the wall and reject the heat. Two in-line 25 MW gas turbine sets sit side by side above the pods under the lid, burn propane from eight tanks beside the silo and feed the pods down the central shaft. Four backup diesel sets sit on the level below them. Everything arrives by truck on a one-way haul ring, and the build is laid out to finish 28 days after the last concrete is poured.
+
+There are two films. **silo_short** shows the build in programme order and nothing else: the pod cage built beside the walls, the pods and coolers, the fuel tanks, the store liner, the power levels fabricated on site, the water fill over the last two weeks and the dock closed in as a control office. It ends on a plan and a section side by side. **GPU_Silo** is the longer presentation, with the narrated cooling loop, personnel access and the pod and cooler replacement. The two are built from the same model and are not kept in step: the long film still shows the earlier build order, with the store filled before the pods.
 
 The animation is the working drawing for this project. Design decisions are made by looking at it, and every dimension in it comes from one file, [design/project.json](design/project.json). The repository holds that file, the [calculations](design/calcs.md) generated from it, the [decisions](design/README.md) and the code that turns them into the film. Anyone can propose a design idea and see it rendered.
 
@@ -22,11 +24,29 @@ The animation is the working drawing for this project. Design decisions are made
 | Fuel | 8 propane tanks of 20 m, 913 m³, about 43 h at full load, one 200 mm line |
 | Roof | 2 turbine exhaust stacks, 2 air inlet houses, diesel exhausts and room vents |
 | Trucking | 32 pod trucks at 2 pods each, 312 water tankers, 30 cooler trucks, 26 propane transports, 140 mixers for the walls |
-| Programme | Walls in 10 daily lifts by a crew of 22, then 28 days to handover as the concrete reaches full strength |
+| Store liner | 2 mm spray-applied polyurea on both faces of the store, 4,453 m², sprayed from four stages on days 11 to 14 |
+| Programme | Walls in 10 daily lifts by a crew of 22 while the pod cage is built beside them a level a day, then 28 days to handover. Water goes in last, on days 15 to 28. Commissioning is by others after day 28. |
 
 These figures are written by `python -m gpu_silo calcs` and also appear on screen throughout the film. The [calculations](design/calcs.md#10-open-questions-raised-by-these-numbers) list the open questions they raise. The largest are the wall design, no spare turbine, heat from the turbines next to the pods and the store, and air for people working in the bore.
 
-### Find it in the movie
+### Find it in the short film (silo_short)
+
+| Scene | Programme | Time |
+| --- | --- | ---: |
+| Jumpform the walls with a crew of 22. The pod cage is built beside the silo: each day three trucks bring a level, it is welded on the pad, lifted onto the stack and welded on. | Days -9 to 0 | 0:00 |
+| Two crawlers lift the finished cage into the silo | Day 3 | 0:42 |
+| Receiving dock: two pods a truck, lifted onto the rail by the gantry | Day 6 | 0:58 |
+| Pods load and the cooler frames are hung. Everything in or on the walls is cleared from the cutaway. | Days 6 to 17 | 1:13 |
+| Fuel tanks arrive and are set on the pad | Days 8 to 11 | 1:28 |
+| The inside of the store is spray-coated from four rising stages | Days 11 to 14 | 1:44 |
+| Power levels fabricated on site: deck steel welded, diesel and turbine sets landed from their trucks | Days 9 to 18 | 1:52 |
+| Open diesel level, open turbine level and the lid lifted in. Water tankers start and the store begins to fill. | Days 19 to 21 | 2:04 |
+| Propane transports fill the tanks and the fuel lines run to the power levels | Days 16 to 26 | 2:30 |
+| The receiving dock is walled and given a flat roof as the control office | Days 24 to 27 | 2:38 |
+| Finished silo, design basis, the 28-day programme and a full exterior orbit | Day 28 | 2:44 |
+| Plan and section side by side, silent | | 3:07 |
+
+### Find it in the long film (GPU_Silo)
 
 | Scene | Time |
 | --- | ---: |
@@ -55,7 +75,7 @@ These figures are written by `python -m gpu_silo calcs` and also appear on scree
 ### Propose a design idea
 
 1. **Describe it.** Open a [design idea](../../issues/new/choose) and say what a viewer should see and why.
-2. **Or try it.** Edit a value in [design/project.json](design/project.json), run `python -m gpu_silo calcs` and open a pull request. The render check builds the MP4 and GLB for review.
+2. **Or try it.** Edit a value in [design/project.json](design/project.json), run `python -m gpu_silo calcs` and open a pull request. The render check builds both films and their GLBs for review.
 3. **Record it.** An accepted change adds a line to the [decision log](design/history.md).
 
 [Contributor quick start](CONTRIBUTING.md) · [Design decisions](design/README.md) · [Design calculations](design/calcs.md) · [Decision log](design/history.md)
@@ -65,12 +85,12 @@ These figures are written by `python -m gpu_silo calcs` and also appear on scree
 | Path | Contents |
 | --- | --- |
 | [design/project.json](design/project.json) | Every design input: cluster, silo, pod, store, coolers, power, diesel, fuel, installation, trucking, site roads, jumpform crew, programme and film |
-| [design/calcs.md](design/calcs.md) | Heat load, store, flows, coolers and spares, the fit of the power levels, roof vents, propane line size, fuel run times, truck loads, the roads and staging areas, and the 28-day programme. Generated from the inputs. |
+| [design/calcs.md](design/calcs.md) | Heat load, store, flows, coolers and spares, the fit of the power levels, roof vents, propane line size, fuel run times, truck loads, the store liner, the roads and staging areas, and the 28-day programme. Generated from the inputs. |
 | [design/narration.json](design/narration.json) · [audio/](audio) | The narration script and its recording |
 | [design/README.md](design/README.md) | The current decision for each part of the design and where to change it |
 | [design/history.md](design/history.md) | Dated decision log, including what each decision replaced |
 | [gpu_silo/](gpu_silo) | Parametric model, animation and checks |
 | [renderer/](renderer) | Film renderer and the on-screen design panels |
-| [docs/sequence.md](docs/sequence.md) | Scene-by-scene guide to the film |
+| [docs/sequence.md](docs/sequence.md) | Scene-by-scene guides to both films |
 
 This is a concept study. The model checks geometry and motion. It is not a structural, hydraulic, thermal or electrical design.

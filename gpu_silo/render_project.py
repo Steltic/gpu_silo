@@ -14,17 +14,48 @@ from . import calcs
 from . import clock
 from . import closing
 from . import service
+from . import film
 from . import logistics
 from . import site
 
 NARRATION = Path(__file__).resolve().parents[1] / "audio" / "plan_view.flac"
 
-MOVIE = "GPU_Silo.mp4"
-MODEL = "GPU_Silo.glb"
+MOVIE = film.OUTPUT + ".mp4"
+MODEL = film.OUTPUT + ".glb"
 SOURCES = ("SiloRender.cs", "CoolerFrameRender.cs", "DesignRender.cs", "FlowRender.cs")
 
 
+def short_chapters():
+    from . import shortfilm
+    yard = p.yard
+    lg = logistics.C
+    full = p.FILLED
+    fuel, coat, fab = shortfilm.cuts(p)
+    marks = [(0, f"Jumpform crew of {lg['crew']} on the first lift | truck mixers at the pump"),
+             (silo.INTRO + silo.SLOW_CYCLE, "Nine more lifts, a day each | the pod cage goes up beside the silo, a level a day"),
+             (p.C, "Two crawlers lift the finished pod cage into the silo"),
+             (yard.INSERT_AT, f"Receiving dock | {lg['pods_per_truck']} pods a truck, lifted onto the rail by the gantry"),
+             (p.FIRST_POD, "Lift the first pod into the store"),
+             (frames.times(0)[0], f"Crawler hangs the first of {frames.N} cooler frames while pods load"),
+             (fuel[0], f"Day 8 | trucks bring {cfg.PROJECT['fuel']['tanks']} propane tanks and the diesel tank"),
+             (fuel[1], "Pods and cooler frames continue"),
+             (coat[0], "Spray-coat the inside of the store"),
+             (fab[0], "Power levels fabricated on site | deck steel welded, sets landed"),
+             (fab[1], "Last pods dock"),
+             (full, "Backup diesel level through the open top | the water-glycol fill begins"),
+             (full + p.plant.PICK_STARTS[1], "Turbine level | two open in-line 25 MW gas turbine sets"),
+             (full + clock.LID[0], "Lower the lid with its exhaust stacks and air inlet houses"),
+             (full + clock.LINES, "Propane transports fill the tanks | fuel lines run to the power levels"),
+             (full + closing.FUEL_END, "The receiving dock is walled and roofed as the control office"),
+             (full + clock.SOLID_BEGIN, f"Finished silo on day {logistics.DAYS} | design basis, programme and 360-degree sweep"),
+             (full + closing.PLAN, "Plan and section side by side | how the cooling loop, power and fuel work")]
+    if any(a[0] >= b[0] for a, b in zip(marks, marks[1:])):
+        raise ValueError("Chapters are out of order: " + str([f for f, _ in marks]))
+    return marks
+
+
 def chapters():
+    if film.SHORT: return short_chapters()
     care, plant, yard = p.care, p.plant, p.yard
     first = frames.times(0)
     full, repair = p.FILLED, p.FILLED+care.REPAIR
@@ -121,7 +152,7 @@ def render(renderer,scene,out,work,jobs):
     start=round(1000*((p.FILLED+closing.PLAN)/p.FPS+closing.VOICE_LEAD))
     sound=["-i",str(NARRATION),"-filter_complex",
            f"[2:a]aresample=48000,adelay={start}:all=1,apad=whole_dur={p.FRAMES/p.FPS:.6f},pan=stereo|c0=c0|c1=c0[voice]",
-           "-map","[voice]","-c:a","aac","-b:a","128k"] if NARRATION.is_file() else []
+           "-map","[voice]","-c:a","aac","-b:a","128k"] if NARRATION.is_file() and not film.SHORT else []
     subprocess.run(["ffmpeg","-hide_banner","-loglevel","error","-y","-f","concat","-safe","0","-i",str(playlist),
         "-f","ffmetadata","-i",str(metadata),*sound[:2],"-map","0:v:0",*sound[2:],"-map_metadata","1","-map_chapters","1",
         "-c:v","copy","-video_track_timescale","12288","-t",f"{p.FRAMES/p.FPS:.6f}","-movflags","+faststart",str(out)],check=True)

@@ -22,6 +22,38 @@ partial class Shot {
         }
     }
 
+    // The short film names the panel for each scene instead of working it out from the long film's clock.
+    void ShortOverlay(Graphics g,int frame) {
+        int kind=3,card=0;
+        foreach(Scene scene in d.Scenes)if(frame>=scene.First && frame<scene.Last){kind=scene.Kind;card=scene.Card;}
+        if(Ghosted(frame))ShellEdges(g);
+        if(kind==2)TerminalOverlay(g,frame);
+        else if(kind==4)CoolerFrameOverlay(g,frame);
+        else if(kind==5)FuelOverlay(g,frame);
+        else if(kind==6)CardOverlay(g,frame,d.Cards[card]);
+        else if(kind==8)PowerOverlay(g,frame);
+        else if(kind==11){DesignOverlay(g,frame);ProgrammeChart(g);}
+        else StorageOverlay(g,frame);
+        ProgrammeTag(g,frame);
+        if(kind!=11)DesignStrip(g,frame);
+    }
+
+    // A plain panel for a scene: what it is, the step in hand and a few figures.
+    void CardOverlay(Graphics g,int frame,Card card) {
+        const float x=24,xr=222;
+        g.FillRectangle(accent,x,33,25,3);g.DrawString(card.Kicker,section,muted,new PointF(x,46),leftText);
+        Heading(g,card.Heading,x-2,73);g.DrawString(card.Sub,title2,muted,new PointF(x,126),leftText);
+        Rule(g,x,164,xr,164,cLine,1);
+        int now=0;
+        for(int i=0;i<card.Steps.Length;i++)if(frame>=card.Steps[i].At)now=i;
+        float bar=(xr-x-4*(card.Steps.Length-1))/card.Steps.Length;
+        for(int i=0;i<card.Steps.Length;i++)g.FillRectangle(i<now?waterBrush:i==now?accent:light,x+(bar+4)*i,186,bar,5);
+        g.DrawString(card.Steps[now].Text,strong,now==card.Steps.Length-1?ink:accent,new PointF(x,206),leftText);
+        Rule(g,x,262,xr,262,cLine,1);
+        Rows(g,card.Rows,x,xr,282,27);
+        UtilityReadouts(g,d.Frames[frame],false,frame);
+    }
+
     // Where the scene falls in the 28-day programme, with the running truck counts.
     void ProgrammeTag(Graphics g,int frame) {
         Tag tag=null;
@@ -114,7 +146,7 @@ partial class Shot {
     void FuelOverlay(Graphics g,int frame) {
         const float x=24,xr=222;
         int t=frame-d.Full,landed=0;
-        for(int k=0;k<d.TankCount;k++)if(t>=d.Tanks+(k+1)*d.TankStep-2)landed++;
+        for(int k=0;k<d.TankCount;k++)if(t>=d.Tanks+k*d.TankStep+d.TankSettle)landed++;
         string phase=t<d.Tanks?"Clear the pad":landed<d.TankCount?"Place the tanks":
             t<d.Line[3]?"Run the line to the silo":t<d.Line[5]?"Up the outside wall":
             t<d.Line[7]?"Across the lid":t<d.Line[9]?"Down to the power levels":"Fuel connected";

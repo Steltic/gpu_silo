@@ -165,7 +165,7 @@ def install(scene,node,p):
         points=roads.arrive()+roads.lap(roads.JOIN[roads.R_RUN],bearing)
         points+=[site(reach,y)[:2],site(roads.BACK_ROAD,y)[:2]]+roads.back_road()[1:]
         return roads.Path(points,8.)
-    step=closing.TANK_STEP
+    step=closing.TANK_STEP;settle=closing.TANK_SETTLE
     deliveries=[(f"Propane tank {j+1:02}",tank,y,FARM_R,hauler,roads.HAUL_AXLE,-11.6,.98,closing.TANKS+j*step) for j,y in enumerate(offsets())]
     last=closing.TANKS+(COUNT-1)*step
     deliveries.append(("Diesel bulk tank",scene.mesh(bulk_tank_mesh()),north,FARM_R-LENGTH/2+BULK_L/2,flat,roads.FLAT_AXLE,traffic.DECK_MID,roads.DECK,last))
@@ -179,9 +179,9 @@ def install(scene,node,p):
         lifted=base+stops+4
         node(name+" | on its trailer",mesh_id,"Fuel delivery",towed,t=(seat,0,deck),tracks={"scale":roads.window(0,lifted)})
         def height(t,deck=deck,stops=stops):
-            return deck+.3*s.step(stops+4,stops+8,t)-(deck+.3)*s.step(stops+step-12,stops+step-2,t)
+            return deck+.3*s.step(stops+4,stops+8,t)-(deck+.3)*s.step(stops+settle-10,stops+settle,t)
         node(name,mesh_id,"Fuel storage",ang=BEARING,
-             tracks={"translation":curve((stops+4,stops+step),lambda t,x=x,y=y,height=height:site(x,y,height(t))),
+             tracks={"translation":curve((stops+4,stops+settle),lambda t,x=x,y=y,height=height:site(x,y,height(t))),
                      "scale":[(0,OFF),(lifted-.02,OFF),(lifted,ON)]})
         if trailer==hauler:
             for dx in (-LENGTH*.3,LENGTH*.3):
@@ -190,7 +190,9 @@ def install(scene,node,p):
                     plant.closed(portal,px-.22,py-.22,px+.22,py+.22,0,4.7,"d7a84c")
                 a,b=site(x+dx,y-1.95,4.6),site(x+dx,y+1.95,4.6)
                 s.bar(portal,a,b,.36,"d7a84c",.4)
-    node(portal.name,scene.mesh(portal),"Fuel delivery",tracks={"scale":window(closing.FUEL-150,last+step+6)})
+    node(portal.name,scene.mesh(portal),"Fuel delivery",tracks={"scale":window(closing.FUEL-150,last+settle+8)})
+    landed=sorted(base+stops+settle for *_,stops in deliveries)
+    scene.counts["tanks"]=[sum(1 for at in landed if f>=at) for f in range(p.FRAMES)]
     # Propane transports unload at the ring lay-by once the tanks are set.
     transport=fleet.mesh("propane transport",lambda:roads.tanker("Propane transport semi-trailer","e9e7dc",12.6,2.2,"c8563c"))
     routes=[layby_route(front) for front in BAY_FRONTS]

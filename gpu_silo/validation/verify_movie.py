@@ -4,7 +4,7 @@ from pathlib import Path
 import subprocess
 import sys
 
-from .. import closing, design, pod_scene, render_project
+from .. import closing, design, film, pod_scene, render_project
 
 
 def check(path):
@@ -23,7 +23,9 @@ def check(path):
     assert all(a["end"] == b["start"] for a, b in zip(chapters, chapters[1:]))
     sound = [stream for stream in info["streams"] if stream["codec_type"] == "audio"]
     voice = ""
-    if render_project.NARRATION.is_file():
+    if film.SHORT:
+        assert not sound, "the short film has no sound track"
+    elif render_project.NARRATION.is_file():
         assert len(sound) == 1 and sound[0]["codec_name"] == "aac", "the narration track is missing"
         assert abs(float(sound[0]["duration"]) - frames / pod_scene.FPS) < .1
         # The voice must sit inside the plan-view scene and be silent before it.
@@ -43,4 +45,4 @@ def check(path):
 
 
 if __name__ == "__main__":
-    check(Path(sys.argv[1]))
+    check(Path(sys.argv[1]))      # set GPU_SILO_FILM=short to check silo_short.mp4

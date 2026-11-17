@@ -7,6 +7,7 @@ service during the pod exchange at the end. This module joins those lifts into o
 import math
 
 from . import cooler_frames as fr
+from . import film
 from . import maintenance as care
 from . import plant
 from . import service
@@ -53,6 +54,7 @@ def poses(p):
     gone=lidded+110
     serving=p.FILLED+care.REPAIR+service.ARRIVE
     back=serving-120
+    if film.SHORT:back=serving=p.FRAMES+10    # the short film ends before any service visit
     result={}
     for f in range(fr.START,p.FRAMES):
         if f<=fr.END:pose=frames(f)

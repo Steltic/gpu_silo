@@ -501,7 +501,7 @@ The backup covers black start, controls, the cooling plant and about a fifth of 
 11. **Power in the shaft.** {c['heat_mw']:.0f} MW passes down the steel shaft to {c['pods']} pods, {c['pod_kw']:.0f} kW each. The busbar, its cooling and the connection at each level are not designed.
 12. **Pod support.** The pods now hang {cfg.STORE['root_radius_m']-cfg.STORE['shaft_radius_m']:.1f} m out from the shaft with a walkway ring between. The carrier ring and its arms are not designed.
 13. **Pod weight.** {lg['pod_t']:.1f} t per pod is an allowance, and it sets the load at {lg['pods_per_truck']} pods a truck. NVIDIA has not published a shipping weight for this rack. Three pods would travel together only if a pod weighed under {cfg.PROJECT['logistics']['flatbed']['payload_t']/3:.1f} t.
-14. **Filling young concrete.** The fill starts on day {logistics.BY_KEY['water']['start']}. Each lift is at least {lg['wet_age_min']:.0f} days old when the water reaches it and the bottom lift is {lg['full_head_age']:.0f} days old at full head. Whether the walls can take that load at that age has not been checked.
+14. **Liner and fill.** The liner goes on from day {logistics.BY_KEY['coating']['start']}, when the youngest concrete is {lg['coat_age_min']} days old, and the fill starts on day {logistics.BY_KEY['water']['start']}. Most coatings ask for 28-day-old, dry concrete, so the liner system and its moisture limits need a supplier's check. The pod sleeves, frame conduits and the door blockout all pass through the liner and need detailing.
 15. **A lift a day.** {cfg.PROJECT['jumpform']['lifts_per_day']:g} lift a day is fast for a jumpform. Slower lifts lengthen the work before day 0 and leave the {logistics.DAYS} days after it unchanged.
 16. **Fuel line across the ring.** The propane and diesel lines run on the ground from the tanks to the wall and cross both ring lanes. They need to be buried or bridged there.
 17. **Heavy and oversize loads.** The {cfg.PROJECT['fuel']['tanks']} propane tanks are {cfg.PROJECT['fuel']['tank_diameter_m']:g} m wide and the turbine sets weigh {pw['set_weight_t']:g} t. Their permits, routes and the way each tank is jacked off its trailer are not designed.
@@ -517,6 +517,7 @@ def trucking_markdown():
     lg, L, P = logistics.C, cfg.PROJECT["logistics"], cfg.PROJECT
     flat, w, site = L["flatbed"], L["water"], L["site"]
     fu = P["fuel"]
+    coat = P["coating"]
     hours = L["working_hours_per_day"]
     def when(key):
         return logistics.days_text(key).replace("Days ", "").replace("Day ", "")
@@ -579,7 +580,22 @@ In real time one lane would be enough. The second lane lets one truck back in wh
 | Youngest concrete the water reaches | {lg['wet_age_min']:.0f} days old | lifts poured one a day, fill from day {logistics.BY_KEY['water']['start']} |
 | Bottom lift at full head | {lg['full_head_age']:.0f} days old | day {logistics.BY_KEY['water']['end']} |
 
-The tankers have their own drive off the public road, so {lg['water_loads']} loads never enter the haul ring.
+The fill is left to the last {lg['water_days']} days so the concrete has as long as possible to dry and gain strength first. The tankers have their own drive off the public road, so {lg['water_loads']} loads never enter the haul ring.
+
+### Liner inside the store
+
+The faces of the store are sprayed with a liner before the fill, to keep the water-glycol off the concrete and its reinforcement.
+
+| Quantity | Value | Basis |
+| --- | ---: | --- |
+| System | {coat['system']} | input, to be confirmed with a coating supplier for warm water-glycol |
+| Wall faces | {n(lg['coat_wall_m2'])} m² | both faces of the gap, {cfg.SILO['height_m']:g} m high |
+| Floor of the gap | {n(lg['coat_floor_m2'])} m² | |
+| **Area to coat** | **{n(lg['coat_m2'])} m²** | |
+| Liner | {coat['thickness_mm']:g} mm, {lg['coat_m3']:.1f} m³ | |
+| Output | {n(lg['coat_m2_per_day'])} m² a day | {coat['sprayers']} sprayers at {coat['m2_per_sprayer_hour']:g} m² an hour, from {coat['stages']} stages hung in the gap |
+| Time needed / allowed | {lg['coat_days_needed']:.1f} / {logistics.span('coating')[2]} days | days {logistics.BY_KEY['coating']['start']} to {logistics.BY_KEY['coating']['end']} |
+| Concrete age when coated | {lg['coat_age_min']} days or more | the last lift is poured on day 0 |
 
 ### Coolers, fuel and concrete
 
@@ -630,7 +646,7 @@ Day 0 is the last wall pour. The concrete reaches its 28-day strength on day {lo
 | --- | ---: | ---: | ---: |
 {chart}
 
-The walls take {lg['wall_days']:.0f} days at {P['jumpform']['lifts_per_day']:g} lift a day and are outside the {logistics.DAYS} days. One crawler crane does every heavy lift, so the cooler frames are hung before the power levels and the lid. The water fill, the cooler deliveries and the pod deliveries overlap from day {logistics.BY_KEY['pods']['start']} to day {logistics.BY_KEY['frames']['end']}, which is when the site is busiest."""
+The walls take {lg['wall_days']:.0f} days at {P['jumpform']['lifts_per_day']:g} lift a day and are outside the {logistics.DAYS} days. The pod cage is built beside the silo in those days, a level a day, so it is ready to lift in on day {logistics.BY_KEY['cage']['start']}. One crawler crane does every heavy lift, so the cooler frames are hung before the power levels and the lid. The power levels are fabricated on the ground while the pods load. The store is coated on days {logistics.BY_KEY['coating']['start']} to {logistics.BY_KEY['coating']['end']} and filled over the last {lg['water_days']} days. Commissioning follows handover and is not part of this programme. The busiest day is day {lg['peak_day']} with about {lg['peak_loads']:.0f} loads."""
 
 
 def write(path=FILE):

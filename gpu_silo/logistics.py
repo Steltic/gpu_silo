@@ -73,6 +73,16 @@ def compute():
         ages.append(reached - poured)
     c["wet_age_min"] = min(ages)
     c["full_head_age"] = BY_KEY["water"]["end"] + (lifts - 1) / J["lifts_per_day"]
+    # Liner sprayed on the faces of the store before it is filled
+    coat = cfg.PROJECT["coating"]
+    r_out, r_in = cfg.OUTSIDE_R - silo["outer_wall_m"], cfg.BORE_R + silo["inner_wall_m"]
+    c["coat_wall_m2"] = 2 * math.pi * (r_out + r_in) * silo["height_m"]
+    c["coat_floor_m2"] = math.pi * (r_out**2 - r_in**2)
+    c["coat_m2"] = c["coat_wall_m2"] + c["coat_floor_m2"]
+    c["coat_m3"] = c["coat_m2"] * coat["thickness_mm"] / 1000
+    c["coat_m2_per_day"] = coat["sprayers"] * coat["m2_per_sprayer_hour"] * HOURS
+    c["coat_days_needed"] = c["coat_m2"] / c["coat_m2_per_day"]
+    c["coat_age_min"] = BY_KEY["coating"]["start"]
     # Coolers and their frames
     k = L["coolers"]
     c["cooler_load_t"] = k["cooler_mass_t"] + k["pump_unit_mass_t"]
@@ -115,12 +125,17 @@ def compute():
     c["rebar_trucks"] = math.ceil(c["rebar_t"] / flat["payload_t"])
     c["wall_days"] = lifts / J["lifts_per_day"]
     c["crew"] = sum(count for _, count in J["crew"])
+    # Pod cage, built a level a day beside the silo while the walls go up
+    cage = L["cage"]
+    c["cage_modules"] = cfg.LEVELS + 1
+    c["cage_trucks"] = c["cage_modules"] * cage["trucks_per_level"]
     # Power plant
     c["turbine_hauls"] = pw["modules"]
     c["diesel_set_trucks"] = di["sets"]
     # Totals by programme activity: (activity, what, loads, vehicle)
     c["loads"] = [
         ("walls", "Concrete for the walls", c["wall_trucks"], f"{k['mixer_load_m3']:g} m³ mixer"),
+        ("cagebuild", "Pod cage steel", c["cage_trucks"], f"flatbed, {cage['trucks_per_level']} a level"),
         ("frames", "Dry coolers with their pump units", c["cooler_trucks"], "flatbed, one each"),
         ("frames", "Cooler frame steel", c["frame_trucks"], "flatbed, one frame each"),
         ("water", "Water-glycol", c["water_loads"], f"{w['tanker_payload_t']:g} t tanker"),
@@ -128,10 +143,11 @@ def compute():
         ("tanks", "Propane tanks and the diesel tank", fu["tanks"] + 1, "oversize load, one each"),
         ("propane", "Propane", c["propane_loads"], f"{p['transport_load_m3']:g} m³ transport"),
         ("propane", "Diesel", c["diesel_loads"], f"{L['diesel']['tanker_load_m3']:g} m³ tanker"),
-        ("power", "Turbine generator sets", pw["modules"], f"heavy haul, {pw['set_weight_t']:g} t each"),
-        ("power", "Diesel sets", di["sets"], f"lowboy, {di['set_weight_t']:g} t each"),
+        ("fabricate", "Turbine generator sets", pw["modules"], f"heavy haul, {pw['set_weight_t']:g} t each"),
+        ("fabricate", "Diesel sets", di["sets"], f"lowboy, {di['set_weight_t']:g} t each"),
+        ("fabricate", "Deck steel for the power levels", math.ceil(2 * L["power_fabrication"]["deck_steel_t"] / flat["payload_t"]), "flatbed"),
     ]
-    c["loads_after_pour"] = sum(n for key, _, n, _ in c["loads"] if key != "walls")
+    c["loads_after_pour"] = sum(n for key, _, n, _ in c["loads"] if key not in ("walls", "cagebuild"))
     # Loads per day through the programme
     per_day = {}
     for key, _, count, _ in c["loads"]:
@@ -153,6 +169,10 @@ def check():
             raise ValueError(f"'{a['name']}' must start before it ends and finish by day {DAYS}.")
     if BY_KEY["pods"]["start"] <= BY_KEY["cage"]["end"] or BY_KEY["power"]["start"] <= BY_KEY["pods"]["end"]:
         raise ValueError("The pods follow the cage, and the power levels follow the pods.")
+    if BY_KEY["coating"]["end"] >= BY_KEY["water"]["start"] or C["coat_days_needed"] > span("coating")[2] + 1e-9:
+        raise ValueError("The store is coated before it is filled, and the sprayers need enough days to cover it.")
+    if BY_KEY["water"]["end"] != DAYS or BY_KEY["fabricate"]["end"] >= BY_KEY["power"]["start"]:
+        raise ValueError("The fill runs to the last day, and the power levels are fabricated before they are lifted.")
     if BY_KEY["hang"]["end"] >= BY_KEY["power"]["start"] or BY_KEY["propane"]["start"] <= BY_KEY["tanks"]["end"]:
         raise ValueError("One crane hangs the frames before it lifts the power levels, and the tanks are set before they are filled.")
     if C["hoist_per_day"] < C["pods_per_day"] or C["dock_trucks_per_day"] < C["pod_trucks_per_day"]:

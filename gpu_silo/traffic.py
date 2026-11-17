@@ -8,6 +8,7 @@ import math
 from . import clock
 from . import cooler_frames as fr
 from . import design as cfg
+from . import film
 from . import logistics
 from . import site
 from . import silo_model as s
@@ -163,12 +164,15 @@ def water_route(bay):
 
 def water_visits(p):
     """(bay, connected from, connected until) for each tanker shown."""
-    first = p.C - 12
-    last = clock.STORE_FILL[1] - 8
+    if film.SHORT:
+        # The fill runs from the last pod to the end of the build.
+        first, last, headway = p.FILLED + clock.WATER[0] - 12, p.FILLED + clock.WATER[1] - 8, 44
+    else:
+        first, last, headway = p.C - 12, clock.STORE_FILL[1] - 8, WATER_HEADWAY
     visits = []
     n = 0
-    while first + n * WATER_HEADWAY + WATER_DWELL <= last:
-        visits.append((n % site.WATER_BAYS, first + n * WATER_HEADWAY, first + n * WATER_HEADWAY + WATER_DWELL))
+    while first + n * headway + WATER_DWELL <= last:
+        visits.append((n % site.WATER_BAYS, first + n * headway, first + n * headway + WATER_DWELL))
         n += 1
     return visits
 

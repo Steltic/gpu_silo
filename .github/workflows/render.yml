@@ -75,18 +75,28 @@ jobs:
           mono --version | head -n 1
       - name: Check that the calculations match the design file
         run: python -m gpu_silo calcs --check
-      - name: Render the MP4 and animated GLB
+      - name: Render the long film and its animated GLB
         run: python -m gpu_silo build
-      - name: Verify the scene and movie
+      - name: Verify the long film
         run: |
           python -m gpu_silo check
           python -m gpu_silo.validation.verify_movie renders/GPU_Silo.mp4
+      - name: Render the short film of the build and its animated GLB
+        run: python -m gpu_silo build --film short
+      - name: Verify the short film
+        env:
+          GPU_SILO_FILM: short
+        run: |
+          python -m gpu_silo check --film short
+          python -m gpu_silo.validation.verify_movie renders/silo_short.mp4
       - uses: actions/upload-artifact@v4
         with:
           name: gpu-silo-animation-${{ needs.source.outputs.tree }}
           path: |
             renders/GPU_Silo.mp4
             renders/GPU_Silo.glb
+            renders/silo_short.mp4
+            renders/silo_short.glb
           if-no-files-found: error
           compression-level: 0
           retention-days: 14
@@ -118,13 +128,14 @@ jobs:
           if [[ "$current" != "$GITHUB_SHA" ]]; then exit 0; fi
           tag="render-$GITHUB_SHA"
           args=(--repo "$GITHUB_REPOSITORY")
+          files=(renders/GPU_Silo.mp4 renders/GPU_Silo.glb renders/silo_short.mp4 renders/silo_short.glb)
           if gh release view "$tag" "${args[@]}" >/dev/null 2>&1; then
             if [[ "$(gh release view "$tag" "${args[@]}" --json isDraft --jq .isDraft)" == true ]]; then
-              gh release upload "$tag" renders/GPU_Silo.mp4 renders/GPU_Silo.glb "${args[@]}" --clobber
+              gh release upload "$tag" "${files[@]}" "${args[@]}" --clobber
               gh release edit "$tag" "${args[@]}" --draft=false --latest
             fi
           else
-            gh release create "$tag" renders/GPU_Silo.mp4 renders/GPU_Silo.glb "${args[@]}" \
+            gh release create "$tag" "${files[@]}" "${args[@]}" \
               --target "$GITHUB_SHA" --title "GPU Silo · ${GITHUB_SHA:0:7}" \
-              --notes "Watch GPU_Silo.mp4. The editable GLB and the source snapshot belong to commit $GITHUB_SHA." --latest
+              --notes "Watch silo_short.mp4 for the 28-day build and GPU_Silo.mp4 for the full presentation. The editable GLBs and the source snapshot belong to commit $GITHUB_SHA." --latest
           fi

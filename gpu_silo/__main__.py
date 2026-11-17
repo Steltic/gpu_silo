@@ -19,7 +19,13 @@ def main():
     still.add_argument("--output", type=Path, default=Path("renders/stills"))
     voice = commands.add_parser("narrate", help="record the narration again after editing design/narration.json")
     voice.add_argument("--models", type=Path, required=True, help="folder holding the Kokoro model and voices files")
+    for command in (build, check, still):
+        command.add_argument("--film", choices=("long", "short"), default="long",
+                             help="long is the full presentation, short is the build only (silo_short)")
     args = parser.parse_args()
+    if getattr(args, "film", "long") == "short":
+        import os
+        os.environ["GPU_SILO_FILM"] = "short"
     if args.command == "narrate":
         from . import narrate
         path, seconds = narrate.record(args.models)
@@ -42,6 +48,9 @@ def main():
         from .render_project import stills
         stills(args.output, args.frames)
         return
+    if args.model == Path("renders/GPU_Silo.glb"):
+        from . import film
+        args.model = Path("renders") / (film.OUTPUT + ".glb")
     if not args.model.is_file():
         parser.error(f"Model not found at {args.model}. Build it first or supply a GLB path.")
     from . import calcs

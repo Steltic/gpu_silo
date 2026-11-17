@@ -196,17 +196,19 @@ Road trucks are taken at the usual US limit of 36.3 t gross (80,000 lb), working
 | Load | Vehicle | Trucks | Days | Trucks a day |
 | --- | --- | ---: | ---: | ---: |
 | Concrete for the walls | 7.6 m³ mixer | 140 | -9 to 0 | 14.0 |
-| Dry coolers with their pump units | flatbed, one each | 30 | 2 to 9 | 3.8 |
-| Cooler frame steel | flatbed, one frame each | 10 | 2 to 9 | 1.2 |
-| Water-glycol | 24 t tanker | 312 | 3 to 12 | 31.2 |
-| 4SU pods | flatbed, 2 each | 32 | 6 to 13 | 4.0 |
+| Pod cage steel | flatbed, 3 a level | 27 | -8 to 0 | 3.0 |
+| Dry coolers with their pump units | flatbed, one each | 30 | 3 to 12 | 3.0 |
+| Cooler frame steel | flatbed, one frame each | 10 | 3 to 12 | 1.0 |
+| Water-glycol | 24 t tanker | 312 | 15 to 28 | 22.3 |
+| 4SU pods | flatbed, 2 each | 32 | 6 to 15 | 3.2 |
 | Propane tanks and the diesel tank | oversize load, one each | 9 | 8 to 11 | 2.2 |
-| Propane | 36 m³ transport | 26 | 12 to 18 | 3.7 |
-| Diesel | 30 m³ tanker | 3 | 12 to 18 | 0.4 |
-| Turbine generator sets | heavy haul, 94.5 t each | 2 | 15 to 17 | 0.7 |
-| Diesel sets | lowboy, 23.5 t each | 4 | 15 to 17 | 1.3 |
+| Propane | 36 m³ transport | 26 | 16 to 22 | 3.7 |
+| Diesel | 30 m³ tanker | 3 | 16 to 22 | 0.4 |
+| Turbine generator sets | heavy haul, 94.5 t each | 2 | 9 to 18 | 0.2 |
+| Diesel sets | lowboy, 23.5 t each | 4 | 9 to 18 | 0.4 |
+| Deck steel for the power levels | flatbed | 4 | 9 to 18 | 0.4 |
 
-After the last pour 428 loads arrive in 28 days. The busiest days are day 8: 42, day 9: 42, day 6: 40 loads.
+After the last pour 432 loads arrive in 28 days. The busiest days are day 16: 27, day 17: 27, day 18: 27 loads.
 
 ### Pods: the heaviest legal load
 
@@ -226,15 +228,15 @@ The deck has room for 4 pods and the weight limit allows 2. The rack weight is a
 
 | Quantity | Value | Basis |
 | --- | ---: | --- |
-| Pods to load each day | 8 | 64 pods in 8 days |
+| Pods to load each day | 6 | 64 pods in 10 days |
 | Hoist capacity | 15 pods a day | 40 minutes a pod |
 | Gantry capacity | 40 pods a day | 15 minutes a pod |
-| Trucks each day | 4 | 2 pods each |
+| Trucks each day | 3 | 2 pods each |
 | One truck unloaded in | 30 min | |
 | Dock capacity | 40 trucks a day | 2 back-in lanes under one gantry |
 | Cradles on the rail | 2 | 1.3 hours of work for the hoist |
 
-In real time one lane would be enough. The second lane lets one truck back in while another unloads, and the cradles keep the hoist working if a truck is late. The film runs 8 days in under a minute, so every truck appears to arrive at once.
+In real time one lane would be enough. The second lane lets one truck back in while another unloads, and the cradles keep the hoist working if a truck is late. The film runs 10 days in under a minute, so every truck appears to arrive at once.
 
 ### Water-glycol by tanker
 
@@ -244,15 +246,30 @@ In real time one lane would be enough. The second lane lets one truck back in wh
 | Of which glycol | 1,833 m³ | 25% by volume |
 | One tanker | 24 t, 23.5 m³ | 36.3 t gross |
 | **Tanker loads** | **312** | |
-| Loads a day | 31 | 10 days, one every 19 minutes |
+| Loads a day | 22 | 14 days, one every 27 minutes |
 | Time in a bay | 30 min | 10 minutes to connect, then 1.2 m³ a minute |
 | One bay unloads | 20 loads a day | |
 | Bays needed / provided | 2 / 3 | one spare |
-| Level rises | 3.2 m a day | |
-| Youngest concrete the water reaches | 12 days old | lifts poured one a day, fill from day 3 |
-| Bottom lift at full head | 21 days old | day 12 |
+| Level rises | 2.3 m a day | |
+| Youngest concrete the water reaches | 24 days old | lifts poured one a day, fill from day 15 |
+| Bottom lift at full head | 37 days old | day 28 |
 
-The tankers have their own drive off the public road, so 312 loads never enter the haul ring.
+The fill is left to the last 14 days so the concrete has as long as possible to dry and gain strength first. The tankers have their own drive off the public road, so 312 loads never enter the haul ring.
+
+### Liner inside the store
+
+The faces of the store are sprayed with a liner before the fill, to keep the water-glycol off the concrete and its reinforcement.
+
+| Quantity | Value | Basis |
+| --- | ---: | --- |
+| System | Spray-applied polyurea liner | input, to be confirmed with a coating supplier for warm water-glycol |
+| Wall faces | 4,222 m² | both faces of the gap, 32 m high |
+| Floor of the gap | 231 m² | |
+| **Area to coat** | **4,453 m²** | |
+| Liner | 2 mm, 8.9 m³ | |
+| Output | 1,120 m² a day | 4 sprayers at 28 m² an hour, from 4 stages hung in the gap |
+| Time needed / allowed | 4.0 / 4 days | days 11 to 14 |
+| Concrete age when coated | 11 days or more | the last lift is poured on day 0 |
 
 ### Coolers, fuel and concrete
 
@@ -260,7 +277,7 @@ The tankers have their own drive off the public road, so 312 loads never enter t
 | --- | ---: | --- |
 | One cooler with its pump unit | 11.7 t, 13 m long | one to a 14.6 m deck, 4.00 m high on the road |
 | Cooler trucks | 30 | plus 10 of frame steel |
-| Assist crane | 13 lifts a day | 45 minutes a cooler, 3.8 a day needed |
+| Assist crane | 13 lifts a day | 45 minutes a cooler, 3.0 a day needed |
 | Propane to fill the tanks | 913 m³ | section 7 |
 | One propane transport | 36 m³, 17.7 t | MC-331 trailer at 36.3 t gross |
 | **Propane loads** | **26** | 4.1 a day with the diesel, 20 a day through 2 bays |
@@ -308,21 +325,24 @@ Day 0 is the last wall pour. The concrete reaches its 28-day strength on day 28,
 | Activity | First day | Last day | Days |
 | --- | ---: | ---: | ---: |
 | Jumpform the walls | -9 | 0 | 10 |
+| Pod cage built, a level a day | -8 | 0 | 9 |
 | Strip forms, rig the cranes | 1 | 2 | 2 |
-| Coolers into their frames | 2 | 9 | 8 |
 | Lift in the pod cage | 3 | 3 | 1 |
-| Water-glycol fill | 3 | 12 | 10 |
-| Build the receiving dock | 4 | 5 | 2 |
-| 4SU pods delivered and loaded | 6 | 13 | 8 |
-| Cooler frames hung and piped | 7 | 14 | 8 |
+| Build the receiving dock | 3 | 5 | 3 |
+| Coolers into their frames | 3 | 12 | 10 |
+| 4SU pods delivered and loaded | 6 | 15 | 10 |
+| Cooler frames hung and piped | 8 | 17 | 10 |
 | Fuel tanks set | 8 | 11 | 4 |
-| Propane and diesel fill | 12 | 18 | 7 |
-| Power levels and lid | 15 | 17 | 3 |
-| Fuel lines and cabling | 17 | 20 | 4 |
-| Commissioning | 20 | 27 | 8 |
-| Full strength, crew leaves | 28 | 28 | 1 |
+| Power levels fabricated on site | 9 | 18 | 10 |
+| Spray-coat the inside of the store | 11 | 14 | 4 |
+| Water-glycol fill | 15 | 28 | 14 |
+| Propane and diesel fill | 16 | 22 | 7 |
+| Power levels and lid lifted in | 19 | 21 | 3 |
+| Fuel lines and cabling | 22 | 26 | 5 |
+| Dock enclosed as the control office | 24 | 27 | 4 |
+| Full strength, handed over | 28 | 28 | 1 |
 
-The walls take 10 days at 1 lift a day and are outside the 28 days. One crawler crane does every heavy lift, so the cooler frames are hung before the power levels and the lid. The water fill, the cooler deliveries and the pod deliveries overlap from day 6 to day 9, which is when the site is busiest.
+The walls take 10 days at 1 lift a day and are outside the 28 days. The pod cage is built beside the silo in those days, a level a day, so it is ready to lift in on day 3. One crawler crane does every heavy lift, so the cooler frames are hung before the power levels and the lid. The power levels are fabricated on the ground while the pods load. The store is coated on days 11 to 14 and filled over the last 14 days. Commissioning follows handover and is not part of this programme. The busiest day is day 16 with about 27 loads.
 
 ## 10. Open questions raised by these numbers
 
@@ -339,7 +359,7 @@ The walls take 10 days at 1 lift a day and are outside the 28 days. One crawler 
 11. **Power in the shaft.** 50 MW passes down the steel shaft to 64 pods, 781 kW each. The busbar, its cooling and the connection at each level are not designed.
 12. **Pod support.** The pods now hang 2.3 m out from the shaft with a walkway ring between. The carrier ring and its arms are not designed.
 13. **Pod weight.** 8.5 t per pod is an allowance, and it sets the load at 2 pods a truck. NVIDIA has not published a shipping weight for this rack. Three pods would travel together only if a pod weighed under 7.3 t.
-14. **Filling young concrete.** The fill starts on day 3. Each lift is at least 12 days old when the water reaches it and the bottom lift is 21 days old at full head. Whether the walls can take that load at that age has not been checked.
+14. **Liner and fill.** The liner goes on from day 11, when the youngest concrete is 11 days old, and the fill starts on day 15. Most coatings ask for 28-day-old, dry concrete, so the liner system and its moisture limits need a supplier's check. The pod sleeves, frame conduits and the door blockout all pass through the liner and need detailing.
 15. **A lift a day.** 1 lift a day is fast for a jumpform. Slower lifts lengthen the work before day 0 and leave the 28 days after it unchanged.
 16. **Fuel line across the ring.** The propane and diesel lines run on the ground from the tanks to the wall and cross both ring lanes. They need to be buried or bridged there.
 17. **Heavy and oversize loads.** The 8 propane tanks are 3 m wide and the turbine sets weigh 94.5 t. Their permits, routes and the way each tank is jacked off its trailer are not designed.
