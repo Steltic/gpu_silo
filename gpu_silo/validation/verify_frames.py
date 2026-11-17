@@ -59,7 +59,8 @@ def check(path):
         final=zup(at(root,"translation",p.FRAMES-1))
         assert np.allclose(final,[fr.BACK*math.cos(fr.BEARINGS[k]),fr.BACK*math.sin(fr.BEARINGS[k]),fr.base(k)],atol=.0003)
         assert fr.base(k)>p.s.OPENING_HEIGHT+2 and fr.base(k)+fr.HEIGHT<=p.s.WALL_HEIGHT+1e-6
-        assert at(root,"scale",fr.START-1).max()<.001 and at(root,"scale",fr.START).min()>.999
+        # A frame stands in laydown from the day its steel arrives. That is after the walls and before its pick.
+        assert at(root,"scale",p.C).max()<.001 and at(root,"scale",a-1).min()>.999
         for part in range(1,fr.ROWS+1):
             assert parents[ids[label+f" | cooler {part}"]]==root and parents[ids[label+f" | pump unit {part}"]]==root
         # The frame never passes through concrete: its back plane stays outside the wall whenever it is off its seat.
@@ -126,7 +127,7 @@ def check(path):
         for f in (e+3,(e+g)//2,g-2):
             pos=zup(at(basket,"translation",f));theta=fr.BEARINGS[k]
             local=np.array([pos[0]*math.cos(theta)+pos[1]*math.sin(theta),-pos[0]*math.sin(theta)+pos[1]*math.cos(theta)])
-            assert fr.BACK<local[0]<fr.BACK+fr.DEPTH and fr.WIDTH/2+.3<fr.SIDE*local[1]<fr.WIDTH/2+2
+            assert fr.BACK<local[0]<fr.BACK+fr.DEPTH and fr.WIDTH/2+.3<fr.side(i)*local[1]<fr.WIDTH/2+2
             assert fr.base(k)<pos[2]<fr.base(k)+fr.HEIGHT
         ground=zup(at(chassis,"translation",(e+g)//2))
         assert abs(math.hypot(ground[0],ground[1])-fr.LIFT_R)<.001 and abs(ground[2])<1e-6

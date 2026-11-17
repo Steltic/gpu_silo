@@ -36,6 +36,13 @@ Add a dated entry when a choice changes. Say what the viewer should see, the dim
 | 2026-11-17 | No room venting | The fan plug in the ground door and the roof air fans are removed. The room venting idea does not work. The roof vents are sized for the turbines and the diesel sets. | Fan plug in the door and four roof air vents | Lid at 2:12 |
 | 2026-11-17 | Walkway at the shaft | The gap left by the wider bore goes next to the central shaft, so people can move between sectors. | Pods rooted at the shaft | Cage at 0:25, crew at 2:19 |
 | 2026-11-17 | Propane line | One propane line has to be big enough to feed both power units. Checked: 3.0 kg/s needs about 100 mm, and the line is 200 mm. | Line drawn without a size | [Calculations](calcs.md#is-one-propane-line-big-enough), fuel at 3:12 |
+| 2026-11-17 | Site roads | A public road north of the silo, a two-lane access road with four holding lanes, and a one-way haul ring with a running lane and a stopping lane. All site traffic turns right in and right out. | Trucks appearing at the terminal with no road behind them | Any wide shot, for example 1:20 |
+| 2026-11-17 | Pod trucks | Each truck carries two pods, the most the weight limit allows, and all 32 arrive during the loading scene. The dock has two back-in lanes under one gantry and two cradles on the rail. | One flatbed with three pods in line | Dock at 0:47, background from 1:01 to 1:52 |
+| 2026-11-17 | Water by tanker | 312 tanker loads fill the store through three bays on their own drive off the public road. | Water appearing in the store | Behind the silo from 0:25 to 0:47 |
+| 2026-11-17 | Coolers by truck | Each cooler arrives on a flatbed with its pump unit and an assist crane lifts it into its frame in laydown. Frame steel arrives the same way. | Complete frames appearing in laydown | Laydown from 0:26, for example frame 01 at 0:30 |
+| 2026-11-17 | Fuel by truck | Each propane tank arrives on a heavy-haul trailer and is jacked down onto the pad. Transports then fill the tanks from a lay-by on the ring. | Tanks lowered from above | Fuel scene at 3:12 and 3:27 |
+| 2026-11-17 | 28-day programme | Day 0 is the last pour. Every later activity fits in 28 days. Each scene carries its days and a truck count, and the closing orbit shows the bar chart. | No programme | Tag at the top of every scene, chart at 2:50 |
+| 2026-11-17 | Jumpform detail | Pour decks, hung trailing platforms, climbing rails and jacks, starter bars, a placing boom on a centre mast, a pump at the ground opening, truck mixers and a crew of 22 that changes task with each step. | Bare form panels with one platform | 0:00 to 0:25 |
 
 ## Assumptions made while applying these decisions
 
@@ -82,7 +89,17 @@ These were needed to draw the decisions. Each one is an input in [project.json](
 | 2026-11-17 | The turbines need gas at about 30 bar, so propane is pumped as liquid and vaporised beside them. | Typical for this class of turbine. Not a datasheet value. | `power.fuel_supply_pressure_bar` |
 | 2026-11-17 | The walkway ring is 2 m wide with a gangway to each wedge deck, and the wedge decks start 4.0 m from the axis. | The decks have to clear the turbine sets so one can rise to the turbine level. | [pod_scene.py](../gpu_silo/pod_scene.py), [crew.py](../gpu_silo/crew.py) |
 | 2026-11-17 | The reveal is on turbine set A, on the top level. The crew's wedge deck rises past the diesel level to reach it. | The turbines are on the top level, under their stacks. | [plant.py](../gpu_silo/plant.py) |
+| 2026-11-17 | A pod weighs 8.5 t: four racks at 1.6 t, 1.5 t of frame and 0.6 t of CDU. | No shipping weight is published for this rack. It sets the load at two pods a truck. | `pod.rack_mass_t`, `frame_mass_t`, `cdu_pump_mass_t` |
+| 2026-11-17 | Trucks are US five-axle rigs at 36.3 t gross: 21.8 t on a 14.6 m flatbed, 24 t in a water tanker, 36 m³ in a propane transport, 7.6 m³ in a mixer. | Usual legal loads. | `logistics` |
+| 2026-11-17 | The walls go up a lift a day and the working day is 10 hours. | Needed for truck rates. A lift a day is fast for a jumpform. | `jumpform.lifts_per_day`, `logistics.working_hours_per_day` |
+| 2026-11-17 | The water fill runs from day 3 to day 12. | It keeps the film's order. Each lift is at least 12 days old when the water reaches it, which has not been checked structurally. | `schedule.activities` |
+| 2026-11-17 | Truck manoeuvres at the dock are faster than the rest of the film. | The film shows 8 days of pod loading in under a minute, so a truck has about a second to back in. | [yard.py](../gpu_silo/yard.py) |
+| 2026-11-17 | Only a sample of the tankers, mixers and transports is drawn. | 312 tankers in 20 seconds would be a solid line. The counters give the totals. | [traffic.py](../gpu_silo/traffic.py) |
+| 2026-11-17 | The fuel scene still comes after the finished-silo orbit. | It explains the fuel system. In the programme the tanks are set on days 8 to 11. | [closing.py](../gpu_silo/closing.py) |
+| 2026-11-17 | The slab, the cranes, the cage steel, the turbine sets and the diesel sets are counted or noted in the calculations and not shown arriving. | They were not asked for in the film. | [calcs.md](calcs.md#8-trucking) |
+| 2026-11-17 | The laydown props are shortened and the boom lift works at the other end of frames 01 and 02. | To keep the stopping lane and the dock lanes clear. | [cooler_frames.py](../gpu_silo/cooler_frames.py) |
+| 2026-11-17 | The farm lane moves west and the barns move north of the public road. | They stood where the fuel farm, the access road and the water drive now are. | [silo_model.py](../gpu_silo/silo_model.py) |
 
 ## Open questions
 
-The [calculations](calcs.md#8-open-questions-raised-by-these-numbers) list the questions these decisions raise. The largest are the wall design at this size, no spare turbine, turbine heat next to the pods and the store, and air for people working in the bore.
+The [calculations](calcs.md#10-open-questions-raised-by-these-numbers) list the questions these decisions raise. The largest are the wall design at this size, no spare turbine, turbine heat next to the pods and the store, and air for people working in the bore.

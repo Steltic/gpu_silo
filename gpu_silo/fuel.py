@@ -12,6 +12,9 @@ from . import design as cfg
 from . import plant
 from . import services
 from . import silo_model as s
+from . import site as roads
+from . import traffic
+from . import logistics
 
 F=cfg.PROJECT["fuel"]
 COUNT=F["tanks"]
@@ -83,6 +86,31 @@ def bulk_tank_mesh():
     return m
 
 
+BAY_FRONTS=(math.degrees(BEARING)-3.,math.degrees(BEARING)+31.)
+BAY_LENGTH=math.degrees((roads.STEER+roads.TANKER_AXLE+2.6)/roads.LAYBY_R)
+BAY_RISERS=tuple(front-BAY_LENGTH*.55 for front in BAY_FRONTS)
+TRANSPORT_DWELL,TRANSPORT_HEADWAY,TRANSPORTS=70,38,5
+
+
+def layby_route(front):
+    """A lap that pulls out to the lay-by beside the tank header. `front` is the bearing at which the front axle stops."""
+    first,last=roads.JOIN[roads.R_RUN],roads.LEAVE[roads.R_RUN]
+    rear=front-BAY_LENGTH
+    def radius(b):
+        out=s.step(max(first+roads.TURN,rear-16),max(first+roads.TURN+8,rear-4),b)-s.step(front+2,front+13,b)
+        return roads.R_RUN+(roads.LAYBY_R-roads.R_RUN)*out
+    count=math.ceil((last-first-2*roads.TURN)/3)
+    marks=[first+roads.TURN+(last-first-2*roads.TURN)*k/count for k in range(count+1)]
+    path=roads.Path(roads.arrive()+[s.polar(radius(b),math.radians(b),0)[:2] for b in marks]+roads.depart())
+    return path,path.nearest(s.polar(roads.LAYBY_R,math.radians(front),0)[:2])
+
+
+def transport_visits():
+    """(bay, connected from, connected until) in frames after the store is full. The downstream bay fills first."""
+    start=closing.LINE-12
+    return [(1-n%2,start+n*TRANSPORT_HEADWAY,start+n*TRANSPORT_HEADWAY+TRANSPORT_DWELL) for n in range(TRANSPORTS)]
+
+
 def growth(t,span):
     return s.step(span[0],span[1],t)
 
@@ -110,24 +138,71 @@ def install(scene,node,p):
     co,si=math.cos(BEARING),math.sin(BEARING)
     def site(x,y,z=0):
         return (x*co-y*si,x*si+y*co,z)
-    pad=plant.mesh("Propane storage | gravel pad and bund kerb")
+    pad=plant.mesh("Propane storage | gravel pad, jacking portals and unloading risers")
     half=COUNT*PITCH/2+1.5
-    pts=[site(FARM_R+dx,dy,.012) for dx,dy in ((-LENGTH/2-3,-half),(LENGTH/2+2,-half),(LENGTH/2+2,half),(-LENGTH/2-3,half))]
+    north=-(COUNT*PITCH/2+BULK_D/2+2.5)
+    pts=[site(FARM_R+dx,dy,.012) for dx,dy in ((-LENGTH/2-3,north-BULK_D/2-1.5),(roads.BACK_ROAD-FARM_R-2.5,north-BULK_D/2-1.5),
+                                                (roads.BACK_ROAD-FARM_R-2.5,half),(-LENGTH/2-3,half))]
     pad.face(pts,"c2b99f")
-    node(pad.name,scene.mesh(pad),"Fuel storage",tracks={"scale":window(closing.FUEL)})
+    node(pad.name,scene.mesh(pad),"Fuel storage",tracks={"scale":window(closing.FUEL-150)})
+    # Unloading risers beside the ring lay-by, one for each transport bay.
+    posts=plant.mesh("Propane unloading | two risers at the lay-by")
+    for bearing in BAY_RISERS:
+        x,y,_=s.polar(roads.LAYBY_R+2.6,math.radians(bearing),0)
+        plant.closed(posts,x-.25,y-.25,x+.25,y+.25,0,1.5,"8f9892")
+        services.pipe(posts,(x,y,1.3),(x+.9*math.cos(math.radians(bearing)+2.4),y+.9*math.sin(math.radians(bearing)+2.4),1.0),.07,"30383a",n=6)
+        services.pipe(posts,(x,y,.4),s.polar(HEADER_R,BEARING+math.asin(s.clamp(math.sin(math.radians(bearing)-BEARING)*roads.LAYBY_R/HEADER_R,-.99,.99)),LOW),PIPE*.5,GAS,n=6)
+    node(posts.name,scene.mesh(posts),"Fuel storage",tracks={"scale":window(closing.LINE-30)})
     tank=scene.mesh(tank_mesh())
-    for j,y in enumerate(offsets()):
-        land=closing.TANKS+j*closing.TANK_STEP
-        def lower(t,y=y,land=land):
-            return site(FARM_R,y,6.5*(1-s.step(land,land+closing.TANK_STEP-2,t)))
-        node(f"Propane tank {j+1:02}",tank,"Fuel storage",ang=BEARING,
-             tracks={"translation":curve((land,land+closing.TANK_STEP),lower),"scale":window(land)})
-    # Bulk diesel for the backup sets stands at the end of the propane row.
-    beside=-(COUNT*PITCH/2+BULK_D/2+2.5)
-    landed=closing.TANKS+(COUNT-1)*closing.TANK_STEP
-    node("Diesel bulk tank",scene.mesh(bulk_tank_mesh()),"Fuel storage",ang=BEARING,
-         tracks={"translation":curve((landed,landed+closing.TANK_STEP),lambda t:site(FARM_R-LENGTH/2+BULK_L/2,beside,6.5*(1-s.step(landed,landed+closing.TANK_STEP-2,t)))),
-                 "scale":window(landed)})
+    fleet=scene.fleet
+    hauler=fleet.mesh("haul trailer",roads.haul_trailer)
+    flat=fleet.mesh("flatbed",roads.flatbed)
+    portal=plant.mesh("Tank jacking portals | lift each tank off its trailer and lower it to the pad")
+    def slot_route(y,short=False):
+        """Ring to a tank slot, out through the back of the farm and north to the public road."""
+        reach=math.sqrt(roads.R_RUN**2-y*y)
+        bearing=math.degrees(BEARING+math.asin(y/roads.R_RUN))
+        points=roads.arrive()+roads.lap(roads.JOIN[roads.R_RUN],bearing)
+        points+=[site(reach,y)[:2],site(roads.BACK_ROAD,y)[:2]]+roads.back_road()[1:]
+        return roads.Path(points,8.)
+    step=closing.TANK_STEP
+    deliveries=[(f"Propane tank {j+1:02}",tank,y,FARM_R,hauler,roads.HAUL_AXLE,-11.6,.98,closing.TANKS+j*step) for j,y in enumerate(offsets())]
+    last=closing.TANKS+(COUNT-1)*step
+    deliveries.append(("Diesel bulk tank",scene.mesh(bulk_tank_mesh()),north,FARM_R-LENGTH/2+BULK_L/2,flat,roads.FLAT_AXLE,traffic.DECK_MID,roads.DECK,last))
+    for name,mesh_id,y,x,trailer,axle,seat,deck,stops in deliveries:
+        route=slot_route(y)
+        stop=route.nearest(site(x,y)[:2])+roads.STEER-seat
+        trip=roads.Trip()
+        traffic.come(trip,route,stop,base+stops+2)
+        traffic.go(trip,route,stop,base+stops+9,gate=roads.back_road()[1])
+        towed,_,_=fleet.rig(name+" | delivery",trip,trailer,axle,group="Fuel delivery")
+        lifted=base+stops+4
+        node(name+" | on its trailer",mesh_id,"Fuel delivery",towed,t=(seat,0,deck),tracks={"scale":roads.window(0,lifted)})
+        def height(t,deck=deck,stops=stops):
+            return deck+.3*s.step(stops+4,stops+8,t)-(deck+.3)*s.step(stops+step-12,stops+step-2,t)
+        node(name,mesh_id,"Fuel storage",ang=BEARING,
+             tracks={"translation":curve((stops+4,stops+step),lambda t,x=x,y=y,height=height:site(x,y,height(t))),
+                     "scale":[(0,OFF),(lifted-.02,OFF),(lifted,ON)]})
+        if trailer==hauler:
+            for dx in (-LENGTH*.3,LENGTH*.3):
+                for sign in (-1,1):
+                    px,py,_=site(x+dx,y+sign*1.95)
+                    plant.closed(portal,px-.22,py-.22,px+.22,py+.22,0,4.7,"d7a84c")
+                a,b=site(x+dx,y-1.95,4.6),site(x+dx,y+1.95,4.6)
+                s.bar(portal,a,b,.36,"d7a84c",.4)
+    node(portal.name,scene.mesh(portal),"Fuel delivery",tracks={"scale":window(closing.FUEL-150,last+step+6)})
+    # Propane transports unload at the ring lay-by once the tanks are set.
+    transport=fleet.mesh("propane transport",lambda:roads.tanker("Propane transport semi-trailer","e9e7dc",12.6,2.2,"c8563c"))
+    routes=[layby_route(front) for front in BAY_FRONTS]
+    visits=transport_visits()
+    for n,(bay,a,b) in enumerate(visits):
+        route,stop=routes[bay]
+        trip=roads.Trip()
+        traffic.come(trip,route,stop,base+a);traffic.go(trip,route,stop,base+b)
+        fleet.rig(f"Propane transport {n+1:02}",trip,transport,roads.TANKER_AXLE,group="Fuel delivery")
+    loads=logistics.C["propane_loads"]
+    ends=[base+b for _,_,b in visits]
+    scene.counts["propane"]=[min(loads,math.ceil(loads*sum(1 for e in ends if f>=e)/len(ends))) for f in range(p.FRAMES)]
     line=scene.mesh(unit_pipe("Fuel lines | one metre of gas and diesel pipe along local X",(1,0,0)))
     rise=scene.mesh(unit_pipe("Fuel lines | one metre of gas and diesel riser",(0,0,1)))
     fall=scene.mesh(unit_pipe("Gas line | one metre of drop",(0,0,-1),diesel=False))

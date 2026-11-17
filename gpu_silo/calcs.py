@@ -8,6 +8,7 @@ import math
 from pathlib import Path
 
 from . import design as cfg
+from . import logistics
 
 US_GAL = 0.003785411784  # m3
 G = 9.80665
@@ -255,6 +256,11 @@ def panel():
         "section": [("Power modules", f"{cfg.POWER['modules']} × {cfg.POWER['module_output_mw']:g} MW"), ("Electrical load", f"{C['heat_mw']:.0f} MW"),
                     (f"{cfg.NAME} pods on the shaft", f"{C['pods']}"), ("Dry coolers", f"{C['coolers']} × {cfg.COOL['cooler_capacity_mw']:g} MW"),
                     ("Propane stored", f"{n(C['fuel_m3'])} m³"), ("Run time", f"{C['fuel_hours']:.0f} h")],
+        "crew": [(name, str(count)) for name, count in cfg.PROJECT["jumpform"]["crew"]]
+                + [("Concrete a lift", f"{logistics.C['lift_m3']:.0f} m³"), ("Mixers a lift", f"{logistics.C['lift_trucks']}"),
+                   ("Pour", f"{logistics.C['lift_pour_h']:.1f} h")],
+        "dock": [("Pod weight", f"{logistics.C['pod_t']:.1f} t"), ("Each truck", f"{logistics.C['pods_per_truck']} pods"),
+                 ("Trucks", f"{logistics.C['pod_trucks']}"), ("Dock lanes", f"{cfg.PROJECT['logistics']['pods']['dock_lanes']}")],
         "frames": [("Dry coolers", f"{cfg.COOL['coolers_per_frame']} × {cfg.COOL['cooler_capacity_mw']:g} MW"),
                    ("Pump units", f"{cfg.COOL['coolers_per_frame']}"),
                    ("Cast-in anchors", f"{C['anchors_per_frame']}"),
@@ -288,6 +294,8 @@ def markdown():
     face_note = (f"A face velocity of {c['cooler_face_ms']:.1f} m/s is high for a dry cooler, where 2 to 4 m/s is usual. A {co['cooler_capacity_mw']:g} MW unit in this casing needs a larger air rise, a deeper coil or more face area. Confirm against a supplier selection."
                  if c["cooler_face_ms"] > 4 else "The face velocity is within the usual 2 to 4 m/s for a dry cooler.")
     word = {8:"Eight",10:"Ten"}.get(c["frames"], str(c["frames"]))
+    trucking = trucking_markdown()
+    lg = logistics.C
     lines = f"""# Design calculations
 
 This file is generated from [project.json](project.json) by `python -m gpu_silo calcs`. Change an input, run the command and commit both files. The same numbers appear on the design panels in the animation.
@@ -476,7 +484,9 @@ One {fu['line_diameter_m']*1000:.0f} mm line carries the full flow in any of the
 
 The backup covers black start, controls, the cooling plant and about a fifth of the racks. It does not cover the loss of a turbine.
 
-## 8. Open questions raised by these numbers
+{trucking}
+
+## 10. Open questions raised by these numbers
 
 1. **Store size.** {c['tank_gal']/1e6:.2f} M US gal gives {c['ride_min']:.0f} minutes of ride-through at {c['heat_mw']:.0f} MW. Decide the ride-through the site needs. See section 2.
 2. **Rack heat.** {c['rack_kw']:.0f} kW per rack is {c['heat_mw']:.0f} MW over {c['racks']} racks. Published figures for the Vera Rubin NVL72 run from about 190 to 230 kW, so the upper end would be {c['racks']*.23:.0f} MW.
@@ -490,12 +500,137 @@ The backup covers black start, controls, the cooling plant and about a fifth of 
 10. **Fuel.** {n(c['fuel_m3'])} m³ of propane runs the site for about {c['fuel_hours']:.0f} hours. Separation distances, bunding, the vaporiser and the resupply rate have not been checked. Fuel stored inside is limited to the day tanks, and the limit that applies has not been checked.
 11. **Power in the shaft.** {c['heat_mw']:.0f} MW passes down the steel shaft to {c['pods']} pods, {c['pod_kw']:.0f} kW each. The busbar, its cooling and the connection at each level are not designed.
 12. **Pod support.** The pods now hang {cfg.STORE['root_radius_m']-cfg.STORE['shaft_radius_m']:.1f} m out from the shaft with a walkway ring between. The carrier ring and its arms are not designed.
+13. **Pod weight.** {lg['pod_t']:.1f} t per pod is an allowance, and it sets the load at {lg['pods_per_truck']} pods a truck. NVIDIA has not published a shipping weight for this rack. Three pods would travel together only if a pod weighed under {cfg.PROJECT['logistics']['flatbed']['payload_t']/3:.1f} t.
+14. **Filling young concrete.** The fill starts on day {logistics.BY_KEY['water']['start']}. Each lift is at least {lg['wet_age_min']:.0f} days old when the water reaches it and the bottom lift is {lg['full_head_age']:.0f} days old at full head. Whether the walls can take that load at that age has not been checked.
+15. **A lift a day.** {cfg.PROJECT['jumpform']['lifts_per_day']:g} lift a day is fast for a jumpform. Slower lifts lengthen the work before day 0 and leave the {logistics.DAYS} days after it unchanged.
+16. **Fuel line across the ring.** The propane and diesel lines run on the ground from the tanks to the wall and cross both ring lanes. They need to be buried or bridged there.
+17. **Heavy and oversize loads.** The {cfg.PROJECT['fuel']['tanks']} propane tanks are {cfg.PROJECT['fuel']['tank_diameter_m']:g} m wide and the turbine sets weigh {pw['set_weight_t']:g} t. Their permits, routes and the way each tank is jacked off its trailer are not designed.
 
 ## Fluid properties used
 
 {fl['fluid']}, {fl['glycol_fraction']*100:.0f}% glycol by volume: density {c['rho']:.0f} kg/m³, specific heat {c['cp']:.2f} kJ/kg·K. These are round values for a warm loop and should be replaced with supplier data at the design temperature. 1 US gal = 3.785 L.
 """
     return lines
+
+
+def trucking_markdown():
+    lg, L, P = logistics.C, cfg.PROJECT["logistics"], cfg.PROJECT
+    flat, w, site = L["flatbed"], L["water"], L["site"]
+    fu = P["fuel"]
+    hours = L["working_hours_per_day"]
+    def when(key):
+        return logistics.days_text(key).replace("Days ", "").replace("Day ", "")
+    rows = "\n".join(f"| {what} | {vehicle} | {n(count)} | {when(key)} | {count/logistics.span(key)[2]:.1f} |" for key, what, count, vehicle in lg["loads"])
+    crew = "\n".join(f"| {name} | {count} |" for name, count in P["jumpform"]["crew"])
+    chart = "\n".join(f"| {a['name'].replace('Pods', cfg.NAME + ' pods')} | {a['start']} | {a['end']} | {a['end']-a['start']+1} |" for a in logistics.ACTIVITIES)
+    per_day = lg["per_day"]
+    busiest = ", ".join(f"day {d}: {per_day[d]:.0f}" for d in sorted(per_day, key=lambda d: -per_day[d])[:3] if d > 0)
+    return f"""## 8. Trucking
+
+Road trucks are taken at the usual US limit of {L['gross_vehicle_limit_t']:g} t gross (80,000 lb), working {hours} hours a day. Day numbers are days after the last wall pour. The film shows a sample of each kind of load, and its counters scale to the totals below.
+
+| Load | Vehicle | Trucks | Days | Trucks a day |
+| --- | --- | ---: | ---: | ---: |
+{rows}
+
+After the last pour {n(lg['loads_after_pour'])} loads arrive in {logistics.DAYS} days. The busiest days are {busiest} loads.
+
+### Pods: the heaviest legal load
+
+| Quantity | Value | Basis |
+| --- | ---: | --- |
+| One {cfg.NAME} pod | {lg['pod_t']:.1f} t | {cfg.CLUSTER['racks_per_pod']} racks × {cfg.POD['rack_mass_t']:g} t, {cfg.POD['frame_mass_t']:g} t of frame and housing, {cfg.POD['cdu_pump_mass_t']:g} t of CDU and pump |
+| Flatbed | {flat['deck_length_m']:g} × {flat['deck_width_m']:g} m deck, {flat['payload_t']:g} t payload | five-axle tractor and trailer |
+| Pods that fit on the deck | {lg['pods_by_space']} | {lg['deck_rows']} end to end × {lg['deck_across']} across |
+| Pods the payload allows | {lg['pods_by_weight']} | {lg['pods_by_weight']} × {lg['pod_t']:.1f} t = {lg['pods_by_weight']*lg['pod_t']:.1f} t |
+| **Pods on each truck** | **{lg['pods_per_truck']}** | weight decides, not space |
+| Height on the road | {lg['pod_load_height']:.2f} m | limit {flat['legal_height_m']:g} m |
+| **Trucks for {cfg.TOTAL} pods** | **{lg['pod_trucks']}** | |
+
+The deck has room for {lg['pods_by_space']} pods and the weight limit allows {lg['pods_by_weight']}. The rack weight is an allowance: NVIDIA has not published a shipping weight for the {cfg.CLUSTER['rack_model'].replace('NVIDIA ', '')}.
+
+### Receiving dock
+
+| Quantity | Value | Basis |
+| --- | ---: | --- |
+| Pods to load each day | {lg['pods_per_day']:.0f} | {cfg.TOTAL} pods in {logistics.span('pods')[2]} days |
+| Hoist capacity | {lg['hoist_per_day']:.0f} pods a day | {L['pods']['hoist_minutes_per_pod']} minutes a pod |
+| Gantry capacity | {lg['gantry_per_day']:.0f} pods a day | {L['pods']['unload_minutes_per_pod']} minutes a pod |
+| Trucks each day | {lg['pod_trucks_per_day']:.0f} | {lg['pods_per_truck']} pods each |
+| One truck unloaded in | {lg['truck_turn_min']:.0f} min | |
+| Dock capacity | {lg['dock_trucks_per_day']:.0f} trucks a day | {L['pods']['dock_lanes']} back-in lanes under one gantry |
+| Cradles on the rail | {L['pods']['buffer_cradles']} | {lg['buffer_hours']:.1f} hours of work for the hoist |
+
+In real time one lane would be enough. The second lane lets one truck back in while another unloads, and the cradles keep the hoist working if a truck is late. The film runs {logistics.span('pods')[2]} days in under a minute, so every truck appears to arrive at once.
+
+### Water-glycol by tanker
+
+| Quantity | Value | Basis |
+| --- | ---: | --- |
+| Store | {n(lg['water_m3'])} m³, {n(lg['water_t'])} t | section 2 |
+| Of which glycol | {n(lg['glycol_m3'])} m³ | {cfg.FLUID['glycol_fraction']*100:.0f}% by volume |
+| One tanker | {w['tanker_payload_t']:g} t, {lg['tanker_m3']:.1f} m³ | {L['gross_vehicle_limit_t']:g} t gross |
+| **Tanker loads** | **{lg['water_loads']}** | |
+| Loads a day | {lg['water_per_day']:.0f} | {lg['water_days']} days, one every {lg['water_headway_min']:.0f} minutes |
+| Time in a bay | {lg['water_turn_min']:.0f} min | {w['connect_minutes']} minutes to connect, then {w['pump_m3_per_minute']:g} m³ a minute |
+| One bay unloads | {lg['water_bay_per_day']:.0f} loads a day | |
+| Bays needed / provided | {lg['water_bays_needed']} / {w['bays']} | one spare |
+| Level rises | {lg['water_rise_m_per_day']:.1f} m a day | |
+| Youngest concrete the water reaches | {lg['wet_age_min']:.0f} days old | lifts poured one a day, fill from day {logistics.BY_KEY['water']['start']} |
+| Bottom lift at full head | {lg['full_head_age']:.0f} days old | day {logistics.BY_KEY['water']['end']} |
+
+The tankers have their own drive off the public road, so {lg['water_loads']} loads never enter the haul ring.
+
+### Coolers, fuel and concrete
+
+| Quantity | Value | Basis |
+| --- | ---: | --- |
+| One cooler with its pump unit | {lg['cooler_load_t']:.1f} t, {cfg.COOL['cooler_length_m']+cfg.COOL['pump_unit_length_m']:g} m long | one to a {flat['deck_length_m']:g} m deck, {lg['cooler_load_height']:.2f} m high on the road |
+| Cooler trucks | {lg['cooler_trucks']} | plus {lg['frame_trucks']} of frame steel |
+| Assist crane | {lg['cooler_lifts_per_day']:.0f} lifts a day | {L['coolers']['lift_minutes_per_cooler']} minutes a cooler, {cfg.COOLERS/logistics.span('frames')[2]:.1f} a day needed |
+| Propane to fill the tanks | {n(lg['propane_m3'])} m³ | section 7 |
+| One propane transport | {L['propane']['transport_load_m3']:g} m³, {lg['propane_load_t']:.1f} t | MC-331 trailer at {L['gross_vehicle_limit_t']:g} t gross |
+| **Propane loads** | **{lg['propane_loads']}** | {lg['propane_per_day']:.1f} a day with the diesel, {lg['propane_capacity_per_day']:.0f} a day through {L['propane']['bays']} bays |
+| Fuel tanks | {fu['tanks']} propane and 1 diesel | one oversize load each, {L['propane']['tank_mass_t']:g} t a propane tank |
+| Concrete in the walls | {n(lg['wall_m3'])} m³ | {lg['lifts']} lifts of {lg['lift_m3']:.0f} m³ |
+| **Mixers for one lift** | **{lg['lift_trucks']}** | {L['concrete']['mixer_load_m3']:g} m³ each, one every {lg['mixer_headway_min']:.0f} minutes |
+| Pour time for one lift | {lg['lift_pour_h']:.1f} h | {L['concrete']['pump_m3_per_hour']:g} m³ an hour through one pump |
+| Mixers for the walls | {lg['wall_trucks']} | |
+| Base slab, before the walls | {n(lg['slab_m3'])} m³, {lg['slab_trucks']} mixers | {L['concrete']['slab_thickness_m']:g} m thick, an allowance |
+| Reinforcement | {lg['rebar_t']:.0f} t, {lg['rebar_trucks']} trucks | {L['concrete']['reinforcement_kg_per_m3']:g} kg per m³, an allowance |
+
+### Crew on a typical lift
+
+| Trade | People |
+| --- | ---: |
+{crew}
+| **Total** | **{lg['crew']}** |
+
+Each lift is poured, left to set, stripped, jumped {cfg.SILO['concrete_lift_m']:g} m and reset. The crew rides the forms: placers and finishers on the pour deck, ironworkers on the starter bars, carpenters and jack operators on the working platform below.
+
+### Roads and staging areas
+
+| Area | Layout | Used by |
+| --- | --- | --- |
+| Public road | {site['public_road_north_m']:g} m north of the silo. All site traffic arrives from the west and leaves to the east, so every turn is a right turn. | everything |
+| Access road and gate | Two lanes from the public road to the ring at a bearing of {site['access_bearing_degrees']:g}° | all trucks except the water tankers |
+| Holding lanes | {site['holding_lanes']} lanes beside the access road | pod trucks waiting to be called to the dock |
+| Haul ring | One-way, anticlockwise. Running lane at {site['haul_ring_radius_m']:g} m radius and a stopping lane inside it at {site['stopping_lane_radius_m']:g} m. The crane track is outside it. | every truck makes one lap |
+| Receiving dock | {L['pods']['dock_lanes']} back-in lanes either side of the rail, under one gantry | pod trucks |
+| Cooler laydown | {cfg.FRAMES} frame positions inside the ring. Trucks stop in the stopping lane and an assist crane lifts each cooler into its frame. | cooler and frame-steel trucks |
+| Water drive | Its own entrance and exit on the public road, {w['bays']} drive-through bays, a pump and a buried fill line to the wall | water tankers |
+| Fuel farm | Each tank truck drives through its slot and leaves by a road out of the back. Transports unload in a {L['propane']['bays']}-bay lay-by on the ring beside the tank header. | tank deliveries, propane transports |
+| Concrete bays | {L['concrete']['bays']} back-in bays at the pump hopper by the ground opening, before the dock is built | truck mixers |
+
+## 9. Programme
+
+Day 0 is the last wall pour. The concrete reaches its 28-day strength on day {logistics.DAYS}, and the work is laid out to finish that day.
+
+| Activity | First day | Last day | Days |
+| --- | ---: | ---: | ---: |
+{chart}
+
+The walls take {lg['wall_days']:.0f} days at {P['jumpform']['lifts_per_day']:g} lift a day and are outside the {logistics.DAYS} days. One crawler crane does every heavy lift, so the cooler frames are hung before the power levels and the lid. The water fill, the cooler deliveries and the pod deliveries overlap from day {logistics.BY_KEY['pods']['start']} to day {logistics.BY_KEY['frames']['end']}, which is when the site is busiest."""
 
 
 def write(path=FILE):

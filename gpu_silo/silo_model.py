@@ -28,7 +28,7 @@ HOLD = 85
 TAU = 2 * math.pi
 ENTRY = math.radians(-37)
 FRAME_EQUIPMENT = ("Cooler frames","Cooler screens","Pump units","Frame anchors","Frame pipework")
-SITE_CLEARING = 46.
+SITE_CLEARING = 60.
 OPENING_WIDTH = cfg.DOOR_WIDTH
 OPENING_HEIGHT = cfg.DOOR_HEIGHT
 
@@ -98,7 +98,8 @@ def camera_at(frame):
     az = math.radians(-64 + 16 * travel + 12 * end_view)
     el = math.radians(12.4 - 1.8 * travel + 31 * end_view)
     target_z = .565*LIFT + .437*WALL_HEIGHT*height_fraction + .06*WALL_HEIGHT*end_view
-    d = 2.67*OUTSIDE_DIAMETER + 1.335*WALL_HEIGHT*height_fraction - .53*OUTSIDE_DIAMETER*end_view
+    # Start close enough to read the crew, then draw back as the forms climb.
+    d = (2.67*OUTSIDE_DIAMETER + 1.335*WALL_HEIGHT*height_fraction)*(.80+.20*step(INTRO+SLOW_CYCLE*.7,INTRO+SLOW_CYCLE+3*FAST_CYCLE,frame)) - .53*OUTSIDE_DIAMETER*end_view
     target = (0, 0, target_z)
     eye = (math.cos(az) * math.cos(el) * d, math.sin(az) * math.cos(el) * d,
            target_z + math.sin(el) * d)
@@ -266,31 +267,31 @@ def build_land():
                 else:
                     quad_xy(fields,g,ya+1,g+.32,yb-1,-.031,line_c)
                 g+=pitch
-    # Low farm roads deliberately stay level all the way to the horizon.
-    quad_xy(fields,-650,20.6,650,24.4,.003,"cec3a6")
-    quad_xy(fields,-64.5,-525,-61.2,480,.004,"c8c2a5")
-    fields.face([(6.3,7.8,-.016),(10.2,6.5,-.016),(14.2,22,-.016),
-                 (10.3,22,-.016)],"c7b795")
+    # The farm lane stays level all the way to the horizon. The public road and the site roads are added by site.py.
+    quad_xy(fields,-124.5,-525,-121.2,480,.004,"c8c2a5")
+    def clear(x,y):
+        """Keep trees off the work area, the access road, the holding lanes and the water drive."""
+        return math.hypot(x,y)>SITE_CLEARING and not (-112<x<24 and 44<y<126) and not 108<y<124 and not (-112<x<-50 and -40<y<50)
     for i in range(50):
         x = -260+i*10.1+rng.uniform(-2.5,2.5)
         if -31 < x < 50 or rng.random()<.16:
             continue
         y,h=27.5+rng.uniform(-1,2.5),rng.uniform(3.2,6.2)
-        # Keep the crawler track and the frame laydown clear of the shelter belt.
-        if math.hypot(x,y)>SITE_CLEARING:tree(details,x,y,h,760+i)
+        if clear(x,y):tree(details,x,y,h,760+i)
     for i in range(48):
         x=-258+i*11.8+rng.uniform(-2,3)
         if rng.random()<.25:
             continue
-        tree(details,x,79+rng.uniform(-4,3),rng.uniform(3.6,8.8),220+i)
+        y,h=79+rng.uniform(-4,3),rng.uniform(3.6,8.8)
+        if clear(x,y):tree(details,x,y,h,220+i)
     for i in range(18):
-        tree(details,-66+rng.uniform(-2.2,1.2),-99+i*8,rng.uniform(3.1,6.1),100+i)
+        tree(details,-127+rng.uniform(-2.2,1.2),-99+i*8,rng.uniform(3.1,6.1),100+i)
     for i in range(70):
         if rng.random()>.15:
             tree(details,-285+i*8.5+rng.uniform(-1,2),164+rng.uniform(-8,8),rng.uniform(3.4,7.5),1300+i)
-    barn(details,1,66,8.2,13,3.9)
-    barn(details,12,70,6.5,10,3.05)
-    for j,(x,y,h) in enumerate([(-7,68,6.9),(-9,71,6.1),(16,75,6.2),(18,76,4.8)]):
+    barn(details,61,140,8.2,13,3.9)
+    barn(details,72,144,6.5,10,3.05)
+    for j,(x,y,h) in enumerate([(53,142,6.9),(51,145,6.1),(76,149,6.2),(78,150,4.8)]):
         tree(details,x,y,h,1060+j)
     return fields, details
 
@@ -382,6 +383,14 @@ def form_mesh(name, r, sense, deck):
         z1 = LIFT-.02
         rr=r+sense*(skin+.035)
         bar(m,polar(rr,a,.10),polar(rr,a,z1),.059,"ac683c",.064)
+    # Tie plates on the panel face, and push-pull props that plumb the panel from the working platform.
+    for a in (a0+WIDTH*.25,a1-WIDTH*.25):
+        for z in (.57,LIFT/2,LIFT-.44):
+            rr=r+sense*(skin+.125)
+            bar(m,polar(rr-sense*.02,a,z),polar(rr+sense*.05,a,z),.11,"d9c28a",.11)
+    if deck:
+        for a in (a0+WIDTH*.33,a1-WIDTH*.33):
+            bar(m,polar(r+sense*.62,a,.30),polar(r+sense*(skin+.13),a,LIFT-.50),.055,"c8563c")
     if deck:
         platform=1.02 if sense>0 else .73
         start,end=sorted((r+sense*.12,r+sense*platform))

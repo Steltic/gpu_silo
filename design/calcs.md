@@ -189,7 +189,142 @@ One 200 mm line carries the full flow in any of the three ways with room to spar
 
 The backup covers black start, controls, the cooling plant and about a fifth of the racks. It does not cover the loss of a turbine.
 
-## 8. Open questions raised by these numbers
+## 8. Trucking
+
+Road trucks are taken at the usual US limit of 36.3 t gross (80,000 lb), working 10 hours a day. Day numbers are days after the last wall pour. The film shows a sample of each kind of load, and its counters scale to the totals below.
+
+| Load | Vehicle | Trucks | Days | Trucks a day |
+| --- | --- | ---: | ---: | ---: |
+| Concrete for the walls | 7.6 m³ mixer | 140 | -9 to 0 | 14.0 |
+| Dry coolers with their pump units | flatbed, one each | 30 | 2 to 9 | 3.8 |
+| Cooler frame steel | flatbed, one frame each | 10 | 2 to 9 | 1.2 |
+| Water-glycol | 24 t tanker | 312 | 3 to 12 | 31.2 |
+| 4SU pods | flatbed, 2 each | 32 | 6 to 13 | 4.0 |
+| Propane tanks and the diesel tank | oversize load, one each | 9 | 8 to 11 | 2.2 |
+| Propane | 36 m³ transport | 26 | 12 to 18 | 3.7 |
+| Diesel | 30 m³ tanker | 3 | 12 to 18 | 0.4 |
+| Turbine generator sets | heavy haul, 94.5 t each | 2 | 15 to 17 | 0.7 |
+| Diesel sets | lowboy, 23.5 t each | 4 | 15 to 17 | 1.3 |
+
+After the last pour 428 loads arrive in 28 days. The busiest days are day 8: 42, day 9: 42, day 6: 40 loads.
+
+### Pods: the heaviest legal load
+
+| Quantity | Value | Basis |
+| --- | ---: | --- |
+| One 4SU pod | 8.5 t | 4 racks × 1.6 t, 1.5 t of frame and housing, 0.6 t of CDU and pump |
+| Flatbed | 14.6 × 2.59 m deck, 21.8 t payload | five-axle tractor and trailer |
+| Pods that fit on the deck | 4 | 2 end to end × 2 across |
+| Pods the payload allows | 2 | 2 × 8.5 t = 17.0 t |
+| **Pods on each truck** | **2** | weight decides, not space |
+| Height on the road | 3.90 m | limit 4.11 m |
+| **Trucks for 64 pods** | **32** | |
+
+The deck has room for 4 pods and the weight limit allows 2. The rack weight is an allowance: NVIDIA has not published a shipping weight for the Vera Rubin NVL72.
+
+### Receiving dock
+
+| Quantity | Value | Basis |
+| --- | ---: | --- |
+| Pods to load each day | 8 | 64 pods in 8 days |
+| Hoist capacity | 15 pods a day | 40 minutes a pod |
+| Gantry capacity | 40 pods a day | 15 minutes a pod |
+| Trucks each day | 4 | 2 pods each |
+| One truck unloaded in | 30 min | |
+| Dock capacity | 40 trucks a day | 2 back-in lanes under one gantry |
+| Cradles on the rail | 2 | 1.3 hours of work for the hoist |
+
+In real time one lane would be enough. The second lane lets one truck back in while another unloads, and the cradles keep the hoist working if a truck is late. The film runs 8 days in under a minute, so every truck appears to arrive at once.
+
+### Water-glycol by tanker
+
+| Quantity | Value | Basis |
+| --- | ---: | --- |
+| Store | 7,331 m³, 7,478 t | section 2 |
+| Of which glycol | 1,833 m³ | 25% by volume |
+| One tanker | 24 t, 23.5 m³ | 36.3 t gross |
+| **Tanker loads** | **312** | |
+| Loads a day | 31 | 10 days, one every 19 minutes |
+| Time in a bay | 30 min | 10 minutes to connect, then 1.2 m³ a minute |
+| One bay unloads | 20 loads a day | |
+| Bays needed / provided | 2 / 3 | one spare |
+| Level rises | 3.2 m a day | |
+| Youngest concrete the water reaches | 12 days old | lifts poured one a day, fill from day 3 |
+| Bottom lift at full head | 21 days old | day 12 |
+
+The tankers have their own drive off the public road, so 312 loads never enter the haul ring.
+
+### Coolers, fuel and concrete
+
+| Quantity | Value | Basis |
+| --- | ---: | --- |
+| One cooler with its pump unit | 11.7 t, 13 m long | one to a 14.6 m deck, 4.00 m high on the road |
+| Cooler trucks | 30 | plus 10 of frame steel |
+| Assist crane | 13 lifts a day | 45 minutes a cooler, 3.8 a day needed |
+| Propane to fill the tanks | 913 m³ | section 7 |
+| One propane transport | 36 m³, 17.7 t | MC-331 trailer at 36.3 t gross |
+| **Propane loads** | **26** | 4.1 a day with the diesel, 20 a day through 2 bays |
+| Fuel tanks | 8 propane and 1 diesel | one oversize load each, 34 t a propane tank |
+| Concrete in the walls | 1,056 m³ | 10 lifts of 106 m³ |
+| **Mixers for one lift** | **14** | 7.6 m³ each, one every 10 minutes |
+| Pour time for one lift | 2.3 h | 45 m³ an hour through one pump |
+| Mixers for the walls | 140 | |
+| Base slab, before the walls | 542 m³, 72 mixers | 1 m thick, an allowance |
+| Reinforcement | 240 t, 11 trucks | 150 kg per m³, an allowance |
+
+### Crew on a typical lift
+
+| Trade | People |
+| --- | ---: |
+| Foreman | 1 |
+| Form carpenters | 6 |
+| Ironworkers | 6 |
+| Concrete placers | 4 |
+| Finishers | 2 |
+| Jack operators | 2 |
+| Pump operator | 1 |
+| **Total** | **22** |
+
+Each lift is poured, left to set, stripped, jumped 3.2 m and reset. The crew rides the forms: placers and finishers on the pour deck, ironworkers on the starter bars, carpenters and jack operators on the working platform below.
+
+### Roads and staging areas
+
+| Area | Layout | Used by |
+| --- | --- | --- |
+| Public road | 116 m north of the silo. All site traffic arrives from the west and leaves to the east, so every turn is a right turn. | everything |
+| Access road and gate | Two lanes from the public road to the ring at a bearing of 143° | all trucks except the water tankers |
+| Holding lanes | 4 lanes beside the access road | pod trucks waiting to be called to the dock |
+| Haul ring | One-way, anticlockwise. Running lane at 42.7 m radius and a stopping lane inside it at 39.1 m. The crane track is outside it. | every truck makes one lap |
+| Receiving dock | 2 back-in lanes either side of the rail, under one gantry | pod trucks |
+| Cooler laydown | 10 frame positions inside the ring. Trucks stop in the stopping lane and an assist crane lifts each cooler into its frame. | cooler and frame-steel trucks |
+| Water drive | Its own entrance and exit on the public road, 3 drive-through bays, a pump and a buried fill line to the wall | water tankers |
+| Fuel farm | Each tank truck drives through its slot and leaves by a road out of the back. Transports unload in a 2-bay lay-by on the ring beside the tank header. | tank deliveries, propane transports |
+| Concrete bays | 2 back-in bays at the pump hopper by the ground opening, before the dock is built | truck mixers |
+
+## 9. Programme
+
+Day 0 is the last wall pour. The concrete reaches its 28-day strength on day 28, and the work is laid out to finish that day.
+
+| Activity | First day | Last day | Days |
+| --- | ---: | ---: | ---: |
+| Jumpform the walls | -9 | 0 | 10 |
+| Strip forms, rig the cranes | 1 | 2 | 2 |
+| Coolers into their frames | 2 | 9 | 8 |
+| Lift in the pod cage | 3 | 3 | 1 |
+| Water-glycol fill | 3 | 12 | 10 |
+| Build the receiving dock | 4 | 5 | 2 |
+| 4SU pods delivered and loaded | 6 | 13 | 8 |
+| Cooler frames hung and piped | 7 | 14 | 8 |
+| Fuel tanks set | 8 | 11 | 4 |
+| Propane and diesel fill | 12 | 18 | 7 |
+| Power levels and lid | 15 | 17 | 3 |
+| Fuel lines and cabling | 17 | 20 | 4 |
+| Commissioning | 20 | 27 | 8 |
+| Full strength, crew leaves | 28 | 28 | 1 |
+
+The walls take 10 days at 1 lift a day and are outside the 28 days. One crawler crane does every heavy lift, so the cooler frames are hung before the power levels and the lid. The water fill, the cooler deliveries and the pod deliveries overlap from day 6 to day 9, which is when the site is busiest.
+
+## 10. Open questions raised by these numbers
 
 1. **Store size.** 1.94 M US gal gives 97 minutes of ride-through at 50 MW. Decide the ride-through the site needs. See section 2.
 2. **Rack heat.** 195 kW per rack is 50 MW over 256 racks. Published figures for the Vera Rubin NVL72 run from about 190 to 230 kW, so the upper end would be 59 MW.
@@ -203,6 +338,11 @@ The backup covers black start, controls, the cooling plant and about a fifth of 
 10. **Fuel.** 913 m³ of propane runs the site for about 43 hours. Separation distances, bunding, the vaporiser and the resupply rate have not been checked. Fuel stored inside is limited to the day tanks, and the limit that applies has not been checked.
 11. **Power in the shaft.** 50 MW passes down the steel shaft to 64 pods, 781 kW each. The busbar, its cooling and the connection at each level are not designed.
 12. **Pod support.** The pods now hang 2.3 m out from the shaft with a walkway ring between. The carrier ring and its arms are not designed.
+13. **Pod weight.** 8.5 t per pod is an allowance, and it sets the load at 2 pods a truck. NVIDIA has not published a shipping weight for this rack. Three pods would travel together only if a pod weighed under 7.3 t.
+14. **Filling young concrete.** The fill starts on day 3. Each lift is at least 12 days old when the water reaches it and the bottom lift is 21 days old at full head. Whether the walls can take that load at that age has not been checked.
+15. **A lift a day.** 1 lift a day is fast for a jumpform. Slower lifts lengthen the work before day 0 and leave the 28 days after it unchanged.
+16. **Fuel line across the ring.** The propane and diesel lines run on the ground from the tanks to the wall and cross both ring lanes. They need to be buried or bridged there.
+17. **Heavy and oversize loads.** The 8 propane tanks are 3 m wide and the turbine sets weigh 94.5 t. Their permits, routes and the way each tank is jacked off its trailer are not designed.
 
 ## Fluid properties used
 

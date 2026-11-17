@@ -13,7 +13,8 @@ from . import clock
 FPS=24
 FUEL=clock.ORBIT_DONE+24
 TANKS=FUEL+56
-TANK_STEP=16
+# One tank truck arrives every TANK_STEP frames. Each tank is on its saddles TANK_STEP frames after its truck stops.
+TANK_STEP=36
 LINE=TANKS+cfg.PROJECT["fuel"]["tanks"]*TANK_STEP+8
 HEADER=(LINE,LINE+20)
 RUN=(LINE+20,LINE+62)

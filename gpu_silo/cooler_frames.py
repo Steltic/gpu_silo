@@ -11,6 +11,7 @@ from . import design as cfg
 from . import crew
 from . import services
 from . import silo_model as s
+from . import site
 
 D=cfg.COOL
 SITE=cfg.SITE
@@ -149,11 +150,21 @@ def crane(f):
     return foot,s.polar(radius,bearing,z),tip,bearing+math.pi/2
 
 
+DOCK_WEDGE=math.asin((site.DOCK_Y+site.DECK_W/2+2.2)/LIFT_R)
+
+
+def side(i):
+    """The end of frame i at which the boom lift works: the end facing the frames already hung,
+    unless that would stand the lift in the pod dock."""
+    station=THETA[i]+SIDE*LIFT_ANGLE
+    return -SIDE if abs(math.atan2(math.sin(station-s.ENTRY),math.cos(station-s.ENTRY)))<DOCK_WEDGE else SIDE
+
+
 def lift_bearing(f):
     """Bearing of the boom lift. It drives to the next frame while the crane hoists."""
     i=cycle(f)
-    here=THETA[i]+SIDE*LIFT_ANGLE
-    before=THETA[i-1]+SIDE*LIFT_ANGLE if i else here+SIDE*LIFT_PARK
+    here=THETA[i]+side(i)*LIFT_ANGLE
+    before=THETA[i-1]+side(i-1)*LIFT_ANGLE if i else here+side(i)*LIFT_PARK
     begin=times(i)[0];ready=times(i)[3]-2
     return before+(here-before)*s.step(begin,ready,f)
 
@@ -189,10 +200,10 @@ def basket(f):
     theta=THETA[i]
     low,high=base(k)+1.15,base(k)+HEIGHT-1.35
     work_z=low+(high-low)*s.step(e+2,g-2,f)
-    x,y=BACK+DEPTH/2,SIDE*(WIDTH/2+.95)
+    x,y=BACK+DEPTH/2,side(i)*(WIDTH/2+.95)
     work=(x*math.cos(theta)-y*math.sin(theta),x*math.sin(theta)+y*math.cos(theta),work_z)
     u=lifted
-    return tuple(p+(q-p)*u for p,q in zip(rest,work)),heading+(theta-SIDE*math.pi/2-heading)*u
+    return tuple(p+(q-p)*u for p,q in zip(rest,work)),heading+(theta-side(i)*math.pi/2-heading)*u
 
 
 def connected(i,f):
@@ -327,8 +338,8 @@ def dunnage_mesh():
         closed(m,-.5,y-.20,DEPTH+.5,y+.20,0,GROUND,"8f8064")
     for y in (-WIDTH/2+.3,WIDTH/2-.3):
         for sign in (-1,1):
-            # Short feet on the silo side leave the boom lift a clear lane.
-            x=DEPTH/2+sign*(DEPTH/2-.1);run=3.1 if sign>0 else 1.0
+            # Short feet leave the boom lift a clear lane inside and the trucks' stopping lane clear outside.
+            x=DEPTH/2+sign*(DEPTH/2-.1);run=.9 if sign>0 else 1.0
             s.bar(m,(x,y,GROUND+4.2 if sign>0 else GROUND+1.6),(x+sign*run,y,.10),.12,"9a8a66")
             closed(m,x+sign*run-.3,y-.3,x+sign*run+.3,y+.3,0,.10,"8f8064")
     return m
@@ -474,7 +485,7 @@ def add(scene,node,p):
         values=[fn(f) for f in range(a,b+1)]
         return [(0,values[0])]+[(a+k,v) for k,v in p.flat_keys(values)]
     apron=track_mesh()
-    node(apron.name,scene.mesh(apron),"Site works",tracks={"scale":window(START)})
+    node(apron.name,scene.mesh(apron),"Site works")
     steel=scene.mesh(frame_mesh());cooler=scene.mesh(cooler_mesh());pump=scene.mesh(pump_mesh())
     screen=scene.mesh(screen_mesh())
     slings=scene.mesh(sling_mesh());dunnage=scene.mesh(dunnage_mesh())
@@ -491,15 +502,15 @@ def add(scene,node,p):
         if lay_bearing(i)!=THETA[i]:tracks["yaw"]=curve(a,e,lambda f,i=i:(frame_bearing(i,f),))
         root=node(label+f" | {ROWS} dry coolers, {ROWS} pumps and steel",-1,"Dry cooler frames",ang=bearing,tracks=tracks)
         node(label+" | steel frame",steel,"Cooler frames",root)
-        node(label+" | mesh screen",screen,"Cooler screens",root)
-        coolers=[]
+        mesh_screen=node(label+" | mesh screen",screen,"Cooler screens",root)
+        coolers=[];pumps=[]
         for row in range(ROWS):
             z=row*ROW+.15
             coolers.append(node(label+f" | cooler {row+1}",cooler,"Dry coolers",root,t=(0,COOL_Y,z)))
-            node(label+f" | pump unit {row+1}",pump,"Pump units",root,t=(0,PUMP_Y,z))
+            pumps.append(node(label+f" | pump unit {row+1}",pump,"Pump units",root,t=(0,PUMP_Y,z)))
         sling=node(label+" | lifting slings",slings,"Frame rigging",root,tracks={"scale":window(b-5,r)})
         lay=lay_bearing(i)
-        node(label+" | laydown dunnage",dunnage,"Frame laydown",ang=lay,t=s.polar(LAY_R,lay,0),
+        timber=node(label+" | laydown dunnage",dunnage,"Frame laydown",ang=lay,t=s.polar(LAY_R,lay,0),
              tracks={"scale":window(START,g)})
         station=node(label+" | fixed wall station",-1,"Cooler frame stations",ang=bearing)
         for y in COLUMNS:
@@ -515,7 +526,7 @@ def add(scene,node,p):
                  tracks={"scale":window(start),"translation":[(0,(0,0,z+.40)),(start,(0,0,z+.40)),(cast,(0,0,z))]})
         pipes=node(label+" | pipe spools",spool,"Frame pipework",station,t=(spool_origin(),0,base(k)),
              tracks={"scale":[(0,OFF),(e+2,OFF)]+[(f,(max(.001,reach_x*connected(i,f)),1,1)) for f in range(e+3,g+1)]})
-        scene.cooler_frames[k]=dict(root=root,coolers=coolers,slings=sling,spools=pipes,station=station,reach=reach_x)
+        scene.cooler_frames[k]=dict(root=root,coolers=coolers,pumps=pumps,screen=mesh_screen,dunnage=timber,order=i,slings=sling,spools=pipes,station=station,reach=reach_x)
     # One boom lift follows the crane round the silo with a two-person connection crew.
     def heading(f):
         return (lift_bearing(f)+math.pi/2,)

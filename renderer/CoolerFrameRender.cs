@@ -108,24 +108,24 @@ partial class Shot {
         Rows(g,d.StoreRows,x,xr,569,24);
     }
 
-    void TerminalOverlay(Graphics g,int t) {
+    void TerminalOverlay(Graphics g,int frame) {
         const int x=24,xr=222;
-        int landed=Clamp((t-106+75)/75,0,3);
+        int t=frame-d.Terminal,landed=Math.Min(d.Cradles,d.Frames[frame].Loads[4]);
         g.FillRectangle(accent,x,33,25,3);Text(g,"GROUND LOGISTICS",section,muted,x,46);
-        Heading(g,"Pod terminal",x-2,73);Text(g,"Flatbed delivery",title2,muted,x,126);
+        Heading(g,"Pod dock",x-2,73);Text(g,d.PodsPerTruck+" a truck, limited by weight",title2,muted,x,126);
         Rule(g,x,164,xr,164,cLine,1);Text(g,"PODS ON RAIL",section,muted,x,183);
-        g.DrawString(landed+" / 3",numbers,ink,new PointF(xr,169),rightText);
-        g.FillRectangle(light,x,211,xr-x,5);g.FillRectangle(waterBrush,x,211,(xr-x)*landed/3,5);
-        string phase=t<50?"Flatbed arriving":t<260?"Gantry unloading":"Rail transfer ready";
+        g.DrawString(landed+" / "+d.Cradles,numbers,ink,new PointF(xr,169),rightText);
+        g.FillRectangle(light,x,211,xr-x,5);g.FillRectangle(waterBrush,x,211,(xr-x)*landed/d.Cradles,5);
+        string phase=t<50?"Truck backing in":landed<d.Cradles?"Gantry unloading":"Rail transfer ready";
         Text(g,phase,strong,accent,x,239);
         Rule(g,x,300,xr,300,cLine,1);Text(g,"RECEIVING CRADLES",section,muted,x,320);
-        for(int j=0;j<3;j++){
-            int y=355+38*j;
+        for(int j=0;j<d.Cradles;j++){
+            int y=349+30*j;
             g.FillRectangle(j<landed?waterBrush:light,x,y+2,8,8);
             Text(g,"Pod "+(j+1).ToString("000"),mono,ink,x+19,y-3);
-            string state=j<landed?"On rail":t>=63+75*j?"On hoist":"On truck";
-            g.DrawString(state,monoSmall,muted,new PointF(xr,y-1),rightText);
+            g.DrawString(j<landed?"On rail":"On truck",monoSmall,muted,new PointF(xr,y-1),rightText);
         }
+        Rows(g,d.DockRows,x,xr,349+30*d.Cradles+6,19);
         Rule(g,x,491,xr,491,cLine,1);g.DrawString("ONE "+d.UnitName+" POD",section,muted,new PointF(x,512),leftText);
         g.DrawString(d.Lengths[0].ToString("0.00")+" m long",strong,ink,new PointF(x,538),leftText);
         g.DrawString(d.CoreLength.ToString("0.00")+" m housing, 4 GPU racks",title2,muted,new PointF(x,577),leftText);
