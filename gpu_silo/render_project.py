@@ -14,6 +14,8 @@ from . import calcs
 from . import clock
 from . import closing
 from . import service
+from . import logistics
+from . import site
 
 NARRATION = Path(__file__).resolve().parents[1] / "audio" / "plan_view.flac"
 
@@ -26,17 +28,18 @@ def chapters():
     care, plant, yard = p.care, p.plant, p.yard
     first = frames.times(0)
     full, repair = p.FILLED, p.FILLED+care.REPAIR
-    marks = [(0,"Cast the pod service sleeves into the inner wall"),(12,"Cast the cooler-frame anchors and conduits"),
-            (123,"Seal the ground opening"),
-            (p.C,"Begin the water-glycol fill and install the steel pod cage"),
-            (clock.STORE_FILL[0],"Fill the water-glycol store to the top"),
-            (yard.INSERT_AT,"Flatbed unloads three framed pods at the rail terminal"),
+    lg = logistics.C
+    marks = [(0,f"Jumpform crew of {lg['crew']} on the first lift | truck mixers at the pump"),(12,"Cast the cooler-frame anchors and conduits"),
+            (123,"Seal the ground opening"),(silo.INTRO+silo.SLOW_CYCLE,f"Nine more lifts, {lg['lift_trucks']} mixers each"),
+            (p.C,"Lift in the steel pod cage | water tankers and the first cooler trucks arrive"),
+            (clock.STORE_FILL[0],f"Fill the water-glycol store | {lg['water_loads']} tanker loads through {site.WATER_BAYS} bays"),
+            (yard.INSERT_AT,f"Receiving dock | {lg['pods_per_truck']} pods a truck, lifted onto the rail by the gantry"),
             (p.FIRST_POD,"Lift the first pod into the store"),
             (p.FIRST_POD+round(.91*p.motion_ticks(0)),"Dock the pod and connect it to the store"),
             (first[0],f"Crawler hangs the first of {frames.N} screened cooler frames while pods load"),
             (first[4],"Boom-lift crew connects the coolers and pumps"),
             (frames.times(1)[0],f"The other {frames.N-1} frames follow round the silo"),
-            (p.SPEED_FRAME,f"Lower {p.LEVELS-2} levels of pods at {p.FAST_RATE:g}x"),
+            (p.SPEED_FRAME,f"Lower {p.LEVELS-2} levels of pods at {p.FAST_RATE:g}x | {lg['pod_trucks']} pod trucks in all"),
             (full,f"{p.TOTAL} pods installed | backup diesel level through the open top"),
             (full+plant.PICK_STARTS[1],"Turbine level | two in-line 25 MW gas turbine sets side by side"),
             (full+care.LID[0],"Lower the lid with its exhaust stacks and air inlet houses"),
@@ -44,8 +47,9 @@ def chapters():
             (full+care.CREW+248,"Service the pods on their assigned levels"),
             (full+clock.ENCLOSURE_OPEN[0],f"Fold down the side of turbine set A | {cfg.POWER['module_output_mw']:g} MW gas turbine"),
             (full+clock.ENCLOSURE_CLOSE[0],"Close the enclosure and return to grade"),
-            (full+care.SOLID_BEGIN,"Finished silo | design basis and 360-degree exterior sweep"),
-            (full+closing.FUEL,f"Place {cfg.PROJECT['fuel']['tanks']} propane tanks and the diesel tank, and run the fuel lines to the power levels"),
+            (full+care.SOLID_BEGIN,f"Finished silo on day {logistics.DAYS} | design basis, programme and 360-degree exterior sweep"),
+            (full+closing.FUEL,f"Trucks bring {cfg.PROJECT['fuel']['tanks']} propane tanks and the diesel tank"),
+            (full+closing.LINE,"Propane transports fill the tanks | fuel lines run to the power levels"),
             (full+closing.PLAN,"Plan view | hot and cold water-glycol dispersing into the store (narrated)"),
             (full+closing.SECTION,"Section | power, cooling and fuel"),
             (repair,f"Replacement | fault in pod {care.BAD+1:03} on Level {care.LEVEL}"),

@@ -22,6 +22,68 @@ partial class Shot {
         }
     }
 
+    // Where the scene falls in the 28-day programme, with the running truck counts.
+    void ProgrammeTag(Graphics g,int frame) {
+        Tag tag=null;
+        foreach(Tag item in d.Tags)if(frame>=item.First && frame<item.Last)tag=item;
+        if(tag==null)return;
+        string note=tag.Note;
+        if(tag.Counters.Length>0)note=note.Replace("{a}",d.Frames[frame].Loads[tag.Counters[0]].ToString());
+        if(tag.Counters.Length>1)note=note.Replace("{b}",d.Frames[frame].Loads[tag.Counters[1]].ToString());
+        string day=tag.Day.StartsWith("DAY")?tag.Day+" OF "+d.ProgrammeDays:tag.Day;
+        const float x=UiLeft+185,y=22;
+        float wide=Math.Max(g.MeasureString(tag.Title,title2,PointF.Empty,leftText).Width,g.MeasureString(note,monoSmall,PointF.Empty,leftText).Width);
+        wide=Math.Max(wide,g.MeasureString(day,section,PointF.Empty,leftText).Width)+26;
+        float high=note.Length>0?58:42;
+        using(var back=new SolidBrush(Color.FromArgb(238,245,244,236)))g.FillRectangle(back,x,y,wide,high);
+        g.FillRectangle(accent,x,y,3,high);
+        g.DrawString(day,section,accent,new PointF(x+13,y+6),leftText);
+        g.DrawString(tag.Title,title2,ink,new PointF(x+13,y+19),leftText);
+        if(note.Length>0)g.DrawString(note,monoSmall,muted,new PointF(x+13,y+39),leftText);
+    }
+
+    // The crew on a typical lift and the concrete it places.
+    void CrewPanel(Graphics g,int frame) {
+        const int x=1016,wide=236;
+        int high=44+d.CrewRows.Length*16,y=720-22-40-12-high;
+        using(var bg=new SolidBrush(Color.FromArgb(247,246,239)))g.FillRectangle(bg,x,y,wide,high);
+        Rule(g,x,y,x+wide,y,cLine,1);Rule(g,x,y+high,x+wide,y+high,cLine,1);
+        g.DrawString("CREW ON A TYPICAL LIFT",section,muted,new PointF(x+14,y+12),leftText);
+        g.DrawString(d.LiftCrew.ToString(),mono,ink,new PointF(x+wide-14,y+10),rightText);
+        float row=y+33;
+        foreach(Row item in d.CrewRows){
+            g.DrawString(item.Left,monoSmall,muted,new PointF(x+14,row),leftText);
+            g.DrawString(item.Right,monoSmall,ink,new PointF(x+wide-14,row),rightText);
+            row+=16;
+        }
+    }
+
+    // The programme as a bar chart, shown with the finished silo.
+    void ProgrammeChart(Graphics g) {
+        const int x=862,y=36,wide=390,label=200;
+        int first=0,last=d.ProgrammeDays;
+        foreach(Bar bar in d.Programme)first=Math.Min(first,bar.First);
+        int high=62+d.Programme.Length*16;
+        using(var bg=new SolidBrush(Color.FromArgb(247,246,239)))g.FillRectangle(bg,x,y,wide,high);
+        Rule(g,x,y,x+wide,y,cLine,1);Rule(g,x,y+high,x+wide,y+high,cLine,1);
+        g.DrawString(d.ProgrammeDays+"-DAY PROGRAMME",section,muted,new PointF(x+14,y+12),leftText);
+        g.DrawString("Day 0 is the last pour",monoSmall,muted,new PointF(x+wide-14,y+11),rightText);
+        float left=x+14+label,right=x+wide-16,scale=(right-left)/(last-first+1);
+        float top=y+48;
+        foreach(int day in new[]{0,7,14,21,d.ProgrammeDays}){
+            float at=left+(day-first)*scale;
+            Rule(g,at,top-6,at,top+d.Programme.Length*16,day==0?cInk:cLine,day==0?1.1f:.8f);
+            g.DrawString(day.ToString(),monoSmall,muted,new PointF(at,top-20),middleText);
+        }
+        float row=top;
+        foreach(Bar bar in d.Programme){
+            g.DrawString(bar.Name,monoSmall,ink,new PointF(x+14,row),leftText);
+            float a=left+(bar.First-first)*scale,b=left+(bar.Last-first+1)*scale;
+            g.FillRectangle(bar.Last<=0?(Brush)muted:bar.First>=d.ProgrammeDays?accent:waterBrush,a,row+3,Math.Max(3,b-a),8);
+            row+=16;
+        }
+    }
+
     // The gas turbine inside the lower power module, shown while its side is folded down.
     void TurbinePanel(Graphics g) {
         const int x=927,y=36,wide=325,high=150;

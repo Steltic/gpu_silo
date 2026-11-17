@@ -25,9 +25,11 @@ class Mesh {public Tri[] Ts;public bool Land;public int Mat;}
 struct Pose {public V T,S;public double A;}
 class Node {public int M,Parent,Kind;public double Sin,Cos;public Pose[] Transform;public Pose WorldPose;}
 class Frame {public V Eye,Target;public double Fov,Height,Plan,U,Theta,Bunch,PodZ,Feed,HookZ,RackZ,Liquid,Dock;
-    public int Lift,Pod,Level,Stored,Ports,Online,Fixings;public bool End;public string Phase,LoadPhase;}
+    public int Lift,Pod,Level,Stored,Ports,Online,Fixings;public bool End;public string Phase,LoadPhase;public int[] Loads;}
 class Row {public string Left,Right;}
 class Caption {public int First,Last;public string Text;}
+class Tag {public int First,Last;public string Day,Title,Note;public int[] Counters;}
+class Bar {public string Name;public int First,Last;}
 class Data {
     public Mesh[] Meshes;public Node[] Nodes;public Frame[] Frames;public int Fps;
     public float Outer,OuterInside,InnerOutside,Inner,Height,Lift;
@@ -46,7 +48,8 @@ class Data {
     public int Fuel,Tanks,TankStep,FuelEnd,Plan,PlanFrames,Section,SectionFrames,Fade,TankCount;
     public int Enc0,Enc1,Enc2,Enc3,FinalBegin,FinalEnd,DieselSets;
     public float ModuleMW,SetY,GenL,GenH,Level0,ExhaustR,InletL,InletH,InletX,DieselStackH,DieselEnd,DropR,ShaftCore;
-    public Row[] TurbineRows,BackupRows;
+    public Row[] TurbineRows,BackupRows,CrewRows,DockRows;public Tag[] Tags;public Bar[] Programme;
+    public int ProgrammeDays,LiftCrew,Cradles,PodsPerTruck;
     public int[] Line=new int[10];
     public float FuelBearing,FarmRadius,TankLength,TankDiameter,TankPitch,RiserRadius,GasTop,DropRadius,DropEnd;
     public Row[] FuelRows,PlanRows,SectionRows;public Caption[] Captions;
@@ -79,7 +82,7 @@ class Data {
     }
     public Data(string file){
         using(var r=new BinaryReader(File.OpenRead(file))){
-            if (System.Text.Encoding.ASCII.GetString(r.ReadBytes(8))!="GSILO04\0") throw new InvalidDataException("Unknown scene");
+            if (System.Text.Encoding.ASCII.GetString(r.ReadBytes(8))!="GSILO05\0") throw new InvalidDataException("Unknown scene");
             int nm=r.ReadInt32(),nn=r.ReadInt32(),nf=r.ReadInt32(); Fps=r.ReadInt32();
             Outer=r.ReadSingle();OuterInside=r.ReadSingle();InnerOutside=r.ReadSingle();Inner=r.ReadSingle();
             Height=r.ReadSingle();Lift=r.ReadSingle();
@@ -124,6 +127,15 @@ class Data {
             FuelRows=Rows(r);PlanRows=Rows(r);SectionRows=Rows(r);TurbineRows=Rows(r);BackupRows=Rows(r);
             Captions=new Caption[r.ReadInt32()];
             for(int i=0;i<Captions.Length;i++){Captions[i]=new Caption();Captions[i].First=r.ReadInt32();Captions[i].Last=r.ReadInt32();Captions[i].Text=Str(r);}
+            CrewRows=Rows(r);DockRows=Rows(r);
+            ProgrammeDays=r.ReadInt32();LiftCrew=r.ReadInt32();Cradles=r.ReadInt32();PodsPerTruck=r.ReadInt32();
+            Programme=new Bar[r.ReadInt32()];
+            for(int i=0;i<Programme.Length;i++){Programme[i]=new Bar();Programme[i].Name=Str(r);Programme[i].First=r.ReadInt32();Programme[i].Last=r.ReadInt32();}
+            Tags=new Tag[r.ReadInt32()];
+            for(int i=0;i<Tags.Length;i++){
+                Tag tag=Tags[i]=new Tag();tag.First=r.ReadInt32();tag.Last=r.ReadInt32();tag.Day=Str(r);tag.Title=Str(r);tag.Note=Str(r);
+                tag.Counters=new int[r.ReadInt32()];for(int k=0;k<tag.Counters.Length;k++)tag.Counters[k]=r.ReadInt32();
+            }
             Meshes=new Mesh[nm];Nodes=new Node[nn];Frames=new Frame[nf];
             for(int i=0;i<nm;i++){
                 Mesh m=Meshes[i]=new Mesh();m.Ts=new Tri[r.ReadInt32()]; m.Land=r.ReadInt32()!=0;m.Mat=r.ReadInt32();
@@ -149,6 +161,7 @@ class Data {
                 f.Feed=r.ReadSingle();f.HookZ=r.ReadSingle();f.RackZ=r.ReadSingle();f.LoadPhase=Str(r);
                 f.Liquid=r.ReadSingle();f.Dock=r.ReadSingle();f.Ports=r.ReadInt32();f.Online=r.ReadInt32();
                 f.Fixings=r.ReadInt32();
+                f.Loads=new int[6];for(int k=0;k<6;k++)f.Loads[k]=r.ReadInt32();
             }
         }
     }
@@ -891,7 +904,7 @@ partial class Shot {
             g.ScaleTransform(Factor,Factor);
             g.SmoothingMode=SmoothingMode.AntiAlias;g.TextRenderingHint=TextRenderingHint.AntiAliasGridFit;
             g.FillRectangle(paper,0,0,UiLeft,H/Factor);
-            if(frame>=d.Terminal && frame<d.FirstPod-8){TerminalOverlay(g,frame-d.Terminal);DesignStrip(g,frame);return;}
+            if(frame>=d.Terminal && frame<d.FirstPod-8){TerminalOverlay(g,frame);ProgrammeTag(g,frame);DesignStrip(g,frame);return;}
             if(frame>=d.BuildEnd){
                 int t=frame-d.Full;
                 if(Ghosted(frame) && (t<d.SealBegin || t>=d.Repair && t<d.FinalBegin))ShellEdges(g);
@@ -904,6 +917,8 @@ partial class Shot {
                 else if(frame>=d.FrameTimes[0,0] && frame<d.FrameTimes[0,7])CoolerFrameOverlay(g,frame);
                 else if(frame>=d.StoreStart && frame<d.Terminal)StoreOverlay(g,frame);
                 else StorageOverlay(g,frame);
+                if(t>=d.SealBegin && t<d.Fuel)ProgrammeChart(g);
+                ProgrammeTag(g,frame);
                 DesignStrip(g,frame);
                 return;
             }
@@ -947,6 +962,8 @@ partial class Shot {
             }
             Text(g,view,section,ink,UiLeft+49,29);
             Dimensions(g,frame);
+            if(frame<d.Closed)CrewPanel(g,frame);
+            ProgrammeTag(g,frame);
             DesignStrip(g,frame);
         }
     }

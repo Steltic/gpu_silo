@@ -29,7 +29,10 @@
     "frame_extra_width_m": 0.16,
     "frame_extra_height_m": 0.1,
     "intake_clearance_each_side_m": 0.05,
-    "intake_clearance_overhead_m": 0.1
+    "intake_clearance_overhead_m": 0.1,
+    "rack_mass_t": 1.6,
+    "frame_mass_t": 1.5,
+    "cdu_pump_mass_t": 0.6
   },
   "storage": {
     "levels": 8,
@@ -195,5 +198,183 @@
     "bulk_tank_length_m": 10.0,
     "bulk_fill_fraction": 0.9,
     "line_diameter_m": 0.05
+  },
+  "logistics": {
+    "gross_vehicle_limit_t": 36.3,
+    "working_hours_per_day": 10,
+    "flatbed": {
+      "deck_length_m": 14.6,
+      "deck_width_m": 2.59,
+      "deck_height_m": 1.5,
+      "payload_t": 21.8,
+      "legal_height_m": 4.11
+    },
+    "pods": {
+      "unload_minutes_per_pod": 15,
+      "hoist_minutes_per_pod": 40,
+      "dock_lanes": 2,
+      "buffer_cradles": 2,
+      "load_gap_m": 0.3
+    },
+    "water": {
+      "tanker_payload_t": 24.0,
+      "connect_minutes": 10,
+      "pump_m3_per_minute": 1.2,
+      "bays": 3
+    },
+    "coolers": {
+      "cooler_mass_t": 10.5,
+      "pump_unit_mass_t": 1.2,
+      "frame_steel_t": 14.0,
+      "lift_minutes_per_cooler": 45
+    },
+    "propane": {
+      "transport_load_m3": 36.0,
+      "tank_mass_t": 34.0,
+      "unload_minutes": 60,
+      "bays": 2
+    },
+    "diesel": {
+      "tanker_load_m3": 30.0
+    },
+    "concrete": {
+      "mixer_load_m3": 7.6,
+      "pump_m3_per_hour": 45,
+      "slab_thickness_m": 1.0,
+      "slab_overhang_m": 0.64,
+      "reinforcement_kg_per_m3": 150,
+      "bays": 2
+    },
+    "site": {
+      "haul_ring_radius_m": 42.7,
+      "stopping_lane_radius_m": 39.1,
+      "lane_width_m": 3.6,
+      "access_bearing_degrees": 143,
+      "public_road_north_m": 116,
+      "holding_lanes": 4,
+      "water_fill_bearing_degrees": 107
+    }
+  },
+  "jumpform": {
+    "lifts_per_day": 1,
+    "crew": [
+      [
+        "Foreman",
+        1
+      ],
+      [
+        "Form carpenters",
+        6
+      ],
+      [
+        "Ironworkers",
+        6
+      ],
+      [
+        "Concrete placers",
+        4
+      ],
+      [
+        "Finishers",
+        2
+      ],
+      [
+        "Jack operators",
+        2
+      ],
+      [
+        "Pump operator",
+        1
+      ]
+    ]
+  },
+  "schedule": {
+    "days": 28,
+    "activities": [
+      {
+        "key": "walls",
+        "name": "Jumpform the walls",
+        "start": -9,
+        "end": 0
+      },
+      {
+        "key": "strip",
+        "name": "Strip forms, rig the cranes",
+        "start": 1,
+        "end": 2
+      },
+      {
+        "key": "frames",
+        "name": "Coolers into their frames",
+        "start": 2,
+        "end": 9
+      },
+      {
+        "key": "cage",
+        "name": "Lift in the pod cage",
+        "start": 3,
+        "end": 3
+      },
+      {
+        "key": "water",
+        "name": "Water-glycol fill",
+        "start": 3,
+        "end": 12
+      },
+      {
+        "key": "dock",
+        "name": "Build the receiving dock",
+        "start": 4,
+        "end": 5
+      },
+      {
+        "key": "pods",
+        "name": "Pods delivered and loaded",
+        "start": 6,
+        "end": 13
+      },
+      {
+        "key": "hang",
+        "name": "Cooler frames hung and piped",
+        "start": 7,
+        "end": 14
+      },
+      {
+        "key": "tanks",
+        "name": "Fuel tanks set",
+        "start": 8,
+        "end": 11
+      },
+      {
+        "key": "propane",
+        "name": "Propane and diesel fill",
+        "start": 12,
+        "end": 18
+      },
+      {
+        "key": "power",
+        "name": "Power levels and lid",
+        "start": 15,
+        "end": 17
+      },
+      {
+        "key": "lines",
+        "name": "Fuel lines and cabling",
+        "start": 17,
+        "end": 20
+      },
+      {
+        "key": "commission",
+        "name": "Commissioning",
+        "start": 20,
+        "end": 27
+      },
+      {
+        "key": "handover",
+        "name": "Full strength, crew leaves",
+        "start": 28,
+        "end": 28
+      }
+    ]
   }
 }

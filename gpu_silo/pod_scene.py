@@ -20,6 +20,11 @@ from . import service
 from . import crew
 from . import cargo
 from . import yard
+from . import site
+from . import jumpform
+from . import logistics
+from . import programme
+from . import traffic
 from . import maintenance as care
 import sys
 
@@ -201,7 +206,8 @@ def frames_camera(frame):
     follow=camera((0,0,15.5),bearing+54*frames.SIDE,18,112)
     a,b,c,d,e,r,g,end=frames.times(0)
     k=frames.ORDER[0];theta=frames.THETA[0]
-    seat=camera(s.polar(frames.BACK+1.0,theta+.16*frames.SIDE,frames.base(k)+4.2),math.degrees(theta)+42*frames.SIDE,5,62)
+    near=frames.side(0)
+    seat=camera(s.polar(frames.BACK+1.0,theta+.16*near,frames.base(k)+4.2),math.degrees(theta)+42*near,5,62)
     near=smooth(frame,d-22,e+2)*(1-smooth(frame,g-4,end+14))
     return blend(follow,seat,near)
 
@@ -429,6 +435,7 @@ def flat_keys(values,tol=.000015):
 
 def build():
     scene=s.build()
+    site.ground(scene)
     services.perforate_concrete(scene)
     scene.project_info=dict(clearBore_m=2*s.RI,podLength_m=POD_L,podWidth_m=POD_W,podHeight_m=POD_H,
         storageLevels=LEVELS,podsPerLevel=BAYS,levelPitch_m=PITCH,storageZone_m=LEVELS*PITCH,
@@ -470,8 +477,10 @@ def build():
         scene.nodes[-1]['parent']=parent
         return len(scene.nodes)-1
     show=lambda a:[(0,OFF),(a-1,OFF),(a,ON)]
+    scene.fleet=site.Fleet(scene,node,flat_keys,FRAMES);scene.counts={}
     def interval(start,end):
         return show(start)+[(end-1,ON),(end,OFF)]
+    jumpform.install(scene,node,sys.modules[__name__])
     scene.liquid=services.add_fixed(scene,node,flat_keys,[liquid_level(f) for f in range(FRAMES)])
     for lite in (False,True):
         m=casing(lite)
@@ -600,6 +609,7 @@ def build():
     service.install(scene,node,sys.modules[__name__])
     fuel.install(scene,node,sys.modules[__name__])
     scene.storage_inspection=(FIRST_POD,FILLED+plant.VENT_END)
+    traffic.install(scene,node,sys.modules[__name__])
     yard.install_terminal(scene,node,sys.modules[__name__])
     return scene
 
@@ -610,7 +620,7 @@ def render_data(scene,path):
         def floats(*v): file.write(struct.pack("<"+"f"*len(v),*v))
         def string(txt):
             b=txt.encode("utf8");ints(len(b));file.write(b)
-        file.write(b"GSILO04\0")
+        file.write(b"GSILO05\0")
         ints(len(scene.meshes),len(scene.nodes),FRAMES,FPS)
         floats(s.RO,s.RI_OUTER,s.RO_INNER,s.RI,s.WALL_HEIGHT,s.LIFT)
         ints(s.COUNT,s.LAST_POUR,s.LAST_POUR+s.REVEAL//2,s.LAST_POUR+s.REVEAL,
@@ -650,6 +660,18 @@ def render_data(scene,path):
         lines=closing.captions()
         ints(len(lines))
         for first,last,text in lines:ints(FILLED+first,FILLED+last);string(text)
+        # Truck counts, the lift crew and the 28-day programme.
+        for rows in (panels["crew"],panels["dock"]):
+            ints(len(rows))
+            for left,right in rows:string(left);string(right)
+        ints(logistics.DAYS,logistics.C["crew"],len(yard.LOAD_OFFSETS),logistics.C["pods_per_truck"])
+        chart=logistics.gantt()
+        ints(len(chart))
+        for name,first,last in chart:string(name);ints(first,last)
+        marks=programme.tags(sys.modules[__name__])
+        ints(len(marks))
+        for first,last,day,title,note,which in marks:
+            ints(first,last);string(day);string(title);string(note);ints(len(which),*which)
         for m in scene.meshes:
             ints(len(m.tris),int(m.terrain),getattr(m,"material",0))
             for a,b,c,col in m.tris:
@@ -692,6 +714,7 @@ def render_data(scene,path):
                 connected=sum(care.extent(w,j)>.995 for j in range(TOTAL))+int(care.extent(w,care.BAD,True)>.995)
             ints(installed,connected)
             ints(bisect.bisect_right(fixings,frame))
+            ints(*[scene.counts[name][frame] for name in programme.COUNTERS])
 
 
 if __name__=="__main__":

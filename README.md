@@ -1,10 +1,10 @@
 # GPU Silo
 
-[![The finished GPU Silo with its roof stacks and ten screened dry cooler frames](docs/animation.jpg)](../../releases/latest/download/GPU_Silo.mp4)
+[![The finished GPU Silo with its roof stacks, ten screened dry cooler frames, the haul ring and the fuel farm](docs/animation.jpg)](../../releases/latest/download/GPU_Silo.mp4)
 
 **[Watch the animation · MP4](../../releases/latest/download/GPU_Silo.mp4)** · [Animated 3D model · GLB](../../releases/latest/download/GPU_Silo.glb) · [All versions](../../releases)
 
-A 32 m concrete silo that houses, powers and liquid-cools 256 NVIDIA Vera Rubin GPU racks, a 50 MW cluster. The racks sit four to a pod in 64 **4SU** pods on eight levels around a central shaft. Each pod carries its own CDU and pump and plugs into a water-glycol store held between the silo's two concrete walls. Thirty 2 MW dry coolers on ten screened steel frames hang on the outside of the wall and reject the heat. Two in-line 25 MW gas turbine sets sit side by side above the pods under the lid, burn propane from eight tanks beside the silo and feed the pods down the central shaft. Four backup diesel sets sit on the level below them.
+A 32 m concrete silo that houses, powers and liquid-cools 256 NVIDIA Vera Rubin GPU racks, a 50 MW cluster. The racks sit four to a pod in 64 **4SU** pods on eight levels around a central shaft. Each pod carries its own CDU and pump and plugs into a water-glycol store held between the silo's two concrete walls. Thirty 2 MW dry coolers on ten screened steel frames hang on the outside of the wall and reject the heat. Two in-line 25 MW gas turbine sets sit side by side above the pods under the lid, burn propane from eight tanks beside the silo and feed the pods down the central shaft. Four backup diesel sets sit on the level below them. Everything arrives by truck on a one-way haul ring, and the build is laid out to finish 28 days after the last concrete is poured.
 
 The animation is the working drawing for this project. Design decisions are made by looking at it, and every dimension in it comes from one file, [design/project.json](design/project.json). The repository holds that file, the [calculations](design/calcs.md) generated from it, the [decisions](design/README.md) and the code that turns them into the film. Anyone can propose a design idea and see it rendered.
 
@@ -21,31 +21,34 @@ The animation is the working drawing for this project. Design decisions are made
 | Backup | 4 × 2.5 MW diesel sets on the level below, day tanks inside, 64 m³ bulk tank outside |
 | Fuel | 8 propane tanks of 20 m, 913 m³, about 43 h at full load, one 200 mm line |
 | Roof | 2 turbine exhaust stacks, 2 air inlet houses, diesel exhausts and room vents |
+| Trucking | 32 pod trucks at 2 pods each, 312 water tankers, 30 cooler trucks, 26 propane transports, 140 mixers for the walls |
+| Programme | Walls in 10 daily lifts by a crew of 22, then 28 days to handover as the concrete reaches full strength |
 
-These figures are written by `python -m gpu_silo calcs` and also appear on screen throughout the film. The [calculations](design/calcs.md#8-open-questions-raised-by-these-numbers) list the open questions they raise. The largest are the wall design, no spare turbine, heat from the turbines next to the pods and the store, and air for people working in the bore.
+These figures are written by `python -m gpu_silo calcs` and also appear on screen throughout the film. The [calculations](design/calcs.md#10-open-questions-raised-by-these-numbers) list the open questions they raise. The largest are the wall design, no spare turbine, heat from the turbines next to the pods and the store, and air for people working in the bore.
 
 ### Find it in the movie
 
 | Scene | Time |
 | --- | ---: |
-| Jumpform the double-wall shell and cast the pod sleeves, frame anchors and conduits | 0:00 |
-| Two crawlers lower the steel pod cage with its walkway rings | 0:25 |
-| Water-glycol fills the wall gap to the top | 0:40 |
-| A flatbed delivers three 4SU pods with their light-grey CDU and pump sections | 0:47 |
+| Jumpform the double-wall shell: the form system, a crew of 22 and truck mixers at the pump | 0:00 |
+| Two crawlers lower the steel pod cage while water tankers and cooler trucks start arriving | 0:25 |
+| Water-glycol fills the wall gap to the top from three tanker bays | 0:40 |
+| Receiving dock: trucks back in with two 4SU pods each and the gantry lifts them onto the rail | 0:47 |
 | Lift the first 4SU | 1:01 |
-| The retained crawler hangs the ten screened cooler frames while the pods load | 1:09 |
+| The retained crawler hangs the ten screened cooler frames while the pods load and the trucks keep coming | 1:09 |
 | Run the lower six levels at 3× | 1:30 |
 | Lower the backup diesel level | 1:52 |
 | Lower the turbine level: two in-line 25 MW sets side by side | 2:04 |
 | Close the lid with its exhaust stacks and air inlet houses | 2:12 |
 | Crews ride the wedge platforms to the pods | 2:19 |
 | The side of turbine set A folds down to show its 25 MW gas turbine | 2:36 |
-| Finished silo, design basis and a full exterior orbit | 2:50 |
-| Eight propane tanks, the diesel tank and the fuel lines to the power levels | 3:12 |
-| Plan view of the cooling loop, with narration | 3:29 |
-| Section showing power, water-glycol, gas and diesel | 4:04 |
-| Replace a faulty 4SU on Level 6 | 4:30 |
-| Wide shot: the crawler lowers cooler frame 09, swaps one cooler and hangs it back | 4:44 |
+| Finished silo on day 28, design basis, the 28-day programme and a full exterior orbit | 2:50 |
+| Trucks bring eight propane tanks and the diesel tank | 3:12 |
+| Propane transports fill the tanks and the fuel lines run to the power levels | 3:27 |
+| Plan view of the cooling loop, with narration | 3:36 |
+| Section showing power, water-glycol, gas and diesel | 4:11 |
+| Replace a faulty 4SU on Level 6 | 4:37 |
+| Wide shot: the crawler lowers cooler frame 09, swaps one cooler and hangs it back | 4:50 |
 
 [Scene guide](docs/sequence.md)
 
@@ -61,8 +64,8 @@ These figures are written by `python -m gpu_silo calcs` and also appear on scree
 
 | Path | Contents |
 | --- | --- |
-| [design/project.json](design/project.json) | Every design input: cluster, silo, pod, store, coolers, power, diesel, fuel, installation and film |
-| [design/calcs.md](design/calcs.md) | Heat load, store, flows, coolers and spares, the fit of the power levels, roof vents, propane line size and fuel run times. Generated from the inputs. |
+| [design/project.json](design/project.json) | Every design input: cluster, silo, pod, store, coolers, power, diesel, fuel, installation, trucking, site roads, jumpform crew, programme and film |
+| [design/calcs.md](design/calcs.md) | Heat load, store, flows, coolers and spares, the fit of the power levels, roof vents, propane line size, fuel run times, truck loads, the roads and staging areas, and the 28-day programme. Generated from the inputs. |
 | [design/narration.json](design/narration.json) · [audio/](audio) | The narration script and its recording |
 | [design/README.md](design/README.md) | The current decision for each part of the design and where to change it |
 | [design/history.md](design/history.md) | Dated decision log, including what each decision replaced |
