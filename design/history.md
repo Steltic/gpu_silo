@@ -55,6 +55,10 @@ Add a dated entry when a choice changes. Say what the viewer should see, the dim
 | 2026-11-17 | Build spread over the 28 days | The activities are spread across the 28 days and commissioning is deleted. It goes to others after day 28. | A programme that finished early with a commissioning period | Programme chart at 2:44, [calculations](calcs.md#9-programme) |
 | 2026-11-17 | Site fabrication | The diesel level and the turbine level are fabricated on site: steel work and welding, then the sets landed on the decks. | Power levels arriving complete | Short film 1:52 |
 | 2026-11-17 | Plan and section together | The closing scene shows the plan and the section side by side with no voice-over. In the section the hot and cold streams disperse in the store as they do in the plan. The plan shows one level of cooler units. | Separate narrated plan and silent section | Short film 3:07 |
+| 2026-11-21 | Design checks and a design report | Six design checks are worked through in order to give confidence in the predicted performance: steel shaft, pod trusses, silo wall thickness, foundation, heat balance of the store, and the pod connection with the drive. They are written up as a professional design report in the repository, to US steel specifications. | Calculations without a structural report | [Design report](report.md) |
+| 2026-11-21 | Access round the shaft cut to 0.5 m | The access round the steel shaft is kept but narrowed to 0.5 m. The grey CDU and pump section is extended to fill the gap this leaves between the pod and the silo wall. | 2.28 m walkway ring and a 0.5 m grey section | Both films, every pod scene. [Report 3.4](report.md#34-geometry) |
+| 2026-11-21 | Pod carried by a cantilevered welded truss | Each pod is a cantilevered steel truss, fully welded, carrying the distributed weight of the racks, coolant and pump. It is designed to a limit on the downward deflection of the tip. Chords are rectangular hollow sections with the long side vertical. | An undesigned frame with a weight allowance | Both films, every pod. [Report 4](report.md#4-check-2-pod-truss) |
+| 2026-11-21 | Fixed base for the shaft | The base of the shaft is to be a very heavy fixed connection to the foundation, because of the out-of-balance loads. | Base not considered | [Report 5](report.md#5-check-1-central-shaft-design-loads) |
 
 ## Assumptions made while applying these decisions
 
@@ -124,6 +128,19 @@ These were needed to draw the decisions. Each one is an input in [project.json](
 | 2026-11-17 | In the short film the store is dry while the pods load and reaches the rim in the last frames of the sweep. | Water last. | [pod_scene.py](../gpu_silo/pod_scene.py) |
 | 2026-11-17 | Days of jumpforming run at about twice the long film's pace in the short film. | A cage module has to arrive, be welded, be lifted and be welded on within each day. | [silo_model.py](../gpu_silo/silo_model.py) |
 | 2026-11-17 | The long film is not re-cut. It still fills the store before the pods and has no cage build, liner or site fabrication, so its day tags no longer run in order. | "No need for the short to match the long." | [programme.py](../gpu_silo/programme.py) |
+| 2026-11-21 | Tip deflection limit of span/1,000 for the truss alone. | No limit was given. The tip carries the wall coupling, whose tolerance is not known. The report shows what other limits need. | `structure.pod_truss` |
+| 2026-11-21 | AISC 360-22 LRFD, ASCE 7-22, ASTM A500 Grade C hollow sections. | US steel specifications. | `structure` |
+| 2026-11-21 | Hollow-section chords, not I-sections. | A chord has 80 mm beside the racks, and no rolled W-shape is that narrow. | [Report 4.1](report.md#41-description) |
+| 2026-11-21 | One truss panel to a rack, two panels over the CDU and pump section, tension diagonals. | So each rack bears on panel points and the long web members are in tension. | [structure.py](../gpu_silo/structure.py) |
+| 2026-11-21 | 0.4 t of coolant and piping a pod, and 10 kg/m² of housing. The frame weight is now calculated. | The load was described as racks, coolant and pump. Neither figure is from a supplier. | `pod`, `structure.pod_truss` |
+| 2026-11-21 | The CDU and pump stay at 0.6 t although their section is 2.28 m long. | Only the enclosure was extended. | `pod` |
+| 2026-11-21 | The pod frame is square at the root. The plan taper at the nose is removed. | The racks are square-ended and the trusses run parallel. This leaves 25 mm between frames at the roots when bunched. | [cargo.py](../gpu_silo/cargo.py), [calcs.md](calcs.md#clearance-at-the-pod-roots) |
+| 2026-11-21 | The root radius and the length of the CDU and pump section are derived from the access and the tip clearance. | So the grey section always fills the gap when the access changes. | [design.py](../gpu_silo/design.py) |
+| 2026-11-21 | The hoist picks a pod up at panel points 1 and 4. | The pickups have to be at panel points and either side of the centre of gravity. | `structure.pod_truss` |
+| 2026-11-21 | Pods travel two side by side on a flatbed. | Two 7.28 m pods no longer fit end to end on a 14.6 m deck. | [calcs.md](calcs.md#pods-the-heaviest-legal-load) |
+| 2026-11-21 | The gangway from the shaft to each wedge deck now starts 2.04 m from the axis. | Inside that radius the pods are too close together to pass between. | [pod_scene.py](../gpu_silo/pod_scene.py) |
+| 2026-11-21 | The shaft is taken as fixed, with each level turning on it, when working out the loads. | This is what the animation shows. It is to be confirmed under check 6. | [Report 5.1](report.md#51-arrangement-assumed) |
+| 2026-11-21 | A 50 mm wall and a 5 mm tip drop are used to look ahead at the lean of the shaft. | Trial values for a comparison, not design values. | `structure.shaft_look_ahead` |
 
 ## Open questions
 

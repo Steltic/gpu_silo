@@ -30,10 +30,13 @@ FRAME_WIDTH = round(BODY_WIDTH + POD["frame_extra_width_m"], 8)
 FRAME_HEIGHT = round(BODY_HEIGHT + POD["frame_extra_height_m"], 8)
 DOOR_WIDTH = round(FRAME_WIDTH + 2 * POD["intake_clearance_each_side_m"], 8)
 DOOR_HEIGHT = round(FRAME_HEIGHT + POD["intake_clearance_overhead_m"], 8)
-SECTION = float(POD["cdu_pump_section_m"])
-SECTIONS = {int(i): float(v) for i, v in POD["cdu_pump_section_m_by_unit"].items()}
 OUTSIDE_R = SILO["outside_diameter_m"] / 2
 BORE_R = SILO["inside_diameter_m"] / 2
+# The pods start at the edge of the access round the shaft, and the CDU and pump section fills the pod out to the tip clearance.
+STORE["root_radius_m"] = round(STORE["shaft_radius_m"] + STORE["shaft_access_m"], 8)
+POD["cdu_pump_section_m"] = round(BORE_R - POD["tip_clearance_m"] - STORE["root_radius_m"] - BODY_LENGTH, 8)
+SECTION = float(POD["cdu_pump_section_m"])
+SECTIONS = {int(i): float(v) for i, v in POD["cdu_pump_section_m_by_unit"].items()}
 WALL_GAP = round(OUTSIDE_R - BORE_R - SILO["outer_wall_m"] - SILO["inner_wall_m"], 8)
 CROWN = STORE["crown_m"]
 LIQUID_TOP = round(SILO["height_m"] - FLUID["freeboard_m"], 8)

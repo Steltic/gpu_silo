@@ -112,7 +112,7 @@ partial class Shot {
         const int x=24,xr=222;
         int t=frame-d.Terminal,landed=Math.Min(d.Cradles,d.Frames[frame].Loads[4]);
         g.FillRectangle(accent,x,33,25,3);Text(g,"GROUND LOGISTICS",section,muted,x,46);
-        Heading(g,"Pod dock",x-2,73);Text(g,d.PodsPerTruck+" a truck, limited by weight",title2,muted,x,126);
+        Heading(g,"Pod dock",x-2,73);Text(g,d.PodsPerTruck+" to a flatbed truck",title2,muted,x,126);
         Rule(g,x,164,xr,164,cLine,1);Text(g,"PODS ON RAIL",section,muted,x,183);
         g.DrawString(landed+" / "+d.Cradles,numbers,ink,new PointF(xr,169),rightText);
         g.FillRectangle(light,x,211,xr-x,5);g.FillRectangle(waterBrush,x,211,(xr-x)*landed/d.Cradles,5);

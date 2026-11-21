@@ -1,4 +1,7 @@
-"""Bronze four-rack housing, its graphite-steel cantilever frame and the grey CDU and pump section."""
+"""Bronze four-rack housing, the grey CDU and pump section, and the two welded side trusses that carry them.
+
+The trusses are drawn from the design in structure.py: the same panel points, chords and web members.
+"""
 from . import design as cfg
 
 import math
@@ -8,7 +11,8 @@ INNER=cfg.STORE["root_radius_m"]
 LENGTH,BODY_WIDTH,BODY_HEIGHT=cfg.BODY_LENGTH,cfg.BODY_WIDTH,cfg.BODY_HEIGHT
 OUTER=INNER+LENGTH
 FRAME_WIDTH,FRAME_HEIGHT=cfg.FRAME_WIDTH,cfg.FRAME_HEIGHT
-NOSE_HALF=.277*FRAME_WIDTH/.76
+# The racks are square-ended, so the frame keeps its full width to the root.
+NOSE_HALF=FRAME_WIDTH/2
 TAPER=.84*LENGTH/5.
 PROFILE=[(INNER,NOSE_HALF),(INNER+TAPER,FRAME_WIDTH/2),(OUTER,FRAME_WIDTH/2)]
 BODY_MESH=cfg.NAME+" pod | bronze rack housing and twin cantilever trusses"
@@ -36,7 +40,7 @@ def prism(m,outline,z0,z1,col):
 
 
 def nominal_half_width(x):
-    return .277+min(1.,max(0.,(x-.86)/.84))*(.38-.277)
+    return .38
 
 
 def longitudinal(m,x0,x1,side,z0,z1,thick,col):
@@ -70,7 +74,7 @@ def mesh(status="normal",extra=0.):
     a,b=.86,5.86
     body_faces=set()
     # The 2.30 m rack housing sits between the top and bottom chords.
-    core=[(a,-.185),(a+.84,-.286),(b,-.286),(b,.286),(a+.84,.286),(a,.185)]
+    core=[(a,-.286),(a+.84,-.286),(b,-.286),(b,.286),(a+.84,.286),(a,.286)]
     prism(m,core,.05,2.35,"25272e")
     body_faces.update(range(len(m.tris)))
     for side in (-1,1):
@@ -78,7 +82,7 @@ def mesh(status="normal",extra=0.):
         for i in range(8):
             x0=a+.13+i*.594;x1=x0+.545
             def skin(x,z,out=0.):
-                h=min(.30,.202+.098*max(0,min(1,(x-a)/.84)))
+                h=.30
                 # Recess the inner panels into the dark body with a shallow crown.
                 return (x,side*min(.30,h+.0005+out),z)
             def face(points,c):
@@ -96,18 +100,6 @@ def mesh(status="normal",extra=0.):
             face([(x0,2.04,0),(x1,2.04,0),(x1,2.19,0),(x0,2.19,0)],"534a39")
             face([(x0+.07,2.13,0),(x1-.07,2.13,0),(x1-.07,2.17,0),(x0+.07,2.17,0)],"b7a16d")
         body_faces.update(range(start,len(m.tris)))
-        for x0,x1 in ((a,a+.84),(a+.84,b)):
-            longitudinal(m,x0,x1,side,0,.11,.058,FRAME)
-            longitudinal(m,x0,x1,side,2.29,2.40,.058,EDGE)
-        spans=(a+.055,a+.84,a+1.91,a+2.91,a+3.91,b-.052)
-        for j,x in enumerate(spans):
-            longitudinal(m,x-.045,x+.045,side,.095,2.305,.06,FRAME)
-            if j+1<len(spans):
-                brace(m,x+.005,.145 if j%2==0 else 2.255,spans[j+1]-.005,2.255 if j%2==0 else .145,side,"667076")
-    for x in (a+.055,a+.84,a+2.60,b-.055):
-        w=nominal_half_width(x)-.021
-        s.box(m,x-.052,-w,x+.052,w,2.30,2.397,FRAME)
-        s.box(m,x-.052,-w,x+.052,w,.007,.10,FRAME)
     # End fascia and status plates. The bronze panels stay recognisable in
     # each state, including the isolated pod and the spare.
     accent={"normal":"a58f66","fault":"e99748","spare":"5eb7a5"}[status]
@@ -132,13 +124,53 @@ def mesh(status="normal",extra=0.):
         bottom=(FRAME_HEIGHT-BODY_HEIGHT)/2
         prism(m,[(OUTER,-half),(OUTER+extra,-half),(OUTER+extra,half),(OUTER,half)],
               bottom,bottom+BODY_HEIGHT,colour)
+    trusses(m,extra)
     return m
 
 
+def stations(extra):
+    """Panel points from the root: one panel to a rack, then the CDU and pump section."""
+    from . import structure
+    racks=cfg.CLUSTER["racks_per_pod"];panels=structure.T["cdu_panels"] if extra>1e-6 else 0
+    return [i*LENGTH/racks for i in range(racks+1)]+[LENGTH+(i+1)*extra/panels for i in range(panels)]
+
+
+def trusses(m,extra):
+    """Two side trusses as designed: HSS chords with the long side vertical, verticals at every panel point and tension diagonals."""
+    from . import structure
+    design=structure.C["design"]
+    chord,web,cross=design["chord"],design["web"],structure.CROSS
+    xs=[INNER+x for x in stations(extra)]
+    deep,wide,size=chord["h"],chord["b"],web["b"]
+    top=FRAME_HEIGHT
+    for side in (-1,1):
+        y0,y1=sorted((side*(FRAME_WIDTH/2-wide),side*FRAME_WIDTH/2))
+        y=(y0+y1)/2
+        outline=[(xs[0],y0),(xs[-1],y0),(xs[-1],y1),(xs[0],y1)]
+        prism(m,outline,0,deep,FRAME)
+        prism(m,outline,top-deep,top,EDGE)
+        for i,x in enumerate(xs):
+            at=min(max(x,xs[0]+size/2),xs[-1]-size/2)
+            s.bar(m,(at,y,deep),(at,y,top-deep),size,FRAME,size)
+            if i+1<len(xs):
+                s.bar(m,(at+size/2,y,top-deep),(xs[i+1]-size/2,y,deep),size,"667076",size)
+    inside=FRAME_WIDTH/2-wide
+    for i,x in enumerate(xs):
+        at=min(max(x,xs[0]+cross["b"]/2),xs[-1]-cross["b"]/2)
+        for z in (deep/2,top-deep/2):
+            s.bar(m,(at,-inside,z),(at,inside,z),cross["b"],FRAME,cross["b"])
+            if i+1<len(xs):
+                # Plan bracing, one diagonal a panel, turns the two trusses into a box.
+                side=1 if i%2 else -1
+                s.bar(m,(at+cross["b"]/2,side*inside,z),(xs[i+1]-cross["b"]/2,-side*inside,z),cross["b"],FRAME,cross["b"])
+
+
 def root_dock():
+    """The root connection on the hub: the upper clevis takes the pull and the weight, the lower bearing takes the thrust."""
     m=s.Mesh("Cantilever root | upper clevis and lower bearing");m.material=3
+    x0=cfg.STORE["shaft_radius_m"]+.045;x1=INNER-.02
     for z in (-.075,FRAME_HEIGHT-.11):
-        s.box(m,.625,-.155,.915,.155,z,z+.078,"738184")
+        s.box(m,x0,-.155,x1,.155,z,z+.078,"738184")
         for y in (-.202,.161):
-            s.box(m,.69,y,.947,y+.041,z+.04,z+.115,"647278")
+            s.box(m,x0+.065,y,INNER+.03,y+.041,z+.04,z+.115,"647278")
     return m
