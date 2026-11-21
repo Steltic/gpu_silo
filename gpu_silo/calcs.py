@@ -9,6 +9,7 @@ from pathlib import Path
 
 from . import design as cfg
 from . import logistics
+from . import structure as st
 
 US_GAL = 0.003785411784  # m3
 G = 9.80665
@@ -184,6 +185,15 @@ def compute():
     c["pod_corner_r"] = math.hypot(c["pod_tip_r"], cfg.FRAME_WIDTH / 2)
     c["pod_clearance"] = ri - c["pod_corner_r"]
     c["store_height"] = cfg.LEVELS * cfg.STORE["pitch_m"]
+    # Clearances at the root of the pods, where they come closest to each other.
+    root, half = cfg.STORE["root_radius_m"], cfg.FRAME_WIDTH / 2
+    packed = math.radians(cfg.STORE["packed_pitch_degrees"])
+    lane = (2 * math.pi - (cfg.BAYS - 1) * packed) / 2
+    c["root_gap_packed"] = 2 * (root * math.sin(packed / 2) - half * math.cos(packed / 2))
+    c["root_gap_lane"] = root * math.sin(lane) - half * math.cos(lane) - half
+    c["root_gap_stored"] = 2 * (root * math.sin(math.pi / cfg.BAYS) - half * math.cos(math.pi / cfg.BAYS))
+    c["access_for_100"] = max((.05 + half * math.cos(packed / 2)) / math.sin(packed / 2),
+                              (.10 + half * (1 + math.cos(lane))) / math.sin(lane)) - cfg.STORE["shaft_radius_m"]
     return c
 
 
@@ -296,6 +306,8 @@ def markdown():
     word = {8:"Eight",10:"Ten"}.get(c["frames"], str(c["frames"]))
     trucking = trucking_markdown()
     lg = logistics.C
+    sc = st.C
+    sd = sc["design"]
     lines = f"""# Design calculations
 
 This file is generated from [project.json](project.json) by `python -m gpu_silo calcs`. Change an input, run the command and commit both files. The same numbers appear on the design panels in the animation.
@@ -409,13 +421,39 @@ At full flow the store turns over once every {c['turnover_min']:.0f} minutes.
 
 | Quantity | Value | Basis |
 | --- | ---: | --- |
-| {cfg.NAME} length | {c['pod_length']:.2f} m | {cfg.BODY_LENGTH:g} m rack housing + {cfg.SECTION:g} m CDU and pump section |
-| Root radius on the shaft | {cfg.STORE['root_radius_m']:.2f} m | input |
+| {cfg.NAME} length | {c['pod_length']:.2f} m | {cfg.BODY_LENGTH:g} m rack housing + {cfg.SECTION:g} m CDU and pump section, which fills the pod out to {cfg.POD['tip_clearance_m']*1000:.0f} mm from the wall |
+| Access round the shaft | {cfg.STORE['shaft_access_m']:.2f} m | input |
+| Root radius | {cfg.STORE['root_radius_m']:.2f} m | {cfg.STORE['shaft_radius_m']:g} m shaft radius + access |
 | Wall-end radius | {c['pod_tip_r']:.2f} m | |
 | Corner radius of the rotating frame | {c['pod_corner_r']:.3f} m | {cfg.FRAME_WIDTH:.2f} m wide frame |
 | Clear bore radius | {cfg.BORE_R:.2f} m | |
 | **Radial clearance** | **{c['pod_clearance']*1000:.0f} mm** | bore − corner |
 | Storage height | {c['store_height']:.1f} m | {cfg.LEVELS} levels × {cfg.STORE['pitch_m']:g} m |
+
+### Clearance at the pod roots
+
+The pods come closest to each other at their roots, and a narrower access round the shaft brings the roots closer together.
+
+| Quantity | Value | Basis |
+| --- | ---: | --- |
+| Between frames, stored at {360/cfg.BAYS:g}° | {c['root_gap_stored']*1000:.0f} mm | at the root corners |
+| Between frames, bunched at {cfg.STORE['packed_pitch_degrees']:g}° | {c['root_gap_packed']*1000:.0f} mm | at the root corners |
+| Between a pod being lifted and the pods either side of the lifting lane | {c['root_gap_lane']*1000:.0f} mm | lane {360-(cfg.BAYS-1)*cfg.STORE['packed_pitch_degrees']:g}° wide between centre lines |
+| Access that would give 100 mm in both cases | {c['access_for_100']:.2f} m | |
+
+### Pod structure and weight
+
+The side trusses are sized in the [design report](report.md#4-check-2-pod-truss). The numbers below come from that design.
+
+| Quantity | Value | Basis |
+| --- | ---: | --- |
+| Chords | {sd['chord']['name']} | long side vertical, {st.STEEL['hss']} |
+| Verticals and diagonals | {sd['web']['name']} | |
+| Tip deflection under dead load | {sd['tip']*1000:.1f} mm | span/{st.SPAN/sd['tip']:,.0f}; limit span/{st.T['tip_deflection_span_over']:,} = {sc['limit']*1000:.1f} mm |
+| Frame and housing | {sd['frame']/1000:.2f} t | {sd['steel']/1000:.2f} t of steel, {sd['connections']/1000:.2f} t of connections, {sd['housing']/1000:.2f} t of housing |
+| **One pod, operating** | **{sc['pod_t']:.2f} t** | {cfg.CLUSTER['racks_per_pod']} racks × {cfg.POD['rack_mass_t']:g} t, {cfg.POD['cdu_pump_mass_t']:g} t of CDU and pump, {cfg.POD['coolant_and_piping_t']:g} t of coolant and piping, frame and housing |
+| Moment of one pod about the shaft axis | {sc['moment_axis']/1000:,.0f} kN·m | centre of gravity {sc['arm']:.2f} m from the axis |
+| Weight on the shaft, {cfg.TOTAL} pods | {sc['store_weight']/1000:,.0f} kN | {cfg.TOTAL*sc['pod_t']:,.0f} t |
 
 ## 6. Power
 
@@ -499,8 +537,8 @@ The backup covers black start, controls, the cooling plant and about a fifth of 
 9. **Lifts.** Each power level is shown lowered as one assembly. The crane, the lifting sequence and the removal route for a turbine or generator are not designed.
 10. **Fuel.** {n(c['fuel_m3'])} m³ of propane runs the site for about {c['fuel_hours']:.0f} hours. Separation distances, bunding, the vaporiser and the resupply rate have not been checked. Fuel stored inside is limited to the day tanks, and the limit that applies has not been checked.
 11. **Power in the shaft.** {c['heat_mw']:.0f} MW passes down the steel shaft to {c['pods']} pods, {c['pod_kw']:.0f} kW each. The busbar, its cooling and the connection at each level are not designed.
-12. **Pod support.** The pods now hang {cfg.STORE['root_radius_m']-cfg.STORE['shaft_radius_m']:.1f} m out from the shaft with a walkway ring between. The carrier ring and its arms are not designed.
-13. **Pod weight.** {lg['pod_t']:.1f} t per pod is an allowance, and it sets the load at {lg['pods_per_truck']} pods a truck. NVIDIA has not published a shipping weight for this rack. Three pods would travel together only if a pod weighed under {cfg.PROJECT['logistics']['flatbed']['payload_t']/3:.1f} t.
+12. **Pod support.** The pod trusses are sized in the [design report](report.md). The shaft, its base, the hub at each level, the root connection and the drive are checks 1 and 6 of that report and are not designed yet. With {cfg.STORE['shaft_access_m']:g} m of access the pod frames pass within {min(c['root_gap_packed'],c['root_gap_lane'])*1000:.0f} mm of each other at their roots.
+13. **Pod weight.** A pod weighs {lg['pod_t']:.1f} t with the frame as designed. The rack, CDU and coolant weights in it are allowances: NVIDIA has not published a shipping weight for this rack. The load is {lg['pods_per_truck']} pods a truck, side by side, because a {st.SPAN:.2f} m pod no longer fits twice along the deck.
 14. **Liner and fill.** The liner goes on from day {logistics.BY_KEY['coating']['start']}, when the youngest concrete is {lg['coat_age_min']} days old, and the fill starts on day {logistics.BY_KEY['water']['start']}. Most coatings ask for 28-day-old, dry concrete, so the liner system and its moisture limits need a supplier's check. The pod sleeves, frame conduits and the door blockout all pass through the liner and need detailing.
 15. **A lift a day.** {cfg.PROJECT['jumpform']['lifts_per_day']:g} lift a day is fast for a jumpform. Slower lifts lengthen the work before day 0 and leave the {logistics.DAYS} days after it unchanged.
 16. **Fuel line across the ring.** The propane and diesel lines run on the ground from the tanks to the wall and cross both ring lanes. They need to be buried or bridged there.
@@ -516,6 +554,7 @@ The backup covers black start, controls, the cooling plant and about a fifth of 
 def trucking_markdown():
     lg, L, P = logistics.C, cfg.PROJECT["logistics"], cfg.PROJECT
     flat, w, site = L["flatbed"], L["water"], L["site"]
+    sd = st.C["design"]
     fu = P["fuel"]
     coat = P["coating"]
     hours = L["working_hours_per_day"]
@@ -540,11 +579,11 @@ After the last pour {n(lg['loads_after_pour'])} loads arrive in {logistics.DAYS}
 
 | Quantity | Value | Basis |
 | --- | ---: | --- |
-| One {cfg.NAME} pod | {lg['pod_t']:.1f} t | {cfg.CLUSTER['racks_per_pod']} racks × {cfg.POD['rack_mass_t']:g} t, {cfg.POD['frame_mass_t']:g} t of frame and housing, {cfg.POD['cdu_pump_mass_t']:g} t of CDU and pump |
+| One {cfg.NAME} pod | {lg['pod_t']:.1f} t | {cfg.CLUSTER['racks_per_pod']} racks × {cfg.POD['rack_mass_t']:g} t, {sd['frame']/1000:.2f} t of frame and housing as designed, {cfg.POD['cdu_pump_mass_t']:g} t of CDU and pump, {cfg.POD['coolant_and_piping_t']:g} t of coolant and piping |
 | Flatbed | {flat['deck_length_m']:g} × {flat['deck_width_m']:g} m deck, {flat['payload_t']:g} t payload | five-axle tractor and trailer |
 | Pods that fit on the deck | {lg['pods_by_space']} | {lg['deck_rows']} end to end × {lg['deck_across']} across |
 | Pods the payload allows | {lg['pods_by_weight']} | {lg['pods_by_weight']} × {lg['pod_t']:.1f} t = {lg['pods_by_weight']*lg['pod_t']:.1f} t |
-| **Pods on each truck** | **{lg['pods_per_truck']}** | weight decides, not space |
+| **Pods on each truck** | **{lg['pods_per_truck']}** | {'weight decides, not space' if lg['pods_by_weight']<lg['pods_by_space'] else 'space decides, not weight' if lg['pods_by_space']<lg['pods_by_weight'] else 'space and weight agree'} |
 | Height on the road | {lg['pod_load_height']:.2f} m | limit {flat['legal_height_m']:g} m |
 | **Trucks for {cfg.TOTAL} pods** | **{lg['pod_trucks']}** | |
 
@@ -650,9 +689,12 @@ The walls take {lg['wall_days']:.0f} days at {P['jumpform']['lifts_per_day']:g} 
 
 
 def write(path=FILE):
+    from . import report
     Path(path).write_text(markdown(), encoding="utf-8", newline="\n")
+    report.write()
     return path
 
 
 def current(path=FILE):
-    return Path(path).is_file() and Path(path).read_text(encoding="utf-8") == markdown()
+    from . import report
+    return Path(path).is_file() and Path(path).read_text(encoding="utf-8") == markdown() and report.current()

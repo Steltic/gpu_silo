@@ -13,7 +13,8 @@ The animation is the working drawing for this project. Design decisions are made
 | Design basis | Value |
 | --- | ---: |
 | GPU racks | 256 × NVIDIA Vera Rubin NVL72, 195 kW each |
-| 4SU pods | 64, eight per level on eight levels, 5.5 m long, 2.77 m apart vertically |
+| 4SU pods | 64, eight per level on eight levels, 2.77 m apart vertically. Each is 7.28 m long and 8.84 t: 5 m of racks at the shaft end and a 2.28 m CDU and pump section out to the wall. |
+| Pod structure | Two welded side trusses, HSS4×3×3/16 chords and HSS2×2×3/16 web, cantilevering from the shaft. Tip deflection 5.3 mm. [Design report](design/report.md) |
 | CDUs and CDU pumps | 64 + 64, one of each per pod |
 | Liquid heat load | 50 MW |
 | Silo | 25 m outside, 17 m inside, 32 m high |
@@ -78,7 +79,7 @@ These figures are written by `python -m gpu_silo calcs` and also appear on scree
 2. **Or try it.** Edit a value in [design/project.json](design/project.json), run `python -m gpu_silo calcs` and open a pull request. The render check builds both films and their GLBs for review.
 3. **Record it.** An accepted change adds a line to the [decision log](design/history.md).
 
-[Contributor quick start](CONTRIBUTING.md) · [Design decisions](design/README.md) · [Design calculations](design/calcs.md) · [Decision log](design/history.md)
+[Contributor quick start](CONTRIBUTING.md) · [Design decisions](design/README.md) · [Design calculations](design/calcs.md) · [Structural design report](design/report.md) · [Decision log](design/history.md)
 
 ### What is in the repository
 
@@ -86,6 +87,7 @@ These figures are written by `python -m gpu_silo calcs` and also appear on scree
 | --- | --- |
 | [design/project.json](design/project.json) | Every design input: cluster, silo, pod, store, coolers, power, diesel, fuel, installation, trucking, site roads, jumpform crew, programme and film |
 | [design/calcs.md](design/calcs.md) | Heat load, store, flows, coolers and spares, the fit of the power levels, roof vents, propane line size, fuel run times, truck loads, the store liner, the roads and staging areas, and the 28-day programme. Generated from the inputs. |
+| [design/report.md](design/report.md) | Structural design report: the register of design checks, the basis of design and each check as it is completed. Generated from the inputs. |
 | [design/narration.json](design/narration.json) · [audio/](audio) | The narration script and its recording |
 | [design/README.md](design/README.md) | The current decision for each part of the design and where to change it |
 | [design/history.md](design/history.md) | Dated decision log, including what each decision replaced |

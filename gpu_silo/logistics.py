@@ -6,6 +6,7 @@ strength on day 28, and the programme is laid out so the crew leaves that day.
 import math
 
 from . import design as cfg
+from . import structure
 
 L = cfg.PROJECT["logistics"]
 S = cfg.PROJECT["schedule"]
@@ -27,7 +28,7 @@ def compute():
     di, pw, co = cfg.PROJECT["diesel"], cfg.POWER, cfg.COOL
     flat = L["flatbed"]
     # Pods: weight decides the load, not the deck.
-    c["pod_t"] = cfg.CLUSTER["racks_per_pod"] * pod["rack_mass_t"] + pod["frame_mass_t"] + pod["cdu_pump_mass_t"]
+    c["pod_t"] = structure.C["pod_t"]
     length = cfg.BODY_LENGTH + cfg.SECTION
     gap = L["pods"]["load_gap_m"]
     c["deck_rows"] = int((flat["deck_length_m"] + gap) // (length + gap))

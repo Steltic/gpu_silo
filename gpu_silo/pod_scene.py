@@ -28,6 +28,7 @@ from . import film
 from . import cagebuild
 from . import coating
 from . import shortfilm
+from . import structure
 from . import traffic
 from . import maintenance as care
 import sys
@@ -39,7 +40,7 @@ POD_L, POD_W, POD_H = cargo.LENGTH, cargo.BODY_WIDTH, cargo.BODY_HEIGHT
 LEVELS, BAYS, PITCH = cfg.LEVELS, cfg.BAYS, cfg.STORE["pitch_m"]
 TOTAL = LEVELS*BAYS
 INNER, OUTER = cargo.INNER, cargo.OUTER
-PICKUPS = (INNER+.158*POD_L, INNER+.838*POD_L)
+PICKUPS = tuple(INNER+cargo.stations(cfg.SECTION)[k] for k in structure.pickup_panels())
 RIM = s.RI-.052
 BASE = cfg.STORE["lowest_berth_m"]
 SHAFT, HEAD = cfg.STORE["shaft_radius_m"], cfg.CROWN-1.16
@@ -314,13 +315,15 @@ def cage_parts():
         z=level_z(level);m=parts[level-1]
         # A walkway ring between the shaft and the pod roots lets people pass from sector to sector.
         # It sits just under the pods, with a gangway out to each wedge deck.
-        annulus(m,SHAFT+.22,INNER-.10,z-.13,z-.09,"cfd3c8",n=40)
+        annulus(m,SHAFT+.22,INNER-.04,z-.13,z-.09,"cfd3c8",n=40)
         annulus(m,INNER-.12,INNER-.04,z-.20,z-.06,STEEL,n=40)
         annulus(m,INNER-.12,INNER-.08,z+.95,z+1.0,"ddb477",n=40)
         for j in range(BAYS):
             a=ENTRY+j*UNIFORM
             if level>1 or j:
-                s.bar(m,s.polar(INNER-.1,a,z-.11),s.polar(crew.PLATE_IN-.06,a,z-.11),.80,"cfd3c8",.04)
+                # The gangway starts where the pods on either side stand far enough apart to pass between them.
+                clear=(.43+cargo.FRAME_WIDTH/2*math.cos(UNIFORM/2))/math.sin(UNIFORM/2)
+                s.bar(m,s.polar(max(INNER-.1,clear),a,z-.11),s.polar(crew.PLATE_IN-.06,a,z-.11),.80,"cfd3c8",.04)
             s.bar(m,s.polar(.78,a+UNIFORM/2,z-.17),s.polar(INNER-.08,a+UNIFORM/2,z-.17),.12,STEEL,.10)
         annulus(m,.48,.792,z+cargo.FRAME_HEIGHT-.125,z+cargo.FRAME_HEIGHT-.03,STEEL,n=28)
         annulus(m,.46,.77,z-.18,z-.045,STEEL,n=28)

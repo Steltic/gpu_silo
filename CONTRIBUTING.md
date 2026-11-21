@@ -56,9 +56,15 @@ The panel text uses the first installed typeface from a short list (Georgia or L
 
 ### Try a one-value change
 
-In `pod`, change `"cdu_pump_section_m": 0.5` to `0.4`. Every 4SU becomes 5.4 m long, with 0.4 m of light grey beyond the 5 m bronze housing. The gantry pick, footprint, service plug and installed copy follow. Run `python -m gpu_silo calcs` and look at section 5 of the calculations: the clearance to the bore grows by 100 mm. Then run the checks and inspect the dock at 0:47.
+In `storage`, change `"shaft_access_m": 0.5` to `0.62`. Every 4SU starts 0.12 m further from the shaft and its light-grey CDU and pump section shortens to 2.16 m, so the wall end stays where it was. The trusses are sized again, and the pod weight, the loads on the shaft and the clearance at the pod roots follow in the calculations and the design report. The gantry pick, footprint, service plug and installed copy follow in the film. Run `python -m gpu_silo calcs` and look at section 5 of the calculations: the clearance at the pod roots grows from 25 mm to about 100 mm. Then run the checks and inspect the dock at 0:47.
 
 To change one unit only, add it to `cdu_pump_section_m_by_unit`, for example `{"1": 0.25}`. A pod too long for the bore is rejected with a message that says so.
+
+### The design report
+
+[design/report.md](design/report.md) is the structural design report. It is generated with the calculations by `python -m gpu_silo calcs`, so do not edit it by hand. The register of checks and the document details are `design_checks` in the design file. The analysis is in [gpu_silo/structure.py](gpu_silo/structure.py) and the wording, tables and figures are in [gpu_silo/report.py](gpu_silo/report.py).
+
+To add or revise a check, put the calculation and its own verification in `structure.py`, write it up in `report.py`, update the status in the register and raise the revision. `python -m gpu_silo calcs --check` fails if the report, a figure or the calculations no longer match the design file, or if a verification in `structure.py` does not hold.
 
 ### Narration
 

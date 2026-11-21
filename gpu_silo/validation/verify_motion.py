@@ -90,8 +90,16 @@ def main(path):
         assert bool(tip.any())==bool(p.cfg.extension(unit))
         if tip.any():
             prim=doc["meshes"][nodes[mesh_id]["mesh"]]["primitives"][0]
-            colour=acc[prim["attributes"]["COLOR_0"]][tip,:3]
-            assert np.all(colour==np.rint(np.array(p.cfg.linear_rgb(p.cfg.POD["cdu_pump_section_colour"]))*255))
+            colour=acc[prim["attributes"]["COLOR_0"]][:,:3]
+            # The grey CDU and pump section fills the pod from the rack housing to the wall end, inside the two trusses.
+            grey=np.all(colour==np.rint(np.array(p.cfg.linear_rgb(p.cfg.POD["cdu_pump_section_colour"]))*255),axis=1)
+            box=cube[grey];steel=cube[tip&~grey]
+            assert np.isclose(box[:,0].min(),p.OUTER) and np.isclose(box[:,0].max(),p.OUTER+p.cfg.extension(unit))
+            assert np.isclose(np.abs(box[:,1]).max(),p.cfg.BODY_WIDTH/2) and np.isclose(np.ptp(box[:,2]),p.cfg.BODY_HEIGHT)
+            chord=p.structure.C["design"]["chord"]["h"]
+            beside=np.abs(steel[:,1])>p.cfg.BODY_WIDTH/2-1e-6
+            across=(steel[:,2]<chord+1e-6)|(steel[:,2]>p.cargo.FRAME_HEIGHT-chord-1e-6)
+            assert len(steel) and np.all(beside|across),"truss steel must pass beside, above or below the CDU and pump section"
             assert np.isclose(cube[:,0].max(),p.OUTER+p.cfg.extension(unit))
     assert np.allclose(cube[:,0].min(),p.INNER)
     wall=points(names[f'Outer wall | lift {p.s.COUNT:02}'])
@@ -378,7 +386,9 @@ def walkways_and_fuel(p,a,doc,names,parents,get,points,ids,planar_overlap,roof,f
         z=p.level_z(level);ring=cage[(np.abs(cage[:,2]-(z-.09))<.002)]
         radii=np.linalg.norm(ring[:,:2],axis=1)
         assert radii.min()<p.SHAFT+.25 and p.INNER-.2<radii[radii<p.INNER].max()<p.INNER, "walkway ring missing"
-    assert p.INNER-p.SHAFT>1.8 and p.crew.PLATE_IN>p.INNER
+    # The access round the shaft is the width given in the design file, and the pod roots still clear each other when bunched.
+    assert abs(p.INNER-p.SHAFT-p.cfg.STORE["shaft_access_m"])<1e-9 and p.crew.PLATE_IN>p.INNER
+    assert p.calcs.C["root_gap_packed"]>0 and p.calcs.C["root_gap_lane"]>0,"the pod roots touch: widen the access round the shaft"
     # Fuel: every tank lands on the pad and each leg of the gas line is at full length at the end.
     fuel,closing=p.fuel,p.closing
     tanks=[names[f"Propane tank {j+1:02}"] for j in range(fuel.COUNT)]

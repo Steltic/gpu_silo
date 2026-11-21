@@ -12,8 +12,8 @@ def main():
     build.add_argument("--jobs", type=int, help="parallel render processes (default: one per CPU)")
     check = commands.add_parser("check", help="check an exported GLB against the working design")
     check.add_argument("model", nargs="?", type=Path, default=Path("renders/GPU_Silo.glb"))
-    calc = commands.add_parser("calcs", help="rewrite design/calcs.md from design/project.json")
-    calc.add_argument("--check", action="store_true", help="fail if design/calcs.md is out of date")
+    calc = commands.add_parser("calcs", help="rewrite design/calcs.md, design/report.md and its figures from design/project.json")
+    calc.add_argument("--check", action="store_true", help="fail if the generated design documents are out of date")
     still = commands.add_parser("stills", help="render review frames as PNG")
     still.add_argument("frames", nargs="+", type=int)
     still.add_argument("--output", type=Path, default=Path("renders/stills"))
@@ -32,13 +32,16 @@ def main():
         print(f"{path} ({seconds:.1f} s)")
         return
     if args.command == "calcs":
-        from . import calcs
+        from . import calcs, report, structure
         if args.check:
             if not calcs.current():
-                parser.exit(1, "design/calcs.md is out of date. Run: python -m gpu_silo calcs\n")
-            print("design/calcs.md matches design/project.json")
+                parser.exit(1, "design/calcs.md or design/report.md is out of date. Run: python -m gpu_silo calcs\n")
+            structure.check()
+            print("design/calcs.md and design/report.md match design/project.json")
             return
+        structure.check()
         print(calcs.write())
+        print(report.FILE)
         return
     if args.command == "build":
         from .render_project import build_project
@@ -53,10 +56,12 @@ def main():
         args.model = Path("renders") / (film.OUTPUT + ".glb")
     if not args.model.is_file():
         parser.error(f"Model not found at {args.model}. Build it first or supply a GLB path.")
-    from . import calcs
+    from . import calcs, structure
     from .validation import verify_frames, verify_logistics, verify_motion
     if not calcs.current():
-        parser.exit(1, "design/calcs.md is out of date. Run: python -m gpu_silo calcs\n")
+        parser.exit(1, "design/calcs.md or design/report.md is out of date. Run: python -m gpu_silo calcs\n")
+    structure.check()
+    print(structure.summary())
     verify_motion.main(args.model)
     verify_logistics.check(args.model)
     verify_frames.check(args.model)
