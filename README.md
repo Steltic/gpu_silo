@@ -19,7 +19,7 @@ The animation is the working drawing for this project. Design decisions are made
 | CDUs and CDU pumps | 64 + 64, one of each per pod |
 | Liquid heat load | 50 MW |
 | Silo | 25 m outside, 17 m inside, 32 m high |
-| Water-glycol store | 7,331 m³ (1.94 M US gal) between the walls, 97 minutes of full load on a 10 K swing |
+| Water-glycol store | 7,331 m³ (1.94 M US gal) between the walls, 97 minutes of full load on a 10 K swing. [Check 5](design/report.md#9-check-5-heat-balance-of-the-store) finds it has to run layered, cool below warm: 86 minutes with the coolers off, in any weather. |
 | Dry coolers | 30 × 2 MW in 10 screened steel frames, one pump each. 25 carry the load, 5 are spare. |
 | Power | 2 × 25 MW in-line gas turbine generator sets, side by side on the top level |
 | Backup | 4 × 2.5 MW diesel sets on the level below, day tanks inside, 64 m³ bulk tank outside |
@@ -88,7 +88,7 @@ These figures are written by `python -m gpu_silo calcs` and also appear on scree
 | --- | --- |
 | [design/project.json](design/project.json) | Every design input: cluster, silo, pod, store, coolers, power, diesel, fuel, installation, trucking, site roads, jumpform crew, programme and film |
 | [design/calcs.md](design/calcs.md) | Heat load, store, flows, coolers and spares, the fit of the power levels, roof vents, propane line size, fuel run times, truck loads, the store liner, the roads and staging areas, and the 28-day programme. Generated from the inputs. |
-| [design/report.md](design/report.md) | Structural design report: the register of design checks, the basis of design and each check as it is completed. Generated from the inputs. |
+| [design/report.md](design/report.md) | Design report: the register of design checks, the basis of design and each check as it is completed. So far the pod trusses, the shaft, the walls, the heat balance of the store and the choice of reinforcement. Generated from the inputs. |
 | [design/narration.json](design/narration.json) · [audio/](audio) | The narration script and its recording |
 | [design/README.md](design/README.md) | The current decision for each part of the design and where to change it |
 | [design/history.md](design/history.md) | Dated decision log, including what each decision replaced |

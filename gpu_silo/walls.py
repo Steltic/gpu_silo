@@ -46,11 +46,11 @@ def steps(value):
     return math.ceil(value / STEP - 1e-9) * STEP
 
 
-def arrangement(area):
-    """Fewest layers, then the smallest bar, that gives the steel area per metre within the spacing limits."""
-    for faces in range(1, W["max_layers_per_face"] + 1):
+def arrangement(area, bars=None, faces=None):
+    """Fewest layers, then the smallest bar, that gives the bar area per metre within the spacing limits."""
+    for faces in range(1, (faces or W["max_layers_per_face"]) + 1):
         layers = 2 * faces
-        for bar in BARS:
+        for bar in bars or BARS:
             spacing = math.floor(layers * bar["area"] / area * 100 + 1e-9) / 100       # down to 10 mm
             if spacing >= S_MIN - 1e-9:
                 spacing = min(spacing, S_MAX)
@@ -75,13 +75,16 @@ def fit(bars):
     return 2 * face + W["core_mm"] / 1000
 
 
-def crack_width(bars):
-    """Largest crack width in a member in direct tension, ACI 224.2R: w = 0.10 fs (dc A)^(1/3) × 10⁻³ in inches and ksi."""
+def crack_width(bars, stress=FS, modulus=ES, bond=1.):
+    """Largest crack width in a member in direct tension, ACI 224.2R: w = 0.10 fs (dc A)^(1/3) × 10⁻³ in inches and ksi.
+
+    The expression is for steel. For a bar of another modulus the stress is scaled to the same strain, and a bond factor applies.
+    """
     face = COVER + (bars["per_face"] * bars["bar"]["d"] + (bars["per_face"] - 1) * W["layer_gap_mm"] / 1000) / 2
     dc = COVER + bars["bar"]["d"] / 2
     effective = 2 * face * bars["spacing"] / bars["per_face"]
     inch = .0254
-    return .10 * (FS / 6.894757e6) * (dc / inch * effective / inch**2)**(1 / 3) * 1e-3 * inch
+    return bond * .10 * (stress * ES / modulus / 6.894757e6) * (dc / inch * effective / inch**2)**(1 / 3) * 1e-3 * inch
 
 
 def outer_lift(index, above):
@@ -123,7 +126,7 @@ def base(t, radius, p):
                 reach=1 / beta, bars=one_face(vertical))
 
 
-def buckling(t):
+def buckling(t, creep=None):
     """Elastic critical pressure of the inner wall, and the pressure allowed in design, for a thickness t.
 
     The critical pressure is that of a cylinder of moderate length held round at both ends (Donnell),
@@ -131,16 +134,16 @@ def buckling(t):
     """
     b = W["inner_wall_buckling"]
     radius = R_BORE + t / 2
-    modulus = EC / (1 + b["creep_coefficient"])
+    modulus = EC / (1 + (b["creep_coefficient"] if creep is None else creep))
     critical = .855 / (1 - NU * NU)**.75 * modulus * (t / radius)**2.5 * radius / HEIGHT
     return critical, b["strength_reduction"] * b["imperfection_factor"] * critical
 
 
-def inner_wall():
+def inner_wall(creep=None):
     """Uniform thickness for the inner wall: buckling under the pressure of the store, then crushing."""
     b = W["inner_wall_buckling"]
     p = pressure(0)
-    modulus = EC / (1 + b["creep_coefficient"])
+    modulus = EC / (1 + (b["creep_coefficient"] if creep is None else creep))
     t = T_MIN
     while True:
         radius = R_BORE + t / 2

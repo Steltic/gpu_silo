@@ -12,7 +12,8 @@ The films are rendered on request, so the published films can be behind the desi
 | Pod trusses with HSS6×3×3/16 chords | Yes | No, they show HSS4×3×3/16 |
 | Shaft connector, support rig shoes and the plates cast into the wall for both power levels | Yes | No |
 | Support rig steel set on days 4 and 5, before the pods, and the generator sets landed on it later | No. The model still lifts the rig in with the generator sets. To be re-cut. | No |
-| Wall thicknesses from check 3: outer wall 750 mm to 400 mm, inner wall 450 mm | No. A proposal in the design report, waiting for a decision. | No |
+| Proposed walls: outer wall 400 mm with stainless steel bars, inner wall 500 mm | No. A proposal in the design report, waiting for a decision. | No |
+| Pipes inside the store for layering, a cover on the store and an overflow, from check 5 | No. Waiting for a decision. | No |
 
 ## The build: silo_short
 
