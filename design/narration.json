@@ -13,8 +13,8 @@
         "show": "Every 4SU pod carries its own CDU and pump at the wall end."
       },
       {
-        "say": "That pump sends hot water-glycol through the inner wall, where it disperses into the store.",
-        "show": "That pump sends hot water-glycol through the inner wall, where it disperses into the store."
+        "say": "It draws cool liquid from the bottom of the store. A second pipe returns the warmed liquid to the top.",
+        "show": "Each CDU draws from the cool bottom layer and returns warm liquid to the top."
       },
       {
         "say": "Sixty-four pods put fifty megawatts of heat into the store this way.",
@@ -25,12 +25,12 @@
         "show": "Outside, every dry cooler has a pump of its own."
       },
       {
-        "say": "It draws liquid out of the store, cools it, and returns it cold at the outer wall.",
-        "show": "It draws liquid out of the store, cools it, and returns it cold at the outer wall."
+        "say": "It draws from the warm upper layer and returns cooled liquid to the bottom.",
+        "show": "The coolers draw from the warm upper layer and return cooled liquid to the bottom."
       },
       {
-        "say": "The cold stream disperses as well. Nothing is piped straight from a cooler to a pod.",
-        "show": "The cold stream disperses as well. Nothing is piped straight from a cooler to a pod."
+        "say": "Diffuser plates spread the flow sideways to keep the layers apart.",
+        "show": "Diffuser plates spread the flow sideways to keep the layers apart."
       },
       {
         "say": "The store between them lets heat collection and heat rejection run independently.",

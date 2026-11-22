@@ -18,6 +18,15 @@ def days(*keys):
     return f"DAY {first}" if first == last else f"DAYS {first} TO {last}"
 
 
+def rig_card():
+    from . import plant
+    return ("SHAFT SUPPORT","Top support rig","Bare steel before pod loading",
+            [("Wall mounts",str(plant.RIG["wall_mounts"])),("Collar arms",str(plant.RIG["arms"])),
+             ("Diesel sets",f"Day {logistics.BY_KEY['power']['start']} onward")],
+            [(clock.CAGE_END,"Rig the bare steel"),(clock.RIG_PICK+55,"Slew over the shaft"),
+             (clock.RIG_PICK+91,"Lower onto the mounts"),(clock.RIG_PICK+plant.PICK_LENGTH,"Shaft braced")])
+
+
 def tags(p):
     full = p.FILLED
     care = p.care
@@ -25,7 +34,8 @@ def tags(p):
     rows = [
         (0, p.C, days("walls"), f"Jumpform the walls, {cfg.PROJECT['jumpform']['lifts_per_day']:g} lift a day",
          f"Mixers {{a}} / {LG['wall_trucks']}, {LG['lift_trucks']} a lift", ("concrete",)),
-        (p.C, clock.STORE_FILL[0], days("cage"), "Lift in the pod cage", water + f", coolers {{b}} / {cfg.COOLERS}", ("water", "coolers")),
+        (p.C, clock.CAGE_END, days("cage"), "Lift in the pod cage", water + f", coolers {{b}} / {cfg.COOLERS}", ("water", "coolers")),
+        (clock.CAGE_END,clock.STORE_FILL[0],days("rig"),"Set the top support rig","Seat the collar and weld the shoes to the wall plates",()),
         (clock.STORE_FILL[0], clock.DELIVERY_AT, days("water"), "Water-glycol fill",
          water + f", {LG['water_per_day']:.0f} a day through {cfg.PROJECT['logistics']['water']['bays']} bays", ("water",)),
         (clock.DELIVERY_AT, p.FIRST_POD, f"DAY {logistics.BY_KEY['pods']['start']}", "First pods at the receiving dock",

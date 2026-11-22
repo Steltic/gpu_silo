@@ -9,7 +9,7 @@ using System.Drawing.Text;
 // and a section showing power, water-glycol and gas. Moving dashes show flow direction.
 partial class Shot {
     readonly Color cHot=Color.FromArgb(201,84,58),cCold=Color.FromArgb(52,122,178),cPower=Color.FromArgb(222,160,38),cGas=Color.FromArgb(98,150,70);
-    readonly Color cDrawn=Color.FromArgb(92,128,132),cDiesel=Color.FromArgb(150,74,54);
+    readonly Color cDiesel=Color.FromArgb(150,74,54);
     readonly Color cConcrete=Color.FromArgb(152,162,154),cSteel=Color.FromArgb(76,98,102),cBronze=Color.FromArgb(160,137,89),cGrey=Color.FromArgb(207,210,210);
     Bitmap sheet;
 
@@ -18,12 +18,11 @@ partial class Shot {
     }
 
     // Dashes travel along the path from its first point to its last.
-    // With fade set, the stream thins out toward its end: the liquid is dispersing into the store.
-    void Stream(Graphics g,IList<PointF> path,Color from,Color to,float width,double travel,float dash=9,float period=22,bool fade=false){
+    void Stream(Graphics g,IList<PointF> path,Color from,Color to,float width,double travel,float dash=9,float period=22){
         var run=new double[path.Count];
         for(int i=1;i<path.Count;i++)run[i]=run[i-1]+Math.Sqrt(Math.Pow(path[i].X-path[i-1].X,2)+Math.Pow(path[i].Y-path[i-1].Y,2));
         double total=run[path.Count-1];if(total<1)return;
-        if(!fade)using(var guide=new Pen(Color.FromArgb(46,Blend(from,to,.5)),width+2.2f)){guide.LineJoin=LineJoin.Round;g.DrawLines(guide,ToArray(path));}
+        using(var guide=new Pen(Color.FromArgb(55,Blend(from,to,.5)),width+2.2f)){guide.LineJoin=LineJoin.Round;g.DrawLines(guide,ToArray(path));}
         Func<double,PointF> at=s=>{
             int i=1;while(i<path.Count-1 && run[i]<s)i++;
             double span=Math.Max(1e-6,run[i]-run[i-1]),q=Sat((s-run[i-1])/span);
@@ -36,7 +35,7 @@ partial class Shot {
             for(int i=1;i<path.Count-1;i++)if(run[i]>a && run[i]<b)points.Add(path[i]);
             points.Add(at(b));
             double along=(a+b)/(2*total);
-            using(var pen=new Pen(Color.FromArgb(fade?(int)(255*Math.Pow(1-along,1.3)):255,Blend(from,to,along)),fade?(float)(width*(1+.6*along)):width)){
+            using(var pen=new Pen(Blend(from,to,along),width)){
                 pen.StartCap=LineCap.Round;pen.EndCap=LineCap.Round;pen.LineJoin=LineJoin.Round;
                 g.DrawLines(pen,points.ToArray());
             }
@@ -74,6 +73,11 @@ partial class Shot {
         Rule(g,x,164,222,164,cLine,1);
     }
 
+    void RiserMark(Graphics g,PointF p,Color colour){
+        using(var fill=new SolidBrush(Color.White))g.FillEllipse(fill,p.X-3,p.Y-3,6,6);
+        using(var edge=new Pen(colour,1.8f))g.DrawEllipse(edge,p.X-3,p.Y-3,6,6);
+    }
+
     // ---------------------------------------------------------------- plan
     void PlanScene(Graphics g,int tick){
         bool duo=d.Short;
@@ -84,7 +88,7 @@ partial class Shot {
         Func<double,double,double,PointF> local=(a,x,y)=>new PointF(
             cx+(float)(m*(x*Math.Cos(a+turn)-y*Math.Sin(a+turn))),cy-(float)(m*(x*Math.Sin(a+turn)+y*Math.Cos(a+turn))));
         Action<double,Brush> disc=(r,b)=>g.FillEllipse(b,cx-(float)(m*r),cy-(float)(m*r),(float)(2*m*r),(float)(2*m*r));
-        Color warm=Color.FromArgb(232,170,138),pale=Color.FromArgb(206,226,214),cool=Color.FromArgb(142,190,214);
+        Color store=Color.FromArgb(213,226,221);
         // Cooler frames behind the wall line: the lower tier first, the upper tier over it.
         for(int pass=0;pass<2;pass++)for(int i=0;i<d.CoolerFrames;i++){
             bool upper=d.FrameBase[i]>d.Height/2;if(upper!=(pass==1) || duo && upper)continue;
@@ -99,14 +103,9 @@ partial class Shot {
                            local(a,d.CoolerBack+d.CoolerFrameDepth-.6,half-.15),local(a,d.CoolerBack+.6,half-.15)};
             using(var fill=new SolidBrush(Color.FromArgb(163,168,168)))g.FillPolygon(fill,pump);
         }
-        // Walls and the store. The tint runs from warm at the inner wall to cool at the outer wall.
+        // The plan locates riser pairs. The temperature layers are shown in section.
         using(var concrete=new SolidBrush(cConcrete))disc(d.Outer,concrete);
-        int bands=26;
-        for(int k=0;k<bands;k++){
-            double q=k/(double)(bands-1),r=d.OuterInside-(d.OuterInside-d.InnerOutside)*k/(double)bands;
-            Color tint=q<.5?Blend(cool,pale,q*2):Blend(pale,warm,q*2-1);
-            using(var b=new SolidBrush(tint))disc(r,b);
-        }
+        using(var water=new SolidBrush(store))disc(d.OuterInside,water);
         using(var concrete=new SolidBrush(cConcrete))disc(d.InnerOutside,concrete);
         using(var bore=new SolidBrush(Color.FromArgb(244,243,235)))disc(d.Inner,bore);
         // Pods on one level, each with its grey CDU and pump section at the wall end.
@@ -122,39 +121,23 @@ partial class Shot {
         using(var deck=new SolidBrush(Color.FromArgb(226,228,216)))disc(d.RootRadius-.08,deck);
         using(var rim=new Pen(cSteel,1))g.DrawEllipse(rim,cx-m*(d.RootRadius-.08f),cy-m*(d.RootRadius-.08f),2*m*(d.RootRadius-.08f),2*m*(d.RootRadius-.08f));
         using(var steel=new SolidBrush(cSteel))disc(d.ShaftCore+.2,steel);
-        // Flow. Hot water-glycol leaves each CDU through the inner wall and disperses into the store.
         double travel=tick*1.5;
         for(int j=0;j<d.Bays;j++){
-            double a=d.Entry+(j+.5)*2*Math.PI/d.Bays;float mouth=d.InnerOutside+.42f;
-            for(int k=-1;k<=1;k++){
-                var plume=new List<PointF>();
-                plume.Add(local(a,d.RootRadius+d.Lengths[0]-.25,.14));plume.Add(local(a,mouth,.14));
-                for(int q=1;q<=6;q++){double u=q/6.0;plume.Add(local(a,mouth+2.5*u,.14+k*1.75*u*u+.25*u));}
-                Stream(g,plume,cHot,Blend(cHot,warm,.55),3.0f,travel+k*5,8,19,true);
-            }
-            // The same CDU pump draws its supply from the store.
-            var supply=new List<PointF>();
-            supply.Add(local(a,mouth+1.5,-1.25));supply.Add(local(a,mouth+.1,-.2));supply.Add(local(a,d.RootRadius+d.Lengths[0]-.25,-.16));
-            Stream(g,supply,cDrawn,cDrawn,1.9f,travel,5,14);
+            double a=d.Entry+(j+.5)*2*Math.PI/d.Bays,tip=d.RootRadius+d.Lengths[0]-.25;
+            PointF take=local(a,d.PodRiser,-d.PodOffset),give=local(a,d.PodRiser,d.PodOffset);
+            Stream(g,new[]{take,local(a,tip,-.18)},cCold,cCold,2.2f,travel,5,12);
+            Stream(g,new[]{local(a,tip,.18),give},cHot,cHot,2.2f,travel,5,12);
+            RiserMark(g,take,cCold);RiserMark(g,give,cHot);
         }
-        // Each cooler pump draws from the store. The cooled liquid returns at the outer wall and disperses.
         for(int i=0;i<d.CoolerFrames;i++){
             if(duo && d.FrameBase[i]>d.Height/2)continue;
-            double a=d.FrameBearing[i];float end=d.CoolerFrameWidth/2-d.PumpLength/2;
-            double wall=Math.Sqrt(d.OuterInside*d.OuterInside-end*end);
-            var suction=new List<PointF>();
-            suction.Add(local(a,wall-1.5,end-1.0));suction.Add(local(a,wall-.15,end));suction.Add(local(a,d.CoolerBack+.75,end));
-            Stream(g,suction,cDrawn,cHot,1.9f,travel,5,14);
-            var through=new List<PointF>();
-            through.Add(local(a,d.CoolerBack+.75,end));through.Add(local(a,d.CoolerBack+1.5,end));
-            through.Add(local(a,d.CoolerBack+1.5,-end));through.Add(local(a,d.CoolerBack+.75,-end));
-            Stream(g,through,cHot,cCold,2.6f,travel,8,20);
-            for(int k=-1;k<=1;k++){
-                var plume=new List<PointF>();
-                plume.Add(local(a,d.CoolerBack+.75,-end));plume.Add(local(a,wall-.1,-end));
-                for(int q=1;q<=6;q++){double u=q/6.0;plume.Add(local(a,wall-.1-2.4*u,-end+k*1.7*u*u+.9*u));}
-                Stream(g,plume,cCold,Blend(cCold,cool,.5),3.0f,travel+k*5,8,19,true);
-            }
+            double a=d.FrameBearing[i],end=d.CoolerFrameWidth/2-d.PumpLength/2;
+            PointF take=polar(d.CoolerRiser,a+d.CoolerSuctionAngle),give=polar(d.CoolerRiser,a+d.CoolerReturnAngle);
+            PointF inlet=local(a,d.CoolerBack+1.5,end),outlet=local(a,d.CoolerBack+1.5,-end);
+            Stream(g,new[]{take,inlet},cHot,cHot,2.2f,travel,6,14);
+            Stream(g,new[]{inlet,outlet},cHot,cCold,2.5f,travel,8,18);
+            Stream(g,new[]{outlet,give},cCold,cCold,2.2f,travel,6,14);
+            RiserMark(g,take,cHot);RiserMark(g,give,cCold);
         }
         PointF door=polar(d.CoolerBack+d.CoolerFrameDepth+1.0,d.Entry);
         Rule(g,door.X-5,door.Y+10,door.X,door.Y+3,cAccent,1.4f);Rule(g,door.X+5,door.Y+10,door.X,door.Y+3,cAccent,1.4f);
@@ -163,18 +146,18 @@ partial class Shot {
         // Labels
         {
             double hot=d.Entry+(PodNear(-.4)+.5)*2*Math.PI/d.Bays;
-            Note(g,"Hot water-glycol enters the store","from "+d.Total+" CDUs, and disperses",1052,70,local(hot,d.InnerOutside+1.5,.5));
-            int f=IndexNear(-1.25);float e=d.CoolerFrameWidth/2-d.PumpLength/2;
-            Note(g,"Cold water-glycol enters the store","from "+(d.CoolerFrames*d.CoolerRows)+" dry coolers, and disperses",1052,206,
-                local(d.FrameBearing[f],Math.Sqrt(d.OuterInside*d.OuterInside-e*e)-1.2,-e+.5));
+            Note(g,"Pod return riser","warm liquid to the top",1052,70,local(hot,d.PodRiser,d.PodOffset));
+            int f=IndexNear(-1.25);
+            Note(g,"Cooler return riser","cool liquid to the bottom",1052,206,
+                polar(d.CoolerRiser,d.FrameBearing[f]+d.CoolerReturnAngle));
             Note(g,"Dry cooler frame",d.CoolerRows+" coolers, "+d.CoolerRows+" pumps",1070,470,local(d.FrameBearing[IndexNear(-2.0)],d.CoolerBack+d.CoolerFrameDepth,-1.5));
         }
         Note(g,d.UnitName+" pod","4 racks, CDU and pump",452,96,local(d.Entry+(PodNear(.4)+.5)*2*Math.PI/d.Bays,d.RootRadius+3.2,0),true);
         Note(g,"Water-glycol store","between the two walls",452,470,polar((d.InnerOutside+d.OuterInside)/2,d.Entry+Math.PI+1.96),true);
         SceneHeading(g,"COOLING LOOP","Plan view","Looking down on one pod level");
         Legend(g,24,186,cHot,"Hot water-glycol");Legend(g,24,214,cCold,"Cold water-glycol");
-        Legend(g,24,242,cDrawn,"Drawn from the store");
-        string[] words={"Hot and cold streams both","disperse into the stored","liquid. Nothing is piped","from a cooler to a pod."};
+        RiserMark(g,new PointF(40,250),cSteel);g.DrawString("Vertical pipe",title2,ink,new PointF(68,242),leftText);
+        string[] words={"Each pod bay and cooler","frame has two risers.","One opens at the top,","one at the bottom."};
         for(int i=0;i<words.Length;i++)g.DrawString(words[i],title2,muted,new PointF(24,286+20*i),leftText);
         Rule(g,24,382,222,382,cLine,1);g.DrawString("AT FULL LOAD",section,muted,new PointF(24,400),leftText);
         Rows(g,d.PlanRows,24,222,422,27);
@@ -214,22 +197,15 @@ partial class Shot {
         Rule(g,west,ground,1280,ground,Color.FromArgb(120,124,104),1.4f);
         double travel=tick*1.5,liquid=d.LiquidTop;
         using(var concrete=new SolidBrush(cConcrete))
-        using(var water=new SolidBrush(Color.FromArgb(178,214,214)))
+        using(var water=new LinearGradientBrush(at(0,liquid),at(0,0),Color.White,Color.White))
         using(var steel=new SolidBrush(cSteel))
         using(var bronze=new SolidBrush(cBronze))
         using(var grey=new SolidBrush(cGrey))
         using(var edge=new Pen(Color.FromArgb(70,74,78),1)){
+            Color warm=Color.FromArgb(233,177,149),cool=Color.FromArgb(151,195,218);
+            water.InterpolationColors=new ColorBlend{Colors=new[]{warm,warm,cool,cool},Positions=new[]{0f,.45f,.55f,1f}};
             for(int side=-1;side<=1;side+=2){
                 box(water,side*d.InnerOutside,0,side*d.OuterInside,liquid);
-                if(duo){
-                    // As in the plan: warm at the inner wall where the pods return, cool at the outer wall where the coolers return.
-                    int bands=14;
-                    for(int k=0;k<bands;k++){
-                        double q=(k+.5)/bands;
-                        Color tint=q<.5?Blend(Color.FromArgb(232,170,138),Color.FromArgb(206,226,214),q*2):Blend(Color.FromArgb(206,226,214),Color.FromArgb(142,190,214),q*2-1);
-                        using(var b=new SolidBrush(tint))box(b,side*(d.InnerOutside+(d.OuterInside-d.InnerOutside)*k/bands),0,side*(d.InnerOutside+(d.OuterInside-d.InnerOutside)*(k+1.02)/bands),liquid);
-                    }
-                }
                 box(concrete,side*d.Inner,0,side*d.InnerOutside,d.Height);
                 box(concrete,side*d.OuterInside,0,side*d.Outer,d.Height);
             }
@@ -292,60 +268,33 @@ partial class Shot {
         }
         float lowTier=d.Height;for(int i=0;i<d.CoolerFrames;i++)lowTier=Math.Min(lowTier,d.FrameBase[i]);
         float rowHeight=d.CoolerFrameHeight/d.CoolerRows;
-        if(duo){
-            // Hot water-glycol leaves each pod through the inner wall and disperses. Cold returns at the outer wall and disperses.
-            Color warm=Color.FromArgb(232,170,138),cool=Color.FromArgb(142,190,214);
-            for(int level=0;level<d.Levels;level++)for(int side=-1;side<=1;side+=2){
-                double tip=d.RootRadius+d.Lengths[0],port=d.PortZ+level*d.Pitch,mouth=d.InnerOutside+.42;
-                for(int k=-1;k<=1;k++){
-                    var plume=new List<PointF>();
-                    plume.Add(at(side*(tip-.2),port+.12));plume.Add(at(side*mouth,port+.12));
-                    for(int q=1;q<=6;q++){double u=q/6.0;plume.Add(at(side*(mouth+2.3*u),port+.12+k*.75*u*u+.55*u));}
-                    Stream(g,plume,cHot,Blend(cHot,warm,.55),2.4f,travel+k*5,7,17,true);
-                }
-                var supply=new List<PointF>();
-                supply.Add(at(side*(mouth+1.3),port-.95));supply.Add(at(side*(mouth+.05),port-.3));supply.Add(at(side*(tip-.2),port-.3));
-                Stream(g,supply,cDrawn,cDrawn,1.6f,travel,5,14);
+        // Project the two pipes of each pair slightly apart so that both paths can be followed.
+        double podCold=d.PodRiser-.23,podHot=d.PodRiser+.23,coolerCold=d.CoolerRiser-.23,coolerHot=d.CoolerRiser+.23;
+        for(int side=-1;side<=1;side+=2){
+            Func<double,double,PointF> wall=(r,z)=>at(side*r,z);
+            double first=d.PortZ,last=first+(d.Levels-1)*d.Pitch;
+            double lowTap=lowTier+rowHeight*.28,highTap=lowTier+(d.CoolerRows-1+.72)*rowHeight;
+            Stream(g,new[]{wall(podCold,d.BottomMouth),wall(podCold,last-.35)},cCold,cCold,2,travel);
+            Stream(g,new[]{wall(podHot,first+.35),wall(podHot,d.TopMouth)},cHot,cHot,2,travel);
+            Stream(g,new[]{wall(coolerHot,d.TopMouth),wall(coolerHot,lowTier+rowHeight*.72)},cHot,cHot,2,travel);
+            Stream(g,new[]{wall(coolerCold,highTap-rowHeight*.44),wall(coolerCold,d.BottomMouth)},cCold,cCold,2,travel);
+            // Horizontal plates at the open ends discharge or collect sideways.
+            foreach(double r in new[]{podHot,coolerHot,podCold,coolerCold}){
+                bool upper=r==podHot || r==coolerHot;
+                double height=upper?d.TopMouth+d.DiffuserGap:d.BottomMouth-d.DiffuserGap;
+                using(var plate=new Pen(cSteel,1.8f))g.DrawLine(plate,wall(r-d.Diffuser,height),wall(r+d.Diffuser,height));
             }
-            for(int k=0;k<d.CoolerRows;k++)for(int side=-1;side<=1;side+=2){
-                double z=lowTier+k*rowHeight,wall=d.OuterInside-.1,far=d.CoolerBack+d.CoolerFrameDepth-.7;
-                var suction=new List<PointF>();
-                suction.Add(at(side*(wall-1.4),z+rowHeight*.72+.6));suction.Add(at(side*wall,z+rowHeight*.72));suction.Add(at(side*far,z+rowHeight*.72));
-                Stream(g,suction,cDrawn,cHot,1.8f,travel,5,14);
-                var through=new List<PointF>();
-                through.Add(at(side*far,z+rowHeight*.72));through.Add(at(side*far,z+rowHeight*.28));through.Add(at(side*wall,z+rowHeight*.28));
-                Stream(g,through,cHot,cCold,2.2f,travel,7,18);
-                for(int j=-1;j<=1;j++){
-                    var plume=new List<PointF>();
-                    plume.Add(at(side*wall,z+rowHeight*.28));
-                    for(int q=1;q<=6;q++){double u=q/6.0;plume.Add(at(side*(wall-2.3*u),z+rowHeight*.28+j*.7*u*u-.55*u));}
-                    Stream(g,plume,cCold,Blend(cCold,cool,.5),2.4f,travel+j*5,7,17,true);
-                }
+            for(int level=0;level<d.Levels;level++){
+                double z=d.BaseZ+level*d.Pitch,tip=d.RootRadius+d.Lengths[0]-.15,port=first+level*d.Pitch;
+                double rack=d.RootRadius+.5;
+                var loop=new[]{wall(podCold,port-.35),wall(tip,port-.35),wall(tip,z+.42),wall(rack,z+.42),
+                               wall(rack,z+d.FrameHeight-.42),wall(tip,z+d.FrameHeight-.42),wall(tip,port+.35),wall(podHot,port+.35)};
+                Stream(g,loop,cCold,cHot,duo?1.5f:2.3f,travel,7,18);
             }
-        }
-        // Water-glycol: cold in from the store, over the racks, hot back out. Then out to the coolers and back cold.
-        if(!duo)for(int level=0;level<d.Levels;level++)for(int side=-1;side<=1;side+=2){
-            double z=d.BaseZ+level*d.Pitch,tip=d.RootRadius+d.Lengths[0],port=d.PortZ+level*d.Pitch;
-            var loop=new List<PointF>();
-            loop.Add(at(side*(d.InnerOutside+.9),port-.42));loop.Add(at(side*(tip-.15),port-.42));
-            loop.Add(at(side*(tip-.15),z+.42));loop.Add(at(side*(d.RootRadius+.5),z+.42));
-            loop.Add(at(side*(d.RootRadius+.5),z+d.FrameHeight-.42));loop.Add(at(side*(tip-.15),z+d.FrameHeight-.42));
-            loop.Add(at(side*(tip-.15),port+.42));loop.Add(at(side*(d.InnerOutside+.9),port+.42));
-            Stream(g,loop,cCold,cHot,2.3f,travel,7,18);
-        }
-        if(!duo)for(int k=0;k<d.CoolerRows;k++)for(int side=-1;side<=1;side+=2){
-            double z=lowTier+k*rowHeight;
-            var loop=new List<PointF>();
-            loop.Add(at(side*(d.OuterInside-.9),z+rowHeight*.72));loop.Add(at(side*(d.CoolerBack+d.CoolerFrameDepth-.7),z+rowHeight*.72));
-            loop.Add(at(side*(d.CoolerBack+d.CoolerFrameDepth-.7),z+rowHeight*.28));loop.Add(at(side*(d.OuterInside-.9),z+rowHeight*.28));
-            Stream(g,loop,cHot,cCold,2.3f,travel,7,18);
-        }
-        // Convection in the store: hot rises at the inner wall, cold sinks at the outer wall.
-        if(!duo)for(int side=-1;side<=1;side+=2){
-            var rise=new List<PointF>();rise.Add(at(side*(d.InnerOutside+.55),1.2));rise.Add(at(side*(d.InnerOutside+.55),lowTier+d.CoolerFrameHeight-.6));
-            Stream(g,rise,cHot,cHot,1.8f,travel*.7,5,26);
-            var sink=new List<PointF>();sink.Add(at(side*(d.OuterInside-.5),lowTier+d.CoolerFrameHeight-.6));sink.Add(at(side*(d.OuterInside-.5),1.2));
-            Stream(g,sink,cCold,cCold,1.8f,travel*.7,5,26);
+            for(int k=0;k<d.CoolerRows;k++){
+                double low=lowTap+k*rowHeight,high=low+rowHeight*.44,fan=d.CoolerBack+d.CoolerFrameDepth-.7;
+                Stream(g,new[]{wall(coolerHot,high),wall(fan,high),wall(fan,low),wall(coolerCold,low)},cHot,cCold,2.3f,travel,7,18);
+            }
         }
         // Power: from the modules down the steel shaft and out to every pod.
         var spine=new List<PointF>();spine.Add(at(4.2,d.PowerBase1+1.6));spine.Add(at(0,d.PowerBase1+1.6));spine.Add(at(0,d.BaseZ+d.FrameHeight/2));
@@ -395,7 +344,7 @@ partial class Shot {
         Note(g,"Power down the steel shaft","out to all "+d.Total+" pods",1098,146,at(d.RootRadius+2.2,d.BaseZ+7*d.Pitch+d.FrameHeight/2));
         Note(g,"Water-glycol over the racks","cold in, hot out",1098,206,at(d.RootRadius+3.4,d.BaseZ+6*d.Pitch+d.FrameHeight-.42));
         Note(g,"Dry coolers","draw hot, return cold",1098,360,at(d.CoolerBack+d.CoolerFrameDepth-.7,lowTier+2.5*rowHeight));
-        Note(g,"Water-glycol store",null,1098,500,at((d.InnerOutside+d.OuterInside)/2+.3,3.2));
+        Note(g,"Cool lower layer","warm liquid above",1098,500,at((d.InnerOutside+d.OuterInside)/2,3.2));
         Note(g,"Gas line","up the wall, over the lid",560,150,at(-d.RiserRadius,lowTier+d.CoolerFrameHeight+4.2),true);
         SceneHeading(g,"HOW IT WORKS","Section","Power, cooling and fuel");
         Legend(g,24,186,cPower,"Electrical power");Legend(g,24,214,cCold,"Cold water-glycol");
@@ -422,13 +371,14 @@ partial class Shot {
             g.DrawString("SECTION",section,accent,new PointF(1012,34),middleText);
             g.DrawString("Power, cooling and fuel",title2,muted,new PointF(1012,50),middleText);
             float y=648;
-            string[] notes={"Hot water-glycol leaves each pod through the inner wall and disperses into the store.",
-                            "Each cooler pump draws from the store. The cooled liquid returns at the outer wall and disperses.",
-                            "Nothing is piped from a cooler to a pod. Power comes down the steel shaft from the turbine sets."};
+            string[] notes={"Pod pumps draw from the cool lower layer and return warm liquid to the upper layer.",
+                            "Dry coolers draw from the upper layer and return cooled liquid to the bottom.",
+                            "Diffuser plates spread the flow sideways at each pipe opening."};
             for(int i=0;i<notes.Length;i++)g.DrawString(notes[i],title2,i==2?muted:ink,new PointF(764,y+20*i),middleText);
             SceneHeading(g,"HOW IT WORKS","Plan and section","Cooling, power and fuel");
             Legend(g,24,186,cHot,"Hot water-glycol");Legend(g,24,214,cCold,"Cold water-glycol");
-            Legend(g,24,242,cDrawn,"Drawn from the store");Legend(g,24,270,cPower,"Electrical power");
+            RiserMark(g,new PointF(40,250),cSteel);g.DrawString("Vertical pipe",title2,ink,new PointF(68,242),leftText);
+            Legend(g,24,270,cPower,"Electrical power");
             Legend(g,24,298,cGas,"Propane gas");Legend(g,24,326,cDiesel,"Backup diesel");
             Rule(g,24,368,222,368,cLine,1);g.DrawString("AT FULL LOAD",section,muted,new PointF(24,386),leftText);
             Rows(g,d.PlanRows,24,222,408,27);

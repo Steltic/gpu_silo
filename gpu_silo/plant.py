@@ -1,7 +1,8 @@
 """The two power levels above the pods and the lid that closes the silo.
 
 The lower level carries the backup diesel sets and their day tanks. The upper level carries two in-line
-gas turbine generator sets side by side. Each level is lowered through the open top as one assembly.
+gas turbine generator sets side by side. The bare support rig goes in before the pods.
+The diesel machines land on it later, followed by the assembled turbine level.
 One turbine enclosure has a side that folds down to a work floor. The lid arrives with the exhaust
 stacks, air inlet houses and diesel vents already on it.
 
@@ -46,6 +47,10 @@ STACK_X, STACK_R = EXHAUST_AT[0][0], EXHAUST_R
 POWER_YAW = math.radians(P["first_heading_degrees"])
 PICK_STARTS = (50, 290)
 PICK_LENGTH = 151
+DIESEL_LOADS = GEN_AT + tuple((x,y,90) for x,y in DAY_TANKS)
+DIESEL_CYCLE = (PICK_STARTS[1]-PICK_STARTS[0]-12)//len(DIESEL_LOADS)
+DIESEL_FLIGHT = round(DIESEL_CYCLE*.65)
+DIESEL_SEATED = PICK_STARTS[0]+(len(DIESEL_LOADS)-1)*DIESEL_CYCLE+DIESEL_FLIGHT
 # After the second level is seated the crane goes for the lid.
 VENT_START, VENT_END, END = PICK_STARTS[1]+PICK_LENGTH+4, care.POWER_DONE, closing.END
 LID_THICK = .22
@@ -171,20 +176,26 @@ def diesel_set(m,cx,cy,deg):
     services.pipe(m,(cx+x,cy+y,2.75),(cx+x,cy+y,LEVEL[0]-DECK),DIESEL_STACK_R,"8b9591",DIESEL_STACK_R-.04,n=12)
 
 
+def diesel_load(index):
+    if index < len(GEN_AT):
+        m=mesh(f"Diesel set {index+1} | skid")
+        diesel_set(m,0,0,0)
+    else:
+        m=mesh(f"Diesel day tank {index-len(GEN_AT)+1} | tank and saddles")
+        r,l=D["day_tank_diameter_m"]/2,D["day_tank_length_m"]
+        services.pipe(m,(-l/2,0,r+.45),(l/2,0,r+.45),r,"b5553c",n=16)
+        for x in (-l/2+.3,l/2-.3):
+            closed(m,x-.08,-r*.8,x+.08,r*.8,0,.5,DARK)
+    return m
+
+
 def power_mesh(index):
     if index==0:
-        m=mesh(f"Power level 1 | {len(GEN_AT)} backup diesel sets, {len(DAY_TANKS)} day tanks and deck steel")
+        m=mesh("Top support rig | bare girders, ring beam, shaft collar and mounting shoes")
         # The girder over the axis stops at the collar that holds the top of the shaft.
         (x0,y0),(x1,y1)=chord(.3)
         deck_steel(m,[((x0,y0),(-COLLAR+.03,y0)),((COLLAR-.03,y1),(x1,y1))]+[chord(y) for y in (-1.5,-4.0,-5.8)]+[((x,-4.4),(x,3.0)) for x in (-6.55,-4.75,4.75,6.55)])
         shaft_connector(m)
-        for cx,cy,deg in GEN_AT:
-            diesel_set(m,cx,cy,deg)
-        r,l=D["day_tank_diameter_m"]/2,D["day_tank_length_m"]
-        for x,y in DAY_TANKS:
-            services.pipe(m,(x,y-l/2,r+.45),(x,y+l/2,r+.45),r,"b5553c",n=16)
-            for yy in (y-l/2+.3,y+l/2-.3):
-                closed(m,x-r*.8,yy-.08,x+r*.8,yy+.08,0,.5,DARK)
         return m
     m=mesh("Power level 2 | two in-line gas turbine generator sets and deck steel")
     l,w=SET_L/2,SET_W/2
@@ -286,11 +297,11 @@ def turbine_mesh(side=1):
     return m
 
 
-def bridle():
+def bridle(half_length=5.6,half_width=4.2,foot=-DECK/2,apex=APEX):
     m=mesh("Four-leg power-unit lifting bridle")
-    for x in (-5.6,5.6):
-        for y in (-4.2,4.2):
-            s.bar(m,(x,y,-DECK/2),(0,0,APEX),.07,"726952")
+    for x in (-half_length,half_length):
+        for y in (-half_width,half_width):
+            s.bar(m,(x,y,foot),(0,0,apex),.07,"726952")
     return m
 
 
@@ -298,28 +309,66 @@ def power_base(crown,idx):
     return crown+DECK+idx*LEVEL[0]
 
 
-def body_position(crown,idx,t):
-    start=PICK_STARTS[idx]
-    q=t-start
+def lift_position(crown,idx,q,ground):
     x,y=PICK_SITES[idx]
     across=s.step(55,89,q)
-    z=GROUND+(TRANSIT-GROUND)*s.step(5,54,q)
+    z=ground+(TRANSIT-ground)*s.step(5,54,q)
     z+=(power_base(crown,idx)-TRANSIT)*s.step(91,PICK_LENGTH,q)
     return (x*(1-across),y*(1-across),z)
 
 
+def body_position(crown,idx,t):
+    return lift_position(crown,idx,t-PICK_STARTS[idx],GROUND)
+
+
+def rig_position(crown,frame):
+    return lift_position(crown,0,frame-clock.RIG_PICK,DECK+.25)
+
+
+def rig_camera(p,frame,previous):
+    x,y,z=rig_position(p.CROWN,frame)
+    target=(x*.68,y*.68,4+z*.80)
+    shot=p.camera(target,-58,30,74)
+    return p.blend(previous,shot,s.step(clock.CAGE_END,clock.RIG_PICK,frame))
+
+
+def diesel_position(crown,index,t):
+    start=PICK_STARTS[0]+index*DIESEL_CYCLE
+    elapsed=(t-start)*PICK_LENGTH/DIESEL_FLIGHT
+    x,y,z=lift_position(crown,0,elapsed,GROUND)
+    dx,dy,_=turned(*DIESEL_LOADS[index][:2])
+    if film.SHORT:
+        at=diesel_arrival(index)
+        z+=2.6*(1-s.step(at,at+DROP,t))
+    return x+dx,y+dy,z
+
+
+def diesel_apex(index):
+    return GEN_H+3 if index<len(GEN_AT) else D["day_tank_diameter_m"]+2.5
+
+
+def empty_hook(a,b,q):
+    high=TRANSIT+APEX
+    slew=s.step(.27,.68,q)
+    return (a[0]+(b[0]-a[0])*slew,a[1]+(b[1]-a[1])*slew,
+            a[2]+(high-a[2])*s.step(0,.27,q)+(b[2]-high)*s.step(.68,1,q))
+
+
 def hook_position(crown,t):
-    if t<PICK_STARTS[0]+PICK_LENGTH:
-        x,y,z=body_position(crown,0,t)
-        return x,y,z+APEX
     if t<PICK_STARTS[1]:
-        a=PICK_STARTS[0]+PICK_LENGTH
-        x,y=PICK_SITES[1]
-        move=s.step(a+28,a+62,t)
-        z=power_base(crown,0)+APEX
-        high=TRANSIT+APEX
-        return (x*move,y*move,z+(high-z)*s.step(a+4,a+27,t)
-                +(GROUND+APEX-high)*s.step(a+63,PICK_STARTS[1]-1,t))
+        index=min(len(DIESEL_LOADS)-1,max(0,int(t-PICK_STARTS[0])//DIESEL_CYCLE))
+        start=PICK_STARTS[0]+index*DIESEL_CYCLE
+        x,y,z=diesel_position(crown,index,t)
+        hook=(x,y,z+diesel_apex(index))
+        if t<=start+DIESEL_FLIGHT:return hook
+        if index+1<len(DIESEL_LOADS):
+            next_pick=start+DIESEL_CYCLE
+            x,y,z=diesel_position(crown,index+1,next_pick)
+            target=(x,y,z+diesel_apex(index+1))
+        else:
+            next_pick=PICK_STARTS[1]
+            target=(*PICK_SITES[1],GROUND+APEX)
+        return empty_hook(hook,target,(t-start-DIESEL_FLIGHT)/(next_pick-start-DIESEL_FLIGHT))
     x,y,z=body_position(crown,1,t)
     end=PICK_STARTS[1]+PICK_LENGTH
     if t<=end+3:return x,y,z+APEX
@@ -395,23 +444,22 @@ GENSET_STEP=14
 TANKS_AT=FAB[0]+146
 TURBINES_AT=(FAB[0]+152,FAB[0]+184)
 DROP=10
+RIG_FAB_START=s.LAST_POUR-3*s.FAST_CYCLE
+
+
+def diesel_arrival(index):
+    return GENSETS_AT+index*GENSET_STEP if index<len(GEN_AT) else TANKS_AT
 
 
 def fabrication_parts(index):
-    """A power level in the pieces it is built from: strips of deck steel, then each machine."""
+    """Divide the deck steel into strips in the order it is welded on the pad."""
     whole=power_mesh(index)
     strips=[mesh(f"Power level {index+1} | deck steel, strip {k+1}") for k in range(STRIPS)]
-    machines={}
     reach=s.RI
     for a,b,c,colour in whole.tris:
-        x=(a[0]+b[0]+c[0])/3;y=(a[1]+b[1]+c[1])/3
-        if max(a[2],b[2],c[2])<=.001:
-            strips[max(0,min(STRIPS-1,int((x+reach)/(2*reach)*STRIPS)))].tris.append((a,b,c,colour));continue
-        near=min(range(len(GEN_AT)),key=lambda n:math.hypot(x-GEN_AT[n][0],y-GEN_AT[n][1]))
-        key=near if math.hypot(x-GEN_AT[near][0],y-GEN_AT[near][1])<4.3 else "tanks"
-        if key not in machines:machines[key]=mesh(f"Power level {index+1} | "+("day tanks" if key=="tanks" else f"diesel set {key+1}"))
-        machines[key].tris.append((a,b,c,colour))
-    return strips,machines
+        x=(a[0]+b[0]+c[0])/3
+        strips[max(0,min(STRIPS-1,int((x+reach)/(2*reach)*STRIPS)))].tris.append((a,b,c,colour))
+    return strips
 
 
 def fabricate(scene,node,p):
@@ -434,19 +482,19 @@ def fabricate(scene,node,p):
     people={}
     for j in (0,1):
         x,y=PICK_SITES[j];label=f"Power level {j+1:02}"
-        holder=node(label+" | being fabricated",-1,"Power fabrication",ang=POWER_YAW,t=(x,y,GROUND),
-                    tracks={"scale":[(0,ON),(base+FAB_DONE-.02,ON),(base+FAB_DONE,OFF)]})
-        strips,machines=fabrication_parts(j)
-        for k,strip in enumerate(strips):
-            node(strip.name,scene.mesh(strip),"Power fabrication",holder,tracks={"scale":show(base+DECK_AT[j]+k*STRIP_STEP)})
+        offset=RIG_FAB_START-FAB[0] if j==0 else base
+        ready=clock.CAGE_END if j==0 else base+FAB_DONE
+        ground=DECK+.25 if j==0 else GROUND
+        holder=node(label+" | being fabricated",-1,"Power fabrication",ang=POWER_YAW,t=(x,y,ground),
+                    tracks={"scale":[(0,ON),(ready-.02,ON),(ready,OFF)]})
+        for k,strip in enumerate(fabrication_parts(j)):
+            node(strip.name,scene.mesh(strip),"Power fabrication",holder,tracks={"scale":show(offset+DECK_AT[j]+k*STRIP_STEP)})
         bearing=math.degrees(math.atan2(y,x))%360
         route,stop=traffic.stop_route(traffic.normal(math.radians(bearing)))
         arrivals=[]
         if j==0:
-            for key,machine in machines.items():
-                at=TANKS_AT if key=="tanks" else GENSETS_AT+key*GENSET_STEP
-                node(machine.name,scene.mesh(machine),"Power fabrication",holder,tracks={"scale":show(base+at),"translation":landing(at)})
-                if key!="tanks":arrivals.append((at,flat,site.FLAT_AXLE,traffic.DECK_MID,site.DECK,loads[0],f"Diesel set {key+1}"))
+            for i in range(len(GEN_AT)):
+                arrivals.append((diesel_arrival(i),flat,site.FLAT_AXLE,traffic.DECK_MID,site.DECK,loads[0],f"Diesel set {i+1}"))
         else:
             for n,(side,name) in enumerate(((1,"A"),(-1,"B"))):
                 at=TURBINES_AT[n]
@@ -460,12 +508,12 @@ def fabricate(scene,node,p):
             towed,_,_=fleet.rig(name+" | delivery",trip,trailer,axle,group="Power fabrication")
             node(name+" | on its truck",load,"Power fabrication",towed,t=(seat,0,deck),tracks={"scale":site.window(0,base+at)})
         # Welders and their arcs on the deck steel.
-        first,last=base+WELD[j][0],base+WELD[j][1]
+        first,last=offset+WELD[j][0],offset+WELD[j][1]
         for n,(wx,wy) in enumerate(((-4.75,-2.),(4.75,-2.),(0,-1.5),(-2.5,-5.6),(3.,1.))):
             node(f"{label} | deck weld {n+1}",arcs,"Welding",holder,t=(wx,wy,.02),tracks={"scale":cagebuild.flicker([(first+3*n,last)],n+j)})
         for n in range(cfg.PROJECT["logistics"]["power_fabrication"]["welders"]):
             a=n*s.TAU/4+.9
-            actor=node(f"{label} | welder {n+1}",-1,"Fabrication crew",holder,ang=a+math.pi,t=s.polar(s.RI+.5,a,-GROUND+.02),
+            actor=node(f"{label} | welder {n+1}",-1,"Fabrication crew",holder,ang=a+math.pi,t=s.polar(s.RI+.5,a,-ground+.02),
                        tracks={"scale":site.window(first-8,last+10)})
             count=crew.MODES["inspect"]
             for index in range(count):
@@ -505,9 +553,9 @@ def add(scene,node,p):
         return [(0,OFF),(max(0,t-.02),OFF),(t,ON)]
     def hide_after(t0,t1):
         return show(t0)+[(t1-.02,ON),(t1,OFF)]
-    def compact_relative(fn):
-        vals=[fn(i) for i in range(END)]
-        return [(0,vals[0])]+[(p.FILLED+f,v) for f,v in p.flat_keys(vals)] if len(set(vals))>1 else [(0,vals[0])]
+    def compact_relative(fn,begin=0):
+        vals=[fn(i) for i in range(begin,END)]
+        return [(0,vals[0])]+[(p.FILLED+begin+f,v) for f,v in p.flat_keys(vals)] if len(set(vals))>1 else [(0,vals[0])]
     rig=addmesh(bridle())
     # Plates for the support rig are set in the forms of the wall lift that holds them, like the cooler fixings.
     from . import cooler_frames
@@ -521,16 +569,25 @@ def add(scene,node,p):
                  tracks={"scale":show(start),"translation":[(0,(x,y,seat+.46)),(start,(x,y,seat+.46)),(cast,(x,y,seat))]})
     crib=mesh("Power-unit ground crib | bearing strips")
     for x in (-5.2,0,5.2):
-        closed(crib,x-.25,-6.0,x+.25,6.0,0,GROUND-DECK+.05,"93846b")
+        closed(crib,x-.25,-6.0,x+.25,6.0,0,.25,"93846b")
     crib_id=addmesh(crib)
     for j in (0,1):
         y=POWER_YAW
         label=f"Power level {j+1:02}"
+        if j==0:
+            ready=clock.CAGE_END if film.SHORT else p.C
+            pick=clock.RIG_PICK
+            crib_at=RIG_FAB_START if film.SHORT else p.C
+            positions=p.flat_keys([rig_position(p.CROWN,f) for f in range(clock.RIG_END+1)])
+        else:
+            ready=p.FILLED+(FAB_DONE if film.SHORT else 1)
+            pick=p.FILLED+PICK_STARTS[j]
+            crib_at=p.FILLED+(FAB[0]-12 if film.SHORT else 1)
+            positions=compact_relative(lambda t:body_position(p.CROWN,j,t))
         node(label+" | ground crib",crib_id,"Power laydown",ang=y,t=(*PICK_SITES[j],0),
-             tracks={"scale":hide_after(p.FILLED+(FAB[0]-12 if film.SHORT else 1),p.FILLED+VENT_END+12)})
-        ready=p.FILLED+(FAB_DONE if film.SHORT else 1)
+             tracks={"scale":hide_after(crib_at,pick+PICK_LENGTH+12)})
         base=node(label+(" | diesel deck assembly" if j==0 else " | turbine deck assembly"),addmesh(power_mesh(j)),"Power modules",ang=y,
-             tracks={"translation":compact_relative(lambda t:body_position(p.CROWN,j,t)),"scale":show(ready)})
+             tracks={"translation":positions,"scale":show(ready)})
         if j==1 and film.SHORT:
             for side,name in ((1,"A"),(-1,"B")):
                 node(f"Turbine set {name} | gas turbine and generator",addmesh(turbine_mesh(side)),"Power modules",base)
@@ -546,7 +603,18 @@ def add(scene,node,p):
                      tracks={"scale":keys})
             node("Turbine set A | gas turbine and generator",addmesh(turbine_mesh()),"Power modules",base)
         node(label+" | four-leg rigging",rig,"Power picks",base,
-             tracks={"scale":hide_after(p.FILLED+PICK_STARTS[j],p.FILLED+PICK_STARTS[j]+PICK_LENGTH+3)})
+             tracks={"scale":hide_after(pick,pick+PICK_LENGTH+3)})
+    for i,(_,_,degrees) in enumerate(DIESEL_LOADS):
+        load=diesel_load(i)
+        start=p.FILLED+PICK_STARTS[0]+i*DIESEL_CYCLE
+        arrival=diesel_arrival(i) if film.SHORT else 1
+        carrier=node(load.name,addmesh(load),"Power modules",ang=POWER_YAW+math.radians(degrees),
+                     tracks={"translation":compact_relative(lambda t:diesel_position(p.CROWN,i,t),min(0,arrival)),
+                             "scale":show(p.FILLED+arrival)})
+        length,width=(GEN_L,GEN_W) if i<len(GEN_AT) else (D["day_tank_length_m"],D["day_tank_diameter_m"])
+        sling=bridle(length*.36,width*.36,.25,diesel_apex(i))
+        node(load.name+" | slings",addmesh(sling),"Power picks",carrier,
+             tracks={"scale":hide_after(start,start+DIESEL_FLIGHT+1)})
     # The lid is the retained crawler's last lift of the build.
     cover=node("Silo lid | crane placement",addmesh(lid_mesh()),"Silo lid",tracks={
         "translation":compact_relative(lid_position),
@@ -567,5 +635,6 @@ def add(scene,node,p):
         lidSeatedAt_s=(p.FILLED+LID[1])/p.FPS,firstLiquidAfter_s=p.C/p.FPS,
         powerModuleOutput_MW=cfg.POWER["module_output_mw"],primeMover=cfg.POWER["prime_mover"],
         turbineEnclosureOpens_s=(p.FILLED+clock.ENCLOSURE_OPEN[0])/p.FPS,turbineWorkFloor_m=power_base(p.CROWN,1)+HINGE_Z,
-        powerScope="Each level is lowered as one assembly. Real lifts would be made machine by machine.")
+        rigSeatedAt_s=(clock.RIG_PICK+PICK_LENGTH)/p.FPS,
+        powerScope="The bare rig seats before the pods. Diesel sets and day tanks land individually, then the turbine level is lifted.")
     assert abs(crew.POWER_FLOOR-power_base(p.CROWN,1)-HINGE_Z)<1e-9

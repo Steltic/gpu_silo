@@ -243,8 +243,9 @@ def construction_camera(frame):
     if t<188: return w
     install=cam((-.8,0,17),-59,19,85)
     if frame<clock.CAGE_END: return blend(w,install,smooth(t,185,307))
+    if frame<clock.RIG_END:return plant.rig_camera(sys.modules[__name__],frame,install)
     store=cam((0,0,24.5),-59,31,60)
-    if frame<yard.INSERT_AT: return blend(install,store,smooth(frame,clock.CAGE_END,clock.CAGE_END+64))
+    if frame<yard.INSERT_AT: return blend(plant.rig_camera(sys.modules[__name__],clock.RIG_END,install),store,smooth(frame,clock.RIG_END,clock.RIG_END+64))
     close=cam((3.4,-2.1,3.5),-110,16,36)
     if frame<yard.INSERT_AT+yard.DELIVERY_FRAMES:
         return yard.delivery_camera(frame,sys.modules[__name__])
@@ -549,7 +550,8 @@ def build():
         foot=[base]*FRAMES;heading=[0.]*FRAMES;leaves=C+349
         if sign<0:
             # The south crawler stays for every later lift: cooler frames, power modules, lid and cooler service.
-            path,(leaves,returns,departs)=crane.poses(sys.modules[__name__])
+            handoff=clock.CAGE_END
+            path,(leaves,returns,departs)=crane.poses(sys.modules[__name__],(base,(hx[handoff],hy[handoff],hook[handoff]),0))
             for f,(place,(x,y,z),facing) in path.items():
                 foot[f]=place;hx[f],hy[f],hook[f]=x,y,z;heading[f]=facing
             if film.SHORT:
@@ -676,7 +678,7 @@ def render_data(scene,path):
         def floats(*v): file.write(struct.pack("<"+"f"*len(v),*v))
         def string(txt):
             b=txt.encode("utf8");ints(len(b));file.write(b)
-        file.write(b"GSILO06\0")
+        file.write(b"GSILO07\0")
         ints(len(scene.meshes),len(scene.nodes),FRAMES,FPS)
         floats(s.RO,s.RI_OUTER,s.RO_INNER,s.RI,s.WALL_HEIGHT,s.LIFT)
         ints(s.COUNT,s.LAST_POUR,s.LAST_POUR+s.REVEAL//2,s.LAST_POUR+s.REVEAL,
@@ -684,6 +686,9 @@ def render_data(scene,path):
         ints(*plant.PICK_STARTS,plant.PICK_LENGTH,plant.VENT_START,plant.VENT_END,*plant.LID)
         ints(care.SOLID_BEGIN,care.SOLID_END,care.ORBIT,care.ORBIT_DONE)
         floats(CROWN,cfg.LIQUID_TOP)
+        ints(clock.RIG_END,plant.DIESEL_SEATED)
+        floats(layering.POD_R,layering.POD_Y,layering.COOLER_R,layering.FLOOR_MOUTH,layering.TOP_MOUTH,
+               layering.PLATE,layering.GAP,*[turn for turn,_ in layering.cooler_points(0)])
         ints(care.CREW,care.REPAIR,care.BAD,care.LEVEL,care.BAY)
         ints(LEVELS,BAYS,TOTAL)
         floats(PITCH,BASE,cfg.BODY_LENGTH,cargo.FRAME_WIDTH,cargo.FRAME_HEIGHT,s.OPENING_WIDTH,s.OPENING_HEIGHT,FAST_RATE)
@@ -735,7 +740,7 @@ def render_data(scene,path):
         shots=shortfilm.scenes(me) if film.SHORT else []
         ints(len(shots))
         for shot in shots:ints(*shot)
-        cards=shortfilm.cards(me) if film.SHORT else []
+        cards=(shortfilm.cards(me) if film.SHORT else [])+[programme.rig_card()]
         ints(len(cards))
         for kicker,heading,sub,rows,steps in cards:
             string(kicker);string(heading);string(sub)

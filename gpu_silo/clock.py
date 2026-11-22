@@ -3,13 +3,15 @@ from . import film
 from . import silo_model as s
 
 CAGE_END=s.FRAMES+352
+RIG_PICK=CAGE_END+34
+RIG_END=CAGE_END+204
 if film.SHORT:
-    # The store is filled at the end of the build, so the dock follows the cage lift directly.
-    STORE_FILL=(CAGE_END+16,CAGE_END+17)
-    STORE_END=CAGE_END+44
+    # The dock follows the rig. The short film fills the store at the end of the build.
+    STORE_FILL=(RIG_END+16,RIG_END+17)
+    STORE_END=RIG_END+44
 else:
-    STORE_FILL=(CAGE_END+16,CAGE_END+126)
-    STORE_END=CAGE_END+168
+    STORE_FILL=(RIG_END+16,RIG_END+126)
+    STORE_END=RIG_END+168
 DELIVERY_AT=STORE_END
 DELIVERY_FRAMES=336
 FIRST_POD=DELIVERY_AT+DELIVERY_FRAMES+8

@@ -43,7 +43,8 @@ def camera(frame, p):
     lift = cam((-10, 0, 26.0), -65, 11.8, 130)
     if t < 58: return blend(s.camera_at(p.C - 1), lift, smooth(t, 0, 54))
     install = cam((-.8, 0, 17), -59, 19, 85)
-    if frame < yard.INSERT_AT: return blend(lift, install, smooth(t, 185, 307))
+    if frame < clock.CAGE_END: return blend(lift, install, smooth(t, 185, 307))
+    if frame < yard.INSERT_AT: return plant.rig_camera(p,frame,install)
     last = yard.INSERT_AT + yard.DELIVERY_FRAMES - 1
     if frame <= last: return yard.delivery_camera(frame, p)
     dock = yard.delivery_camera(last, p)
@@ -85,11 +86,11 @@ def cards(p):
     full = p.FILLED
     fab, coat = (tuple(p.FIRST_POD + f for f in span) for span in (film.FABRICATE_CUT, film.COATING_CUT))
     power, diesel, lc = cfg.POWER, cfg.PROJECT["diesel"], cfg.PROJECT["coating"]
-    fabricate = ("SITE FABRICATION", "Power levels", "Built on the ground",
+    fabricate = ("SITE FABRICATION", "Power plant", "Diesels and turbine deck",
                  [("Turbine level", f"{power['modules']} × {power['module_output_mw']:g} MW"), ("Diesel level", f"{diesel['sets']} × {diesel['set_output_mw']:g} MW"),
                   ("One turbine set", f"{power['set_weight_t']:g} t"), ("One diesel set", f"{diesel['set_weight_t']:g} t"),
                   ("Deck steel, each", f"{cfg.PROJECT['logistics']['power_fabrication']['deck_steel_t']:g} t")],
-                 [(fab[0], "Weld the deck steel"), (fab[0] + 84, "Land the diesel sets"), (fab[0] + 150, "Land the turbine sets")])
+                 [(fab[0], "Weld the turbine deck"), (fab[0] + 84, "Stage the diesel sets"), (fab[0] + 150, "Land the turbine sets")])
     coating = ("STORE LINER", "Spray coating", "Both faces of the store",
                [("System", "Polyurea liner"), ("Thickness", f"{lc['thickness_mm']:g} mm"), ("Area", f"{LG['coat_m2']:,.0f} m²"),
                 ("Sprayers", f"{lc['sprayers']}"), ("Time", f"{LG['coat_days_needed']:.0f} days"), ("Concrete age", f"{LG['coat_age_min']}+ days")],
@@ -124,13 +125,14 @@ def tags(p):
     rows = [
         (0, p.C, days("walls"), "Jumpform the walls. The pod cage goes up beside them, a level a day.",
          f"Mixers {{a}} / {LG['wall_trucks']}, cage modules {{b}} / {LG['cage_modules']}", ("concrete", "cage")),
-        (p.C, yard.INSERT_AT, days("cage"), "Lift in the pod cage", f"Coolers {{a}} / {cfg.COOLERS}", ("coolers",)),
+        (p.C, clock.CAGE_END, days("cage"), "Lift in the pod cage", f"Coolers {{a}} / {cfg.COOLERS}", ("coolers",)),
+        (clock.CAGE_END,yard.INSERT_AT,days("rig"),"Set the top support rig","Seat the collar and weld the shoes to the wall plates",()),
         (yard.INSERT_AT, p.FIRST_POD, f"DAY {logistics.BY_KEY['pods']['start']}", "First pods at the receiving dock",
          f"{LG['pods_per_truck']} pods a truck: {LG['pod_load_t']:.1f} t of {cfg.PROJECT['logistics']['flatbed']['payload_t']:g} t allowed", ()),
         (p.FIRST_POD, full, days("pods", "hang"), "Pods loaded, cooler frames hung",
          f"Pod trucks {{a}} / {LG['pod_trucks']}, coolers {{b}} / {cfg.COOLERS}", ("pod_trucks", "coolers")),
         (fuel[0], fuel[1], days("tanks"), "Fuel tanks set", f"Tanks on the pad {{a}} / {cfg.PROJECT['fuel']['tanks'] + 1}", ("tanks",)),
-        (fab[0], fab[1], days("fabricate"), "Power levels fabricated on site", "Deck steel welded, then the sets are landed", ()),
+        (fab[0], fab[1], days("fabricate"), "Prepare the power plant", "Stage the diesels and assemble the turbine level", ()),
         (coat[0], coat[1], days("coating"), "Spray-coat the inside of the store", f"{LG['coat_m2']:,.0f} m² of liner from {lc['stages']} stages", ()),
         (full, full + clock.LINES, days("power"), "Power levels and lid lifted in. The fill begins.", tankers, ("water",)),
         (full + clock.LINES, full + closing.FUEL_END, days("propane", "lines"), "Propane fill and fuel lines",
