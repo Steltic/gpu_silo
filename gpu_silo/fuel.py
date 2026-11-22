@@ -30,7 +30,9 @@ DIESEL="b5553c"
 BULK_D,BULK_L=D["bulk_tank_diameter_m"],D["bulk_tank_length_m"]
 SIDE=.34
 LOW=.45
-TOP=s.WALL_HEIGHT+.80
+BURIED=-cfg.PROJECT["coordination"]["services"]["crossing_centre_depth_m"]
+TOP=plant.LID_Z+.80
+BULK_Y=-(COUNT-1)*PITCH/2-DIA/2-BULK_D/2-cfg.PROJECT["coordination"]["services"]["bulk_diesel_offset_m"]
 # The drops come down beside the turbine sets, clear of the roof equipment.
 DROP_R=4.6
 GAS="d9b13c"
@@ -140,7 +142,7 @@ def install(scene,node,p):
         return (x*co-y*si,x*si+y*co,z)
     pad=plant.mesh("Propane storage | gravel pad, jacking portals and unloading risers")
     half=COUNT*PITCH/2+1.5
-    north=-(COUNT*PITCH/2+BULK_D/2+2.5)
+    north=BULK_Y
     pts=[site(FARM_R+dx,dy,.012) for dx,dy in ((-LENGTH/2-3,north-BULK_D/2-1.5),(roads.BACK_ROAD-FARM_R-2.5,north-BULK_D/2-1.5),
                                                 (roads.BACK_ROAD-FARM_R-2.5,half),(-LENGTH/2-3,half))]
     pad.face(pts,"c2b99f")
@@ -221,10 +223,12 @@ def install(scene,node,p):
             return (g,1,1) if axis=="x" else (1,1,g)
         node(name,mesh_id,"Gas line",ang=angle,t=origin,
              tracks={"scale":[(0,OFF),(base+span[0]-.02,OFF)]+[(base+t,size(t)) for t in range(span[0],span[1]+1)]})
-    lay("Gas line | ground run to the silo",line,site(HEADER_R,0,LOW),BEARING+math.pi,closing.RUN,HEADER_R-RISER_R,"x")
-    lay("Gas line | riser on the outside wall",rise,site(RISER_R,0,LOW),0,closing.RISER,TOP-LOW,"z")
+    diesel_transition=scene.mesh(unit_pipe("Diesel header transition",(0,0,1),gas=False))
+    lay("Diesel header | transition to buried crossing",diesel_transition,site(HEADER_R,0,BURIED),BEARING+math.pi,closing.RUN,LOW-BURIED,"z")
+    lay("Gas line | buried road crossing",line,site(HEADER_R,0,BURIED),BEARING+math.pi,closing.RUN,HEADER_R-RISER_R,"x")
+    lay("Gas line | riser on the outside wall",rise,site(RISER_R,0,BURIED),BEARING+math.pi,closing.RISER,TOP-BURIED,"z")
     lay("Gas line | run across the lid",line,site(RISER_R,0,TOP),BEARING+math.pi,closing.ROOF,RISER_R-DROP_R,"x")
-    lay("Gas line | drop to the power modules",fall,site(DROP_R,0,TOP),0,closing.DROP,TOP-drop_end(p.CROWN),"z")
+    lay("Gas line | drop to the power modules",fall,site(DROP_R,0,TOP),BEARING+math.pi,closing.DROP,TOP-drop_end(p.CROWN),"z")
     lay("Diesel line | drop to the day tanks",oil,site(DROP_R,0,TOP),BEARING+math.pi,closing.DROP,TOP-diesel_end(p.CROWN),"z")
     scene.project_info.update(dieselBulkTank_m=[BULK_L,BULK_D],propaneTanks=COUNT,propaneTank_m=[LENGTH,DIA],propaneStorageDistance_m=FARM_R,
         gasRiserBearing_deg=math.degrees(BEARING),gasLineTop_m=TOP,fuelSceneStart_s=(base+closing.FUEL)/p.FPS)

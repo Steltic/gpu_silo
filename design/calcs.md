@@ -34,7 +34,7 @@ The water-glycol fills the gap between the two concrete skins to 31.75 m, 0.25 m
 | Heat capacity | 26.0 GJ/K = 7.21 MWh/K | cp 3.90 kJ/kg·K |
 | Temperature rise with no heat rejection | 1 K every 8.7 min | at 50 MW |
 | Ride-through on a 10 K swing | 87 min, 72 MWh | input swing. A mixed store can be held 10 K below its limit only in mild weather. |
-| Ride-through with the store layered | 86 min | [check 5](report.md#9-check-5-heat-balance-of-the-store): one pass of the store, 90% usable, in any weather |
+| Ride-through with the store layered | 85 min | [check 5](report.md#9-check-5-heat-balance-of-the-store): one pass of the store, 90% usable, in any weather |
 | Static pressure at the base | 318 kPa | ρ g h |
 | Outer skin hoop tension at the base | 3,843 kN/m, 9.6 MPa on the gross section | p r, thin wall |
 | Inner skin hoop compression at the base | 2,858 kN/m, 5.7 MPa | p r, thin wall |
@@ -71,8 +71,8 @@ At full flow the store turns over once every 87 minutes.
 | --- | ---: | --- |
 | Steel frames | 10 | 5 per tier, tiers based at 13.2 m and 22.2 m |
 | Dry coolers installed | 30 × 2 MW | 3 stacked per frame |
-| Dry coolers needed for the load | 25 | 50 MW ÷ 2 MW |
-| Spare coolers | 5 | N+5 |
+| Dry coolers needed for the load | 26 | 51.25 MW including pump heat ÷ 2 MW |
+| Spare coolers | 4 | N+4 |
 | Cooler pumps | 30 | one per cooler |
 | **Rejection capacity** | **60 MW** | |
 | Margin over the heat load | 20% | 60 / 50 MW |
@@ -80,7 +80,7 @@ At full flow the store turns over once every 87 minutes.
 | One whole frame out of service | 54 MW | still carries the full load |
 | Two whole frames out of service | 48 MW | store warms 1 K every 3.6 h at full load |
 
-25 coolers carry the load and ten frames of three give 30, so 5 are spare. A whole frame can be lowered for service at full load.
+26 coolers carry the load and ten frames of three give 30, so 4 are spare. A whole frame can be lowered at full load when the remaining coils have sufficient measured thermal duty.
 
 ### One 2 MW cooler
 
@@ -164,12 +164,12 @@ Two in-line gas turbine generator sets stand side by side on the top level, unde
 | Diagonal of one set | 14.71 m | the bore is 17 m |
 | Two sets side by side | 0.33 m clear of the wall | 1.5 m aisle between them |
 | Height needed above the pods | 8.48 m | diesel level and turbine level, each with 0.6 m of floor structure |
-| Height available | 8.51 m | crown at 23.49 m, lid at 32 m |
+| Height available | 9.26 m | crown at 23.49 m, raised lid seat at 32.75 m |
 | Weight at the top of the silo | 283 t | 2 turbine sets and 4 diesel sets |
 
 ### Roof vents
 
-The lid carries everything that breathes. There is no general ventilation of the bore.
+The lid carries the machine intakes and exhausts. Two interlocked air handlers serve the bore through separate supply and return ducts at the raised curb.
 
 | Vent | Flow | Size on the roof | Speed |
 | --- | ---: | --- | ---: |
@@ -236,9 +236,9 @@ Road trucks are taken at the usual US limit of 36.3 t gross (80,000 lb), working
 | Diesel | 30 m³ tanker | 3 | 16 to 22 | 0.4 |
 | Turbine generator sets | heavy haul, 94.5 t each | 2 | 9 to 18 | 0.2 |
 | Diesel sets | lowboy, 23.5 t each | 4 | 9 to 18 | 0.4 |
-| Deck steel for the power levels | flatbed | 4 | 9 to 18 | 0.4 |
+| Deck steel for the power levels | flatbed | 12 | 9 to 18 | 1.2 |
 
-After the last pour 398 loads arrive in 28 days. The busiest days are day 16: 25, day 17: 25, day 18: 25 loads.
+After the last pour 406 loads arrive in 28 days. The busiest days are day 16: 26, day 17: 26, day 18: 26 loads.
 
 ### Pods: the heaviest legal load
 
@@ -374,28 +374,13 @@ Day 0 is the last wall pour. The concrete reaches its 28-day strength on day 28,
 | Dock enclosed as the control office | 24 | 27 | 4 |
 | Full strength, handed over | 28 | 28 | 1 |
 
-The walls take 10 days at 1 lift a day and are outside the 28 days. The pod cage is built beside the silo in those days, a level a day, so it is ready to lift in on day 3. One crawler crane does every heavy lift, so the cooler frames are hung before the power levels and the lid. The power levels are fabricated on the ground while the pods load. The store is coated on days 11 to 14 and filled over the last 14 days. Commissioning follows handover and is not part of this programme. The busiest day is day 16 with about 25 loads.
+The walls take 10 days at 1 lift a day and are outside the 28 days. The pod cage is built beside the silo in those days, a level a day, so it is ready to lift in on day 3. One crawler crane does every heavy lift, so the cooler frames are hung before the power levels and the lid. The power levels are fabricated on the ground while the pods load. The store is coated on days 11 to 14 and filled over the last 14 days. Commissioning follows handover and is not part of this programme. The busiest day is day 16 with about 26 loads.
 
-## 10. Open questions raised by these numbers
+## 10. Operating limits and coordination decisions
 
-1. **Store size.** 1.72 M US gal gives 87 minutes of ride-through at 50 MW. Decide the ride-through the site needs. See section 2. Check 5 of the [design report](report.md#9-check-5-heat-balance-of-the-store) finds that the store has to be layered, cool below warm, for the 30 coolers to carry the load above 25 °C outside. Layered, they carry it to 34 °C and the store rides through 86 minutes in any weather. The pipes inside the store that layering needs, a cover and an overflow are in the model.
-2. **Rack heat.** 195 kW per rack is 50 MW over 256 racks. Published figures for the Vera Rubin NVL72 run from about 190 to 230 kW, so the upper end would be 59 MW.
-3. **Generation.** Two 25 MW sets match the 50 MW load with no spare, and pumps, fans and conversion losses add to that load. The diesels cover 20%.
-4. **Fit of the power levels.** The two levels need 8.48 m and have 8.51 m, so the turbine sets stand 30 mm under the lid. The floor structure for 283 t is an allowance, not a design.
-5. **Wall design.** 318 kPa at the base puts 3,843 kN/m of hoop tension in the outer wall. The walls have no post-tensioning. The outer wall is 400 mm for its whole height with two layers of duplex stainless steel hoop bars, designed for strength and for the crack the liner can bridge. The inner wall is 500 mm, set by buckling with the creep of warm concrete. This departs from the durability factor of ACI 350 and needs the agreement of the checker and the authority. See [check 3](report.md#8-check-3-silo-walls) and the [reinforcement options](report.md#10-reinforcement-of-the-outer-wall-options) in the design report. The walls as first drawn were 250 mm.
-6. **Air in the bore.** There is no general ventilation. The bore is surrounded by a store at 42 to 52 °C, so it will sit near that temperature. Check 5 finds about 79 kW coming through the inner wall with the bore held at 30 °C. Work inside needs cooled air or short shifts, and this is not designed.
-7. **Heat next to the pods.** Each turbine rejects about 44 MW, mostly up the stack at 566 °C. Insulation of the stacks and the turbine level above the pods and the store is not designed.
-8. **Cooler air path.** Three coolers stacked vertically discharge outward at 4.6 m/s. Recirculation between rows and between the two tiers has not been checked.
-9. **Lifts.** The films show the bare support rig lifted first, the diesel sets and day tanks landed individually later, and the turbine level lifted as an assembly. Crane selection, lift engineering and the removal route for a turbine or generator remain open.
-10. **Fuel.** 913 m³ of propane runs the site for about 43 hours. Separation distances, bunding, the vaporiser and the resupply rate have not been checked. Fuel stored inside is limited to the day tanks, and the limit that applies has not been checked.
-11. **Power in the shaft.** 50 MW passes down the steel shaft to 64 pods, 781 kW each. The busbar, its cooling and the connection at each level are not designed.
-12. **Pod support.** The pod trusses, the shaft wall, the base of the shaft, the root connection, the hub and the drive of each level are sized in the [design report](report.md) for gravity load. Each level turns on a slewing ring with a motor of about 1.5 kW. The support rig, its shaft connector and the wall mounts are still to be designed. The support rig holds the top of the shaft, so its steel is set on its wall mounts straight after the cage and before the first pod. The shaft wall is 2 in, which keeps the movement of a pod tip to 9.5 mm against the 10 mm allowed. Each pod is joined to its wall sleeve through a flexible section that takes ± 25 mm, for settlement and temperature.
-13. **Pod weight.** A pod weighs 8.9 t with the frame as designed. The rack, CDU and coolant weights in it are allowances: NVIDIA has not published a shipping weight for this rack. The load is 2 pods a truck, side by side, because a 7.16 m pod no longer fits twice along the deck.
-14. **Liner and fill.** The liner goes on from day 11, when the youngest concrete is 11 days old, and the fill starts on day 15. Most coatings ask for 28-day-old, dry concrete, so the liner system and its moisture limits need a supplier's check. The pod sleeves, frame conduits and the door blockout all pass through the liner and need detailing.
-15. **A lift a day.** 1 lift a day is fast for a jumpform. Slower lifts lengthen the work before day 0 and leave the 28 days after it unchanged.
-16. **Fuel line across the ring.** The propane and diesel lines run on the ground from the tanks to the wall and cross both ring lanes. They need to be buried or bridged there.
-17. **Heavy and oversize loads.** The 8 propane tanks are 3 m wide and the turbine sets weigh 94.5 t. Their permits, routes and the way each tank is jacked off its trailer are not designed.
-18. **The ground.** The silo weighs 153 MN full, which is 282 kPa on its slab on average. The slab is 2 m thick and the ground is taken as dense sand or stiff clay, on which [check 4](report.md#11-check-4-foundation) finds about 69 mm of settlement as the silo is loaded. There is no ground investigation: it has to confirm the ground, the settlement over time and the choice of a slab over piles.
+The 50 MW figure is the installed IT load. Two turbines supply 50 MW gross. A 6 MW utility intertie supplies the 4 MW auxiliary allowance at full IT load. Island operation is capped at 46 MW IT. The four diesels support at most 7 MW of priority IT with 3 MW reserved for essential plant. The controller uses the lower of the electrical and thermal limits.
+
+The [revision J assumption register](assumptions.md) gives the disposition of all 18 questions previously listed here. [Structural checks 7–10](report.md#7-checks-7-to-10-support-rig-shaft-connector-and-wall-mounts-design-loads) include the independent upper floor, the guided shaft collar and the wall seats. The IFC includes the buried fuel crossing, conversion plant and the individual rack positions.
 
 ## Fluid properties used
 

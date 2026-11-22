@@ -592,7 +592,7 @@ partial class Shot {
             if(active){using(var br=new SolidBrush(Color.FromArgb(126,202,154)))g.FillEllipse(br,podFace-10,cy-17,5,5);}
         }else Text(g,"Bore",monoSmall,ink,bx+35,cy-8);
         Text(g,"CDU supply and return open into the store",monoSmall,ink,bx+15,by+142);
-        Text(g,"Power and data arrive down the shaft",monoSmall,muted,bx+15,by+155);
+        Text(g,"Interlocked power contact at each berth",monoSmall,muted,bx+15,by+155);
     }
     void StorageOverlay(Graphics g,int frame){
         Frame f=d.Frames[frame];bool installing=frame<d.StoreStart,full=frame>=d.Full;

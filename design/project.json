@@ -3,6 +3,41 @@
     "name": "GPU Silo",
     "application": "House, power and liquid-cool GPU racks"
   },
+  "coordination": {
+    "site": {
+      "horizontal_coefficient": 0.05, "long_period_spectral_g": 0.004,
+      "wind_pressure_kpa": 1.0, "allowable_bearing_kpa": 400,
+      "slab_boss_radius_m": 2.4, "slab_boss_extra_m": 0.8,
+      "weather_recirculation_k": 2.0
+    },
+    "decks": {
+      "diesel_box_m": [0.76, 0.58, 0.057, 0.022],
+      "turbine_box_m": [0.88, 0.58, 0.065, 0.025],
+      "ring_box_m": [0.48, 0.58, 0.035, 0.025],
+      "guide_arm_box_m": [0.28, 0.38, 0.020, 0.016],
+      "diesel_rail_y_m": [-6.0, -3.8, -2.05, 1.30, 3.25],
+      "turbine_rail_y_m": [-3.4, -1.2, 1.2, 3.4],
+      "ring_radius_m": 8.19, "connector_radius_m": 0.82, "access_half_deg": 26,
+      "end_margin_deg": 5, "live_load_kpa": 2.5, "machinery_factor": 1.15,
+      "collar_travel_mm": 25, "guide_pad_m": [0.20, 0.30, 0.015],
+      "pad_modulus_mpa": 90, "guide_play_mm": 0.20, "wall_seat_stiffness_kn_mm": 120,
+      "seat_studs": 8, "stud_diameter_mm": 32, "stud_embed_m": 0.32,
+      "stud_fu_mpa": 450, "anchor_rebar_mm": 32, "shoe_eccentricity_m": 0.20,
+      "plate_thickness_m": 0.04, "roof_curb_m": 0.75
+    },
+    "services": {
+      "facility_aux_mw": 4.0, "grid_import_mw": 6.0, "bus_kv": 13.8,
+      "power_factor": 0.95, "bus_amps": 1600, "level_amps": 400,
+      "fan_kw_per_cooler": 45, "other_services_mw": 0.4, "conversion_loss_fraction": 0.016,
+      "essential_aux_mw": 3.0, "ups_mw": 10.0, "ups_minutes": 5, "ups_mwh": 1.25,
+      "pod_branch_id_m": 0.125, "cooler_branch_id_m": 0.200,
+      "pump_head_m": [30, 35], "pump_efficiency": 0.75,
+      "ahu_kw": 150, "ahu_flow_m3s": 12, "bore_other_kw": 50,
+      "vapour_train_mw": 1.75, "vaporiser_water_c": 105,
+      "crossing_centre_depth_m": 1.4, "bulk_diesel_offset_m": 12,
+      "catch_inflow_m3h": 75, "fill_trip_minutes": 10, "ride_target_min": 60
+    }
+  },
   "cluster": {
     "rack_model": "NVIDIA Vera Rubin NVL72",
     "racks_per_pod": 4,
@@ -58,7 +93,7 @@
     "frames": 10,
     "coolers_per_frame": 3,
     "cooler_capacity_mw": 2.0,
-    "duty_coolers": 25,
+    "duty_coolers": 26,
     "pumps_per_cooler": 1,
     "frame_width_m": 13.0,
     "frame_height_m": 8.4,
@@ -260,7 +295,7 @@
       "welders": 4
     },
     "power_fabrication": {
-      "deck_steel_t": 38,
+      "deck_steel_t": 120,
       "welders": 4
     }
   },
@@ -985,10 +1020,10 @@
   },
   "design_checks": {
     "document": "GS-STR-001",
-    "revision": "I",
+    "revision": "J",
     "date": "2026-11-22",
     "status": "Preliminary, issued for review. Not checked. Not for construction.",
-    "prepared_by": "Claude (Anthropic), for Steltic",
+    "prepared_by": "Revisions A–I by Claude (Anthropic), revision J by Codex for Steltic",
     "checked_by": "Not yet checked",
     "approved_by": "Not yet approved",
     "register": [
@@ -1038,28 +1073,28 @@
         "id": 7,
         "title": "Top support rig",
         "scope": "The steel rig at the crown that carries the diesel generator sets and holds the top of the shaft. Set on its mounts straight after the cage.",
-        "status": "Design loads issued. Design not started.",
+        "status": "Fabricated rail and open ring sized at actual mount positions. Coordination design for review.",
         "section": "7"
       },
       {
         "id": 8,
         "title": "Shaft-top connector",
         "scope": "The connector that puts the horizontal force from the top of the shaft into the support rig",
-        "status": "Design loads issued. Design not started.",
+        "status": "Sliding collar, four arms, pad pressure and stiffness checked for the assumed envelope.",
         "section": "7"
       },
       {
         "id": 9,
         "title": "Cast-in wall mounts",
         "scope": "The mounts cast into the inner wall that carry the support rig, and the wall locally",
-        "status": "Design loads issued. Design not started.",
+        "status": "Cast-in rig plates, positive keys and developed anchor reinforcement sized for review.",
         "section": "7"
       },
       {
         "id": 10,
         "title": "Turbine level mounts and cast-in anchors",
         "scope": "The turbine level's own mounts and the anchors cast into the inner wall for them",
-        "status": "Design loads issued. Design not started.",
+        "status": "Independent turbine rail, ring, seats and anchor groups sized for review.",
         "section": "7"
       }
     ]
@@ -1068,7 +1103,7 @@
     "basis": "Check 5. Site not fixed: the outside air temperatures are assumptions. Fluid and concrete properties are typical values to be replaced with supplier data.",
     "rack_supply_limit_c": 45.0,
     "cdu_approach_k": 3.0,
-    "pump_heat_fraction": 0.015,
+    "pump_heat_fraction": 0.025,
     "cooler_rating": {
       "liquid_in_c": 55.0,
       "air_in_c": 35.0

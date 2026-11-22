@@ -4,6 +4,12 @@ Add a dated entry when a choice changes. Say what the viewer should see, the dim
 
 ## Decisions
 
+### Revision J · 22 November 2026
+
+The crown now has fabricated box girders, separate diesel and turbine bearing groups, field-fit shoes and a guided shaft collar. A 0.75 m curb raises the lid. The revision replaces the 38 t deck allowance with a 120 t ceiling per deck and records the equipment loads at their actual positions. The early rig pick is visible at 0:56 in the short film. The revised fuel crossing, cooling baffles and power distribution are visible in the closing construction and section views at 3:15 short and 4:19 long.
+
+The 6 MW intertie supplies the auxiliary margin at full IT demand. Grade-mounted transformers feed indexed electrical berth contacts. The operating-state IFC4 model shares the film geometry and carries individual equipment identities, storeys, engineering properties, reinforcement and civil services. The [assumption register](assumptions.md) carries R1–R20 and Q1–Q18 with the evidence required for site release.
+
 | Date | Decision | Change and reason | Replaces | Where to see it |
 | --- | --- | --- | --- | --- |
 | 2026-11-16 | Application | The silo houses and powers GPU racks: 256 NVL72 racks in 64 pods of four, about 32 MW of liquid heat. | The earlier storage study this model was adapted from | Design basis strip, whole film |

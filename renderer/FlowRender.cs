@@ -296,16 +296,20 @@ partial class Shot {
                 Stream(g,new[]{wall(coolerHot,high),wall(fan,high),wall(fan,low),wall(coolerCold,low)},cHot,cCold,2.3f,travel,7,18);
             }
         }
-        // Power: from the modules down the steel shaft and out to every pod.
-        var spine=new List<PointF>();spine.Add(at(4.2,d.PowerBase1+1.6));spine.Add(at(0,d.PowerBase1+1.6));spine.Add(at(0,d.BaseZ+d.FrameHeight/2));
+        // Medium voltage drops down the shaft to grade. Transformers feed the fixed bay risers.
+        var spine=new List<PointF>();spine.Add(at(4.2,d.PowerBase1+1.6));spine.Add(at(0,d.PowerBase1+1.6));spine.Add(at(0,-.6));
         var standby=new List<PointF>();standby.Add(at(-3.2,d.PowerBase0+1.4));standby.Add(at(0,d.PowerBase0+1.4));
         Stream(g,standby,cPower,cPower,2.0f,travel,5,16);
         Stream(g,spine,cPower,cPower,3.4f,travel,9,20);
-        for(int level=0;level<d.Levels;level++)for(int side=-1;side<=1;side+=2){
-            double z=d.BaseZ+level*d.Pitch+d.FrameHeight/2;
-            var feed=new List<PointF>();feed.Add(at(0,z));feed.Add(at(side*(d.RootRadius+d.CoreLength-.3),z));
-            Stream(g,feed,cPower,cPower,2.4f,travel,7,18);
-            Arrow(g,at(side*(d.RootRadius+d.CoreLength-.1),z),side>0?0:Math.PI,cPower,6);
+        for(int side=-1;side<=1;side+=2){
+            double riser=side*(d.Outer+.35);
+            Stream(g,new[]{at(0,-.6),at(riser,-.6),at(riser,d.BaseZ+(d.Levels-1)*d.Pitch+d.FrameHeight/2-.42)},cPower,cPower,2.1f,travel,6,18);
+            for(int level=0;level<d.Levels;level++){
+                double z=d.BaseZ+level*d.Pitch+d.FrameHeight/2-.42;
+                var end=at(side*(d.RootRadius+d.CoreLength-.2),z);
+                Stream(g,new[]{at(riser,z),end},cPower,cPower,2.1f,travel,6,18);
+                Arrow(g,end,side>0?Math.PI:0,cPower,6);
+            }
         }
         // Gas: from the tanks along the ground, up the outside wall behind a cooler frame, over the lid and down.
         float farm=412,breakAt=duo?cx-m*(d.Outer+6.5f):574,tank=17,pitch=38;
@@ -317,7 +321,7 @@ partial class Shot {
             g.FillEllipse(shell,x-r,y-r,2*r,2*r);g.DrawEllipse(edge,x-r,y-r,2*r,2*r);g.DrawArc(band,x-r+3,y-r+3,2*r-6,2*r-6,200,140);
             g.FillRectangle(Brushes.Gray,x-r*.7f,ground-7,r*1.4f,7);
         }
-        float pipeY=ground-(float)(m*.45);
+        float pipeY=ground+(float)(m*1.4);
         if(!duo){
             g.DrawString(d.TankCount+" propane tanks",title2,ink,new PointF(farm,ground-2*tank-52),middleText);
             g.DrawString(d.TankLength.ToString("0.#")+" m long, "+d.FarmRadius.ToString("0.#")+" m from the silo",monoSmall,muted,new PointF(farm,ground-2*tank-34),middleText);
@@ -327,12 +331,12 @@ partial class Shot {
         }
         using(var slash=new Pen(cInk,1.2f)){g.DrawLine(slash,breakAt-6,pipeY+9,breakAt+2,pipeY-9);g.DrawLine(slash,breakAt+2,pipeY+9,breakAt+10,pipeY-9);}
         var line=new List<PointF>();
-        line.Add(new PointF(breakAt+14,pipeY));line.Add(at(-d.RiserRadius,.45));line.Add(at(-d.RiserRadius,d.GasTop));
+        line.Add(new PointF(breakAt+14,pipeY));line.Add(at(-d.RiserRadius,-1.4));line.Add(at(-d.RiserRadius,d.GasTop));
         line.Add(at(-d.DropR,d.GasTop));line.Add(at(-d.DropR,d.DropEnd));line.Add(at(-2.4,d.DropEnd));
         Stream(g,line,cGas,cGas,3.0f,travel+6);
         // Diesel: from the bulk tank beside the propane, along the same route, down to the day tanks.
         var oil=new List<PointF>();
-        oil.Add(new PointF(breakAt+14,pipeY+7));oil.Add(at(-d.RiserRadius-.35,.2));oil.Add(at(-d.RiserRadius-.35,d.GasTop+.35));
+        oil.Add(new PointF(breakAt+14,pipeY+7));oil.Add(at(-d.RiserRadius-.35,-1.4));oil.Add(at(-d.RiserRadius-.35,d.GasTop+.35));
         oil.Add(at(-d.DropR-.35,d.GasTop+.35));oil.Add(at(-d.DropR-.35,d.DieselEnd));oil.Add(at(-5.6,d.DieselEnd));
         Stream(g,oil,cDiesel,cDiesel,1.8f,travel*.5,4,15);
         if(duo)return;
@@ -341,7 +345,7 @@ partial class Shot {
         Note(g,"Turbine exhaust stack",null,1098,40,at(d.StackX+d.ExhaustR,d.VentTop-.6));
         Note(g,"Backup diesel sets",d.DieselSets+" sets and day tanks",1098,268,at(5.0+d.GenL/2*.62,d.PowerBase0+d.GenH/2));
         Note(g,"Air inlet house","filtered air for a turbine",560,64,at(d.InletX-d.InletL/2,d.LidZ+.24+d.InletH/2),true);
-        Note(g,"Power down the steel shaft","out to all "+d.Total+" pods",1098,146,at(d.RootRadius+2.2,d.BaseZ+7*d.Pitch+d.FrameHeight/2));
+        Note(g,"13.8 kV down the shaft","via grade transformers",1098,146,at(d.Outer+.35,d.BaseZ+7*d.Pitch+d.FrameHeight/2-.42));
         Note(g,"Water-glycol over the racks","cold in, hot out",1098,206,at(d.RootRadius+3.4,d.BaseZ+6*d.Pitch+d.FrameHeight-.42));
         Note(g,"Dry coolers","draw hot, return cold",1098,360,at(d.CoolerBack+d.CoolerFrameDepth-.7,lowTier+2.5*rowHeight));
         Note(g,"Cool lower layer","warm liquid above",1098,500,at((d.InnerOutside+d.OuterInside)/2,3.2));

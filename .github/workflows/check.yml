@@ -26,6 +26,8 @@ jobs:
       - run: python -m pip install -r requirements.txt
       - name: Check that the calculations and the design report match the design file
         run: python -m gpu_silo calcs --check
+      - name: Export, reopen and geometrically validate the complete IFC4 facility
+        run: python -m gpu_silo ifc
       - name: Export and check the model of the long film
         run: |
           python -m gpu_silo build --scene-only

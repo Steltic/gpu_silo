@@ -64,7 +64,7 @@ def pod_mesh():
     riser(m, POD_R, POD_Y, ports[0] - .30, TOP_MOUTH, WARM, "top")
     for z in ports:
         for side, colour in ((-1, COOL), (1, WARM)):
-            services.pipe(m, (services.TANK_END - .02, side * .043, z + .015), (POD_R, side * POD_Y, z + .015), .05, colour, n=8)
+            services.pipe(m, (services.TANK_END - .02, side * services.PORT_OFFSET, z + .015), (POD_R, side * POD_Y, z + .015), services.BRANCH_BORE+.006, colour, n=12)
     for z in [p + cfg.STORE["pitch_m"] / 2 for p in ports[:-1]] + [ports[-1] + 4, ports[-1] + 8]:
         for side in (-1, 1):
             if side < 0 and z > ports[-1] + .3: continue

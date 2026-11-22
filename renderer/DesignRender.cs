@@ -158,7 +158,7 @@ partial class Shot {
         for(int i=0;i<d.TankCount;i++)g.FillRectangle(i<landed?waterBrush:light,x+(bar+4)*i,212,bar,5);
         g.DrawString(phase,strong,t>=d.Line[9]?ink:accent,new PointF(x,239),leftText);
         Rule(g,x,311,xr,311,cLine,1);g.DrawString("FUEL LINES",section,muted,new PointF(x,329),leftText);
-        string[] legs={"Tank header","Ground run","Riser on the wall","Across the lid","Drops to the power levels"};
+        string[] legs={"Tank header","Buried crossing","Riser on the wall","Across the lid","Drops to the power levels"};
         for(int i=0;i<5;i++){
             float y=356+i*30;bool done=t>=d.Line[2*i+1],live=t>=d.Line[2*i] && !done;
             g.FillRectangle(done?waterBrush:live?accent:light,x,y+4,8,8);

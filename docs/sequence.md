@@ -28,7 +28,7 @@ The pod scenes show the 0.62 m access space around the shaft, the 7.16 m trussed
 | 2:12 | Days 19 to 21 | The crane lifts the four diesel sets and two day tanks onto the seated rig, one load at a time. Water tankers start cycling through the three bays of the water drive and the level in the store begins to rise. |
 | 2:24 | | The turbine level follows: two in-line 25 MW sets with no enclosure. |
 | 2:32 | | The crawler lowers the lid with its stacks and inlet houses, then drives off. |
-| 2:38 | Days 16 to 26 | Propane transports unload at the lay-by. The propane and diesel lines run along the ground, up the wall, across the lid and down to the power levels. |
+| 2:38 | Days 16 to 26 | Propane transports unload at the lay-by. The propane and diesel lines cross under the ring road, up the wall, across the lid and down to the power levels. |
 | 2:46 | Days 24 to 27 | The receiving dock is walled, then roofed panel by panel, and becomes the control office. |
 | 2:53 | Day 28 | The concrete turns solid. A full orbit of the finished silo with the design basis and the 28-day programme as a bar chart. The tankers keep running and the store reaches the rim at the end of the orbit. |
 | 3:15 | | Plan and section side by side, with no voice. The plan shows one pod level and the lower tier of cooler frames. The section shows pod supply from the lower layer and return to the upper layer. Coolers take from the upper layer and return to the lower layer. The section also shows power down the shaft, propane and diesel. |
@@ -50,7 +50,7 @@ Day 0 is the day the last wall lift is poured. The film shows a sample of the tr
 | 0:40 | Days 4 to 5 | The retained crawler sets the bare support rig on the wall plates and braces the shaft before the first pod is hung. |
 | 0:49 | Days 3 to 12 | The water-glycol rises to 31.75 m. The panel gives the volume, the target and the heat buffer, and the tag counts the 278 tanker loads. |
 | 0:55 | Day 6 | The receiving dock. A truck backs into the far lane with two 4SU pods side by side, which is the most the weight limit allows. The gantry spans both lanes and lifts each pod onto a cradle on the rail. A second truck backs in as the first leaves. |
-| 1:09 | Days 6 to 14 | The first 4SU travels through the ground opening, attaches to the hoist, spirals up and docks. The inset shows its coupling: the sleeve stops in the store and power arrives down the shaft. |
+| 1:09 | Days 6 to 14 | The first 4SU travels through the ground opening, attaches to the hoist, spirals up and docks. The inset shows its coupling: the wet sleeve stops in the store and an interlocked dry contact supplies the berth. |
 | 1:17 | | While pods keep loading, the south crawler picks cooler frame 01 and seats it on its cast-in anchors at RL 13.2 to 21.6 m. The inset shows one 2 MW cooler, 12 m long. |
 | 1:22 | | Two fitters in the boom lift connect the supply and return spools to the cast-in conduits, row by row. |
 | 1:24 | | The crawler tracks anticlockwise round the silo and the boom lift follows. Ahead of it the assist crane keeps loading coolers into the frames still in laydown. Pod trucks wait in the holding lanes, lap the ring to the dock and leave by the access road. |
@@ -63,9 +63,9 @@ Day 0 is the day the last wall lift is poured. The film shows a sample of the tr
 | 2:52 | | The crew step back, their deck starts down and the side closes as the camera leaves. |
 | 2:58 | Day 28 | The concrete turns solid and the lid returns. The camera makes a full orbit of the finished silo with its ring road. One panel lists the design basis and the other shows the 28-day programme as a bar chart. |
 | 3:21 | Days 8 to 18 | The fuel farm, 66 m from the silo. Eight heavy-haul trucks come round the ring, each drives into its slot, the tank is jacked off the trailer and lowered to the pad, and the truck leaves by the road out of the back. The diesel tank arrives on a flatbed. |
-| 3:36 | | Propane transports pull into the two-bay lay-by beside the tank header and unload. The propane line and the smaller diesel line run along the ground, up the outside wall, across the lid and down to the power levels. The panel gives the stored volumes and the run times, and the tag counts the 26 propane loads. |
+| 3:36 | | Propane transports pull into the two-bay lay-by beside the tank header and unload. The propane line and the smaller diesel line cross under the ring road, up the outside wall, across the lid and down to the power levels. The panel gives the stored volumes and the run times, and the tag counts the 26 propane loads. |
 | 3:44 | | Plan view, narrated. Riser pairs connect the CDUs and the dry coolers to the two layers. Pods draw cool liquid from the bottom and return warm liquid to the top. Coolers draw from the top and return to the bottom. |
-| 4:19 | | Section. Power runs from the turbine sets down the steel shaft and out to every 4SU. The section follows the pipes from their diffuser plates at the top and bottom of the store to the pods and coolers. Propane runs from the tanks up the wall to the turbines, and diesel follows it to the backup sets. |
+| 4:19 | | Section. Power runs down the fixed shaft to grade transformers, then up the exterior bay risers to the docked 4SUs. The section follows the pipes from their diffuser plates at the top and bottom of the store to the pods and coolers. Propane runs from the tanks up the wall to the turbines, and diesel follows it to the backup sets. |
 | 4:45 | In service | The replacement scene, a cutaway again. A fault is flagged on 4SU 021, Level 6. Neighbouring pods clear the vertical lane. |
 | 4:59 | | The camera pulls back. While the faulty pod comes out through the door, the crawler returns and lowers cooler frame 09 to the ground. |
 | 5:05 | | One 2 MW cooler is drawn out of the frame and set down, and a replacement is lifted into its bay. |

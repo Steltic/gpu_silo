@@ -2,9 +2,9 @@
 
 [![The finished GPU Silo with its roof stacks, ten screened dry cooler frames, the haul ring and the fuel farm](docs/animation.jpg)](../../releases/latest/download/GPU_Silo.mp4)
 
-**[Watch the build · silo_short.mp4](../../releases/latest/download/silo_short.mp4)** (3:34) · **[Watch the full presentation · GPU_Silo.mp4](../../releases/latest/download/GPU_Silo.mp4)** (5:42) · Animated 3D models: [silo_short.glb](../../releases/latest/download/silo_short.glb), [GPU_Silo.glb](../../releases/latest/download/GPU_Silo.glb) · [All versions](../../releases)
+**[Watch the build · silo_short.mp4](../../releases/latest/download/silo_short.mp4)** (3:34) · **[Watch the full presentation · GPU_Silo.mp4](../../releases/latest/download/GPU_Silo.mp4)** (5:42) · Animated 3D models: [silo_short.glb](../../releases/latest/download/silo_short.glb), [GPU_Silo.glb](../../releases/latest/download/GPU_Silo.glb) · **[Complete BIM model · GPU_Silo.ifc](../../releases/latest/download/GPU_Silo.ifc)** · [All versions](../../releases)
 
-A 32 m concrete silo that houses, powers and liquid-cools 256 NVIDIA Vera Rubin GPU racks, a 50 MW cluster. The racks sit four to a pod in 64 **4SU** pods on eight levels around a central shaft. Each pod carries its own CDU and pump and plugs into a water-glycol store held between the silo's two concrete walls. Thirty 2 MW dry coolers on ten screened steel frames hang on the outside of the wall and reject the heat. Two in-line 25 MW gas turbine sets sit side by side above the pods under the lid, burn propane from eight tanks beside the silo and feed the pods down the central shaft. Four backup diesel sets sit on the level below them. Everything arrives by truck on a one-way haul ring, and the build is laid out to finish 28 days after the last concrete is poured.
+A 32 m concrete silo that houses, powers and liquid-cools 256 NVIDIA Vera Rubin GPU racks, a 50 MW cluster. The racks sit four to a pod in 64 **4SU** pods on eight levels around a central shaft. Each pod carries its own CDU and pump and plugs into a water-glycol store held between the silo's two concrete walls. Thirty 2 MW dry coolers on ten screened steel frames hang on the outside of the wall and reject the heat. Two in-line 25 MW gas turbine sets sit side by side above the pods under the lid, burn propane from eight tanks beside the silo and feed the grade-level transformers down the central shaft. Fixed bay risers supply each docked pod. Four backup diesel sets sit on the level below them. Everything arrives by truck on a one-way haul ring, and the build is laid out to finish 28 days after the last concrete is poured.
 
 There are two films. **silo_short** shows the build in programme order and nothing else: the pod cage built beside the walls, the pods and coolers, the fuel tanks, the store liner, the power levels fabricated on site, the water fill over the last two weeks and the dock closed in as a control office. It ends on a plan and a section side by side. **GPU_Silo** is the longer presentation, with the narrated cooling loop, personnel access and the pod and cooler replacement. The two are built from the same model and are not kept in step: the long film still shows the earlier build order, with the store filled before the pods.
 
@@ -19,9 +19,9 @@ The animation is the working drawing for this project. Design decisions are made
 | CDUs and CDU pumps | 64 + 64, one of each per pod |
 | Liquid heat load | 50 MW |
 | Silo | 25 m outside, 17 m inside, 32 m high. Outer wall 400 mm with stainless steel hoop bars, inner wall 500 mm, no post-tensioning. |
-| Water-glycol store | 6,524 m³ (1.72 M US gal) between the walls. It runs layered, cool below warm, through a pair of vertical pipes for each bay of pods and each cooler frame: 77 minutes of full load with the coolers off, in any weather. [Check 5](design/report.md#9-check-5-heat-balance-of-the-store) |
-| Dry coolers | 30 × 2 MW in 10 screened steel frames, one pump each. 25 carry the load, 5 are spare. |
-| Power | 2 × 25 MW in-line gas turbine generator sets, side by side on the top level |
+| Water-glycol store | 6,524 m³ (1.72 M US gal) between the walls. It runs layered, cool below warm, through a pair of vertical pipes for each bay of pods and each cooler frame: about 76 minutes from a fully charged store at the 51.25 MW thermal design load. [Check 5](design/report.md#9-check-5-heat-balance-of-the-store) |
+| Dry coolers | 30 × 2 MW in 10 screened steel frames, one pump each. The full cluster and pumps require at least 26 at rated conditions. Inlet temperature determines the available duty. |
+| Power | 2 × 25 MW gas turbines plus a 6 MW utility intertie. IT dispatch is limited to 46 MW on turbines alone and 7 MW on diesel alone, subject to cooling. |
 | Backup | 4 × 2.5 MW diesel sets on the level below, day tanks inside, 64 m³ bulk tank outside |
 | Fuel | 8 propane tanks of 20 m, 913 m³, about 43 h at full load, one 200 mm line |
 | Roof | 2 turbine exhaust stacks, 2 air inlet houses, diesel exhausts and room vents |
@@ -29,7 +29,7 @@ The animation is the working drawing for this project. Design decisions are made
 | Store liner | 2 mm spray-applied polyurea on both faces of the store, 4,448 m², sprayed from four stages on days 11 to 14 |
 | Programme | Walls in 10 daily lifts by a crew of 22 while the pod cage is built beside them a level a day, then 28 days to handover. The support rig is set on days 4 and 5 to hold the top of the shaft before the first pod. Water goes in last, on days 15 to 28. Commissioning is by others after day 28. |
 
-These figures are written by `python -m gpu_silo calcs` and also appear on screen throughout the film. The [calculations](design/calcs.md#10-open-questions-raised-by-these-numbers) list the open questions they raise. The largest are the wall design, no spare turbine, heat from the turbines next to the pods and the store, and air for people working in the bore.
+The [revision J review register](design/assumptions.md) records the disposition of every open design item and identifies the site data, supplier tests and approvals needed for construction. The [design report](design/report.md) gives the floor, shaft guide, wall anchor and foundation calculations. The [IFC4 model](../../releases/latest/download/GPU_Silo.ifc) can be filtered by storey, system or equipment tag.
 
 ### Find it in the short film (silo_short)
 
@@ -90,7 +90,7 @@ These figures are written by `python -m gpu_silo calcs` and also appear on scree
 | --- | --- |
 | [design/project.json](design/project.json) | Every design input: cluster, silo, pod, store, coolers, power, diesel, fuel, installation, trucking, site roads, jumpform crew, programme and film |
 | [design/calcs.md](design/calcs.md) | Heat load, store, flows, coolers and spares, the fit of the power levels, roof vents, propane line size, fuel run times, truck loads, the store liner, the roads and staging areas, and the 28-day programme. Generated from the inputs. |
-| [design/report.md](design/report.md) | Design report: the register of design checks, the basis of design and each check as it is completed. So far the pod trusses, the shaft, the walls, the heat balance of the store, the choice of reinforcement, the foundation, and the root connection, hub and drive of each level. Generated from the inputs. |
+| [design/report.md](design/report.md) | Ten design checks, the site screening envelope, thermal limits and owner review assumptions. |
 | [design/narration.json](design/narration.json) · [audio/](audio) | The narration script and its recording |
 | [design/README.md](design/README.md) | The current decision for each part of the design and where to change it |
 | [design/history.md](design/history.md) | Dated decision log, including what each decision replaced |
