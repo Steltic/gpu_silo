@@ -65,7 +65,7 @@ To change one unit only, add it to `cdu_pump_section_m_by_unit`, for example `{"
 
 [design/report.md](design/report.md) is the structural design report. It is generated with the calculations by `python -m gpu_silo calcs`, so do not edit it by hand. The register of checks and the document details are `design_checks` in the design file. The analysis is in [gpu_silo/structure.py](gpu_silo/structure.py) and the wording, tables and figures are in [gpu_silo/report.py](gpu_silo/report.py).
 
-To add or revise a check, put the calculation and its own verification in its module, write it up in `report.py`, update the status in the register and raise the revision. The steel checks are in `structure.py`, the walls in `walls.py`, the heat balance of the store in `thermal.py` and the comparison of reinforcement in `reinforcement.py`. `python -m gpu_silo calcs --check` fails if the report, a figure or the calculations no longer match the design file, or if a verification in one of these modules does not hold.
+To add or revise a check, put the calculation and its own verification in its module, write it up in `report.py`, update the status in the register and raise the revision. The steel checks are in `structure.py`, the walls in `walls.py`, the heat balance of the store in `thermal.py`, the comparison of reinforcement in `reinforcement.py`, the foundation in `foundation.py` and the root connection, hub and drive in `connection.py`. `python -m gpu_silo calcs --check` fails if the report, a figure or the calculations no longer match the design file, or if a verification in one of these modules does not hold.
 
 ### Narration
 
