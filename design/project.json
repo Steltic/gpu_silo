@@ -645,12 +645,181 @@
         "creep_coefficient": 2.0,
         "imperfection_factor": 0.5,
         "strength_reduction": 0.65
+      },
+      "reinforcement": {
+        "basis": "Scope of reinforcement for the outer wall. The liner is the liquid barrier, so the crack width it has to bridge is the common limit.",
+        "crack_limit_mm": 0.41,
+        "crack_limit_basis": "ACI 224R-01 Table 4.1, member with a protective membrane",
+        "proposed": "stainless",
+        "segments_per_lift": 8,
+        "schemes": [
+          {
+            "key": "carbon",
+            "name": "Carbon steel",
+            "bar": "ASTM A615 Grade 60",
+            "design": "ACI 350-06, service stress 138 MPa",
+            "modulus_gpa": 200,
+            "strength_mpa": 420,
+            "phi": 0.9,
+            "environment_factor": 1.0,
+            "service_stress_mpa": 138,
+            "sustained_fraction": null,
+            "crack_limited": false,
+            "bond": 1.0,
+            "density_kg_m3": 7850,
+            "max_layers_per_face": 2,
+            "ductile": true,
+            "couplers": true,
+            "bars": [
+              [
+                "#8",
+                25.4,
+                510
+              ],
+              [
+                "#9",
+                28.7,
+                645
+              ],
+              [
+                "#10",
+                32.3,
+                819
+              ],
+              [
+                "#11",
+                35.8,
+                1006
+              ]
+            ]
+          },
+          {
+            "key": "stainless",
+            "name": "Duplex stainless steel",
+            "bar": "ASTM A955 Grade 75, duplex alloy such as UNS S32304",
+            "design": "ACI 318-19 strength, crack width to the liner limit",
+            "modulus_gpa": 200,
+            "strength_mpa": 520,
+            "phi": 0.9,
+            "environment_factor": 1.0,
+            "service_stress_mpa": null,
+            "sustained_fraction": null,
+            "crack_limited": true,
+            "bond": 1.0,
+            "density_kg_m3": 7800,
+            "max_layers_per_face": 2,
+            "ductile": true,
+            "couplers": true,
+            "bars": [
+              [
+                "#8",
+                25.4,
+                510
+              ],
+              [
+                "#9",
+                28.7,
+                645
+              ],
+              [
+                "#10",
+                32.3,
+                819
+              ],
+              [
+                "#11",
+                35.8,
+                1006
+              ]
+            ]
+          },
+          {
+            "key": "gfrp",
+            "name": "GFRP, bars to the code",
+            "bar": "ASTM D7957 glass FRP, 44.8 GPa",
+            "design": "ACI CODE-440.11-22, sustained stress limit",
+            "modulus_gpa": 44.8,
+            "strength_mpa": 550,
+            "phi": 0.55,
+            "environment_factor": 0.85,
+            "service_stress_mpa": null,
+            "sustained_fraction": 0.3,
+            "crack_limited": false,
+            "bond": 1.2,
+            "density_kg_m3": 2100,
+            "max_layers_per_face": 3,
+            "ductile": false,
+            "couplers": false,
+            "bars": [
+              [
+                "#8",
+                25.4,
+                510
+              ],
+              [
+                "#9",
+                28.7,
+                645
+              ],
+              [
+                "#10",
+                32.3,
+                819
+              ]
+            ]
+          },
+          {
+            "key": "gfrp_high",
+            "name": "GFRP, high modulus",
+            "bar": "Glass FRP of 60 GPa and 1,000 MPa, outside ASTM D7957",
+            "design": "Method of ACI CODE-440.11-22, which does not yet cover this bar",
+            "modulus_gpa": 60,
+            "strength_mpa": 1000,
+            "phi": 0.55,
+            "environment_factor": 0.85,
+            "service_stress_mpa": null,
+            "sustained_fraction": 0.3,
+            "crack_limited": false,
+            "bond": 1.2,
+            "density_kg_m3": 2100,
+            "max_layers_per_face": 3,
+            "ductile": false,
+            "couplers": false,
+            "bars": [
+              [
+                "#8",
+                25.4,
+                510
+              ],
+              [
+                "#9",
+                28.7,
+                645
+              ],
+              [
+                "#10",
+                32.3,
+                819
+              ]
+            ]
+          }
+        ],
+        "cfrp": {
+          "modulus_gpa": 140,
+          "strength_mpa": 2000,
+          "sustained_fraction": 0.55,
+          "largest_bar": [
+            "#5",
+            15.9,
+            199
+          ]
+        }
       }
     }
   },
   "design_checks": {
     "document": "GS-STR-001",
-    "revision": "D",
+    "revision": "E",
     "date": "2026-11-22",
     "status": "Preliminary, issued for review. Not checked. Not for construction.",
     "prepared_by": "Claude (Anthropic), for Steltic",
@@ -675,7 +844,7 @@
         "id": 3,
         "title": "Silo wall thickness",
         "scope": "Hoop tension in the outer wall, external pressure on the inner wall, wall thickness and reinforcement, without post-tensioning",
-        "status": "Thickness and reinforcement proposed for liquid load. For review. Not yet in the model.",
+        "status": "Proposed for liquid load and temperature: outer wall 400 mm with stainless steel bars, inner wall 500 mm. For review. Not yet in the model.",
         "section": "8"
       },
       {
@@ -689,8 +858,8 @@
         "id": 5,
         "title": "Heat balance of the store",
         "scope": "Water-glycol temperatures, mixing and ride-through in the store",
-        "status": "Not started",
-        "section": ""
+        "status": "First pass complete. The store has to be layered. For review.",
+        "section": "9"
       },
       {
         "id": 6,
@@ -728,5 +897,91 @@
         "section": "7"
       }
     ]
+  },
+  "thermal": {
+    "basis": "Check 5. Site not fixed: the outside air temperatures are assumptions. Fluid and concrete properties are typical values to be replaced with supplier data.",
+    "rack_supply_limit_c": 45.0,
+    "cdu_approach_k": 3.0,
+    "pump_heat_fraction": 0.015,
+    "cooler_rating": {
+      "liquid_in_c": 55.0,
+      "air_in_c": 35.0
+    },
+    "ambient": {
+      "summer_design_c": 35.0,
+      "extreme_hot_c": 40.0,
+      "winter_design_c": -20.0,
+      "annual_mean_c": 12.0,
+      "daily_range_k": 12.0
+    },
+    "stratification_figure_of_merit": 0.9,
+    "fill_temperature_c": 10.0,
+    "fluid": {
+      "freeze_point_c": -10.0,
+      "burst_point_c": -18.0,
+      "specific_heat_at_50c_kj_kgk": 3.94,
+      "density_by_temperature": [
+        [
+          0,
+          1024.5
+        ],
+        [
+          10,
+          1022.6
+        ],
+        [
+          20,
+          1019.6
+        ],
+        [
+          30,
+          1015.8
+        ],
+        [
+          40,
+          1011.3
+        ],
+        [
+          45,
+          1008.8
+        ],
+        [
+          50,
+          1006.2
+        ],
+        [
+          55,
+          1003.5
+        ],
+        [
+          60,
+          1000.7
+        ],
+        [
+          70,
+          994.7
+        ]
+      ]
+    },
+    "concrete": {
+      "conductivity_w_mk": 2.0,
+      "expansion_per_k": 1e-05,
+      "heat_capacity_mj_m3k": 2.2,
+      "creep_per_k_above_20c": 0.015
+    },
+    "films_w_m2k": {
+      "liquid": 300.0,
+      "outside_wind": 25.0,
+      "outside_still": 10.0,
+      "bore": 8.0
+    },
+    "liner_conductivity_w_mk": 0.2,
+    "insulation": {
+      "thickness_mm": 100,
+      "conductivity_w_mk": 0.035
+    },
+    "bore_air_c": 30.0,
+    "erection_temperature_c": 15.0,
+    "steel_expansion_per_k": 1.2e-05
   }
 }

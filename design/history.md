@@ -177,6 +177,20 @@ These were needed to draw the decisions. Each one is an input in [project.json](
 | 2026-11-22 | The walls are built into the base slab. | The usual detail. It puts bending and shear into the feet of the walls. | [Report 8.6](report.md#86-foot-of-the-outer-wall) |
 | 2026-11-22 | The proposed thicknesses are not put into the design file, the model or the calculations yet. | They change the store volume, the programme and the look of the silo, and tying the walls together is still open. | [Report 8.11](report.md#811-conclusion) |
 | 2026-11-22 | Temperature, earthquake and the ground entry are left out of check 3. | Temperature waits for check 5 and earthquake for the site. The entry is a design task of its own. | [Report 8.12](report.md#812-not-covered-by-this-check) |
+| 2026-11-22 | The CDU is taken to have a plate heat exchanger with a 3 K approach, so the store supplies at 42 °C and returns at 52 °C. | Store liquid from a lined concrete tank should not pass through cold plates. Not a project decision yet. | [Report 9.2](report.md#92-inputs-and-assumptions) |
+| 2026-11-22 | A cooler gives its 2 MW with liquid at 55 °C in and 45 °C out and air at 35 °C. | The rating temperatures were not in the design file. These match NVIDIA's loop on a 35 °C day. | `thermal.cooler_rating` |
+| 2026-11-22 | Outside air: 35 °C summer design, 40 °C extreme, -20 °C winter design, 12 °C yearly mean, 12 K daily range. | The site is not fixed. A temperate inland site in the USA. | `thermal.ambient` |
+| 2026-11-22 | 1.5% is added to the rack heat for pump power. | Allowance until the hydraulics are done. It makes 26 coolers the duty number, not 25. | `thermal.pump_heat_fraction` |
+| 2026-11-22 | A layered store is taken as 90% usable. | Usual range for a layered tank. To be confirmed by a flow model or a test. | [Report 9.6](report.md#96-what-layering-needs) |
+| 2026-11-22 | The pipes that layering needs inside the store are not added to the model. | New equipment that needs a project decision first. | [Report 9.6](report.md#96-what-layering-needs) |
+| 2026-11-22 | Density of the liquid against temperature is built from water tables and the density of glycol. | No supplier table to hand. Used only for the rise of the liquid and for layering. | `thermal.fluid` |
+| 2026-11-22 | The wall temperatures use 52 °C liquid at every height against -20 °C air with wind. | The warm layer can stand anywhere up the wall. | [Report 9.12](report.md#912-temperatures-for-the-design-of-the-walls) |
+| 2026-11-22 | Creep of the inner wall is raised for warm concrete by the fib Model Code 2010 rule, which makes the wall 500 mm. | Creep sets the buckling pressure, and the wall is at about 41 °C for life. | [thermal.py](../gpu_silo/thermal.py) |
+| 2026-11-22 | The crack width that the liner has to bridge is limited to 0.41 mm for every kind of bar. | ACI 224R-01 Table 4.1 for a member with a protective membrane. The liner does not know what the bar is made of. | `structure.walls.reinforcement` |
+| 2026-11-22 | Stainless bars are designed for strength and the crack limit, without the durability factor of ACI 350. | The liner holds the liquid and the bars do not corrode. A departure that the checker and the authority must agree. | [Report 10.6](report.md#106-stainless-steel-proposed) |
+| 2026-11-22 | Glass FRP bars to ASTM D7957 are taken at 550 MPa guaranteed strength, and high-modulus bars at 60 GPa and 1,000 MPa. | Typical values, to be confirmed against the standard and a supplier. | `structure.walls.reinforcement` |
+| 2026-11-22 | The outer wall is not insulated. | With stainless bars the winter stress is accepted, and insulation is another trade at height. | [Report 10.9](report.md#109-temperature) |
+| 2026-11-22 | Stainless reinforcement is proposed but the walls are still not changed in the design file or the model. | The wall thickness is a project decision, and the films are not being rendered for now. | [Report 10.13](report.md#1013-conclusion) |
 
 ## Open questions
 

@@ -9,7 +9,9 @@ from pathlib import Path
 
 from . import design as cfg
 from . import logistics
+from . import reinforcement as rf
 from . import structure as st
+from . import thermal as th
 from . import walls
 
 US_GAL = 0.003785411784  # m3
@@ -345,7 +347,8 @@ The water-glycol fills the gap between the two concrete skins to {c['liquid_top'
 | Liquid mass | {n(c['tank_t'])} t | {c['rho']:.0f} kg/m³ |
 | Heat capacity | {c['store_mj_k']/1000:.1f} GJ/K = {c['store_mwh_k']:.2f} MWh/K | cp {c['cp']:.2f} kJ/kg·K |
 | Temperature rise with no heat rejection | 1 K every {c['min_per_k']:.1f} min | at {c['heat_mw']:.0f} MW |
-| Ride-through on a {c['swing']:g} K swing | {c['ride_min']:.0f} min, {c['ride_mwh']:.0f} MWh | input swing |
+| Ride-through on a {c['swing']:g} K swing | {c['ride_min']:.0f} min, {c['ride_mwh']:.0f} MWh | input swing. A mixed store can be held {c['swing']:g} K below its limit only in mild weather. |
+| Ride-through with the store layered | {th.C['rides']['drawn']['layered']/60:.0f} min | [check 5](report.md#9-check-5-heat-balance-of-the-store): one pass of the store, {th.FOM*100:.0f}% usable, in any weather |
 | Static pressure at the base | {c['head_kpa']:.0f} kPa | ρ g h |
 | Outer skin hoop tension at the base | {n(c['outer_hoop_kn_m'])} kN/m, {c['outer_hoop_mpa']:.1f} MPa on the gross section | p r, thin wall |
 | Inner skin hoop compression at the base | {n(c['inner_hoop_kn_m'])} kN/m, {c['inner_hoop_mpa']:.1f} MPa | p r, thin wall |
@@ -531,12 +534,12 @@ The backup covers black start, controls, the cooling plant and about a fifth of 
 
 ## 10. Open questions raised by these numbers
 
-1. **Store size.** {c['tank_gal']/1e6:.2f} M US gal gives {c['ride_min']:.0f} minutes of ride-through at {c['heat_mw']:.0f} MW. Decide the ride-through the site needs. See section 2.
+1. **Store size.** {c['tank_gal']/1e6:.2f} M US gal gives {c['ride_min']:.0f} minutes of ride-through at {c['heat_mw']:.0f} MW. Decide the ride-through the site needs. See section 2. Check 5 of the [design report](report.md#9-check-5-heat-balance-of-the-store) finds that the store has to be layered, cool below warm, for the {th.INSTALLED} coolers to carry the load above {th.C['limit'][th.INSTALLED, True]:.0f} °C outside. Layered, they carry it to {th.C['limit'][th.INSTALLED, False]:.0f} °C and the store rides through {th.C['rides']['drawn']['layered']/60:.0f} minutes in any weather. The pipes inside the store that layering needs are not drawn.
 2. **Rack heat.** {c['rack_kw']:.0f} kW per rack is {c['heat_mw']:.0f} MW over {c['racks']} racks. Published figures for the Vera Rubin NVL72 run from about 190 to 230 kW, so the upper end would be {c['racks']*.23:.0f} MW.
 3. **Generation.** Two {pw['module_output_mw']:g} MW sets match the {c['heat_mw']:.0f} MW load with no spare, and pumps, fans and conversion losses add to that load. The diesels cover {c['diesel_share']*100:.0f}%.
 4. **Fit of the power levels.** The two levels need {c['levels_need']:.2f} m and have {c['levels_have']:.2f} m, so the turbine sets stand {(c['levels_have']-c['levels_need'])*1000:.0f} mm under the lid. The floor structure for {c['top_weight_t']:.0f} t is an allowance, not a design.
-5. **Wall design.** {c['head_kpa']:.0f} kPa at the base puts about {c['outer_hoop_mpa']:.0f} MPa of hoop tension in a {s['outer_wall_m']*1000:.0f} mm outer skin, which cannot be reinforced for it. Check 3 of the [design report](report.md#8-check-3-silo-walls) proposes walls without post-tensioning: an outer wall of {wl['lifts'][0]['t']*1000:.0f} mm at the base stepping to {wl['lifts'][-1]['t']*1000:.0f} mm, and an inner wall of {wl['inner']['t']*1000:.0f} mm. They would cut the store from {wl['now_volume']:,.0f} m³ to {wl['volume']:,.0f} m³ and nearly double the concrete. They are not yet adopted: this file and the model still use the walls as drawn.
-6. **Air in the bore.** There is no general ventilation. The bore is surrounded by a store at 45 to 55 °C, so it will sit near that temperature. Work inside needs cooled air or short shifts, and this is not designed.
+5. **Wall design.** {c['head_kpa']:.0f} kPa at the base puts about {c['outer_hoop_mpa']:.0f} MPa of hoop tension in a {s['outer_wall_m']*1000:.0f} mm outer skin, which cannot be reinforced for it. Check 3 of the [design report](report.md#8-check-3-silo-walls) proposes walls without post-tensioning: an outer wall of {wl['lifts'][0]['t']*1000:.0f} mm at the base stepping to {wl['lifts'][-1]['t']*1000:.0f} mm, and an inner wall of {wl['inner']['t']*1000:.0f} mm. They would cut the store from {wl['now_volume']:,.0f} m³ to {wl['volume']:,.0f} m³ and nearly double the concrete. [Section 10](report.md#10-reinforcement-of-the-outer-wall-options) of the report then proposes stainless steel bars, which make the outer wall {rf.C['proposed']['lifts'][0]['t']*1000:.0f} mm for its whole height, with an inner wall of {rf.C['inner']*1000:.0f} mm and a store of {rf.C['proposed']['volume']:,.0f} m³. Neither is adopted yet: this file and the model still use the walls as drawn.
+6. **Air in the bore.** There is no general ventilation. The bore is surrounded by a store at {th.COLD:.0f} to {th.HOT:.0f} °C, so it will sit near that temperature. Check 5 finds about {th.C['inner']['heat']/1e3:.0f} kW coming through the inner wall with the bore held at {th.T['bore_air_c']:g} °C. Work inside needs cooled air or short shifts, and this is not designed.
 7. **Heat next to the pods.** Each turbine rejects about {c['turbine_heat_mw']:.0f} MW, mostly up the stack at {pw['exhaust_temperature_c']:.0f} °C. Insulation of the stacks and the turbine level above the pods and the store is not designed.
 8. **Cooler air path.** Three coolers stacked vertically discharge outward at {c['cooler_face_ms']:.1f} m/s. Recirculation between rows and between the two tiers has not been checked.
 9. **Lifts.** Each power level is shown lowered as one assembly. The crane, the lifting sequence and the removal route for a turbine or generator are not designed.

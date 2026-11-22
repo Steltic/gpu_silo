@@ -1,0 +1,157 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 371.5" width="760" height="371.5" font-family="Helvetica, Arial, sans-serif" font-size="12">
+<rect width="760" height="371.5" fill="#ffffff"/>
+<text x="20" y="26" font-size="15" fill="#22303a" font-weight="bold">Figure 6. One metre of the lowest lift of the outer wall, for each reinforcement option</text>
+<text x="20" y="45" fill="#6b7780">Plan section, to scale. The store and its liner are at the top of each piece of wall and the outside air at the bottom.</text>
+<text x="20" y="61" fill="#6b7780">Hoop bars are drawn as dots. Vertical bars are left out.</text>
+<rect x="22.0" y="96.0" width="170.0" height="127.5" fill="#d9dcdc" stroke="#22303a" stroke-width="1"/>
+<line x1="22.0" y1="94.0" x2="192.0" y2="94.0" stroke="#4f8f86" stroke-width="3"/>
+<circle cx="33.9" cy="107.5" r="3.0" fill="#22303a"/>
+<circle cx="57.7" cy="107.5" r="3.0" fill="#22303a"/>
+<circle cx="81.5" cy="107.5" r="3.0" fill="#22303a"/>
+<circle cx="105.3" cy="107.5" r="3.0" fill="#22303a"/>
+<circle cx="129.1" cy="107.5" r="3.0" fill="#22303a"/>
+<circle cx="152.9" cy="107.5" r="3.0" fill="#22303a"/>
+<circle cx="176.7" cy="107.5" r="3.0" fill="#22303a"/>
+<circle cx="33.9" cy="212.0" r="3.0" fill="#22303a"/>
+<circle cx="57.7" cy="212.0" r="3.0" fill="#22303a"/>
+<circle cx="81.5" cy="212.0" r="3.0" fill="#22303a"/>
+<circle cx="105.3" cy="212.0" r="3.0" fill="#22303a"/>
+<circle cx="129.1" cy="212.0" r="3.0" fill="#22303a"/>
+<circle cx="152.9" cy="212.0" r="3.0" fill="#22303a"/>
+<circle cx="176.7" cy="212.0" r="3.0" fill="#22303a"/>
+<circle cx="33.9" cy="120.4" r="3.0" fill="#22303a"/>
+<circle cx="57.7" cy="120.4" r="3.0" fill="#22303a"/>
+<circle cx="81.5" cy="120.4" r="3.0" fill="#22303a"/>
+<circle cx="105.3" cy="120.4" r="3.0" fill="#22303a"/>
+<circle cx="129.1" cy="120.4" r="3.0" fill="#22303a"/>
+<circle cx="152.9" cy="120.4" r="3.0" fill="#22303a"/>
+<circle cx="176.7" cy="120.4" r="3.0" fill="#22303a"/>
+<circle cx="33.9" cy="199.1" r="3.0" fill="#22303a"/>
+<circle cx="57.7" cy="199.1" r="3.0" fill="#22303a"/>
+<circle cx="81.5" cy="199.1" r="3.0" fill="#22303a"/>
+<circle cx="105.3" cy="199.1" r="3.0" fill="#22303a"/>
+<circle cx="129.1" cy="199.1" r="3.0" fill="#22303a"/>
+<circle cx="152.9" cy="199.1" r="3.0" fill="#22303a"/>
+<circle cx="176.7" cy="199.1" r="3.0" fill="#22303a"/>
+<text x="22.0" y="247.5" fill="#22303a" font-weight="bold">Carbon steel</text>
+<text x="22.0" y="264.5" fill="#22303a" font-weight="normal">750 mm wall</text>
+<text x="22.0" y="281.5" fill="#22303a" font-weight="normal">4 layers of #11 at 140 mm</text>
+<text x="22.0" y="298.5" fill="#6b7780" font-weight="normal">bar stress 130 MPa</text>
+<text x="22.0" y="315.5" fill="#6b7780" font-weight="normal">crack 0.19 mm</text>
+<text x="22.0" y="332.5" fill="#6b7780" font-weight="normal">radius grows 8 mm</text>
+<rect x="205.0" y="96.0" width="170.0" height="68.0" fill="#d9dcdc" stroke="#22303a" stroke-width="2"/>
+<line x1="205.0" y1="94.0" x2="375.0" y2="94.0" stroke="#4f8f86" stroke-width="3"/>
+<circle cx="216.1" cy="107.5" r="3.0" fill="#22303a"/>
+<circle cx="238.2" cy="107.5" r="3.0" fill="#22303a"/>
+<circle cx="260.2" cy="107.5" r="3.0" fill="#22303a"/>
+<circle cx="282.4" cy="107.5" r="3.0" fill="#22303a"/>
+<circle cx="304.4" cy="107.5" r="3.0" fill="#22303a"/>
+<circle cx="326.6" cy="107.5" r="3.0" fill="#22303a"/>
+<circle cx="348.6" cy="107.5" r="3.0" fill="#22303a"/>
+<circle cx="370.8" cy="107.5" r="3.0" fill="#22303a"/>
+<circle cx="216.1" cy="152.5" r="3.0" fill="#22303a"/>
+<circle cx="238.2" cy="152.5" r="3.0" fill="#22303a"/>
+<circle cx="260.2" cy="152.5" r="3.0" fill="#22303a"/>
+<circle cx="282.4" cy="152.5" r="3.0" fill="#22303a"/>
+<circle cx="304.4" cy="152.5" r="3.0" fill="#22303a"/>
+<circle cx="326.6" cy="152.5" r="3.0" fill="#22303a"/>
+<circle cx="348.6" cy="152.5" r="3.0" fill="#22303a"/>
+<circle cx="370.8" cy="152.5" r="3.0" fill="#22303a"/>
+<text x="205.0" y="247.5" fill="#22303a" font-weight="bold">Duplex stainless steel</text>
+<text x="205.0" y="264.5" fill="#22303a" font-weight="normal">400 mm wall</text>
+<text x="205.0" y="281.5" fill="#22303a" font-weight="normal">2 layers of #11 at 130 mm</text>
+<text x="205.0" y="298.5" fill="#6b7780" font-weight="normal">bar stress 248 MPa</text>
+<text x="205.0" y="315.5" fill="#6b7780" font-weight="normal">crack 0.38 mm</text>
+<text x="205.0" y="332.5" fill="#6b7780" font-weight="normal">radius grows 15 mm</text>
+<rect x="388.0" y="96.0" width="170.0" height="119.0" fill="#d9dcdc" stroke="#22303a" stroke-width="1"/>
+<line x1="388.0" y1="94.0" x2="558.0" y2="94.0" stroke="#4f8f86" stroke-width="3"/>
+<circle cx="399.9" cy="106.9" r="2.4" fill="#b4532a"/>
+<circle cx="423.7" cy="106.9" r="2.4" fill="#b4532a"/>
+<circle cx="447.5" cy="106.9" r="2.4" fill="#b4532a"/>
+<circle cx="471.3" cy="106.9" r="2.4" fill="#b4532a"/>
+<circle cx="495.1" cy="106.9" r="2.4" fill="#b4532a"/>
+<circle cx="518.9" cy="106.9" r="2.4" fill="#b4532a"/>
+<circle cx="542.7" cy="106.9" r="2.4" fill="#b4532a"/>
+<circle cx="399.9" cy="204.1" r="2.4" fill="#b4532a"/>
+<circle cx="423.7" cy="204.1" r="2.4" fill="#b4532a"/>
+<circle cx="447.5" cy="204.1" r="2.4" fill="#b4532a"/>
+<circle cx="471.3" cy="204.1" r="2.4" fill="#b4532a"/>
+<circle cx="495.1" cy="204.1" r="2.4" fill="#b4532a"/>
+<circle cx="518.9" cy="204.1" r="2.4" fill="#b4532a"/>
+<circle cx="542.7" cy="204.1" r="2.4" fill="#b4532a"/>
+<circle cx="399.9" cy="118.6" r="2.4" fill="#b4532a"/>
+<circle cx="423.7" cy="118.6" r="2.4" fill="#b4532a"/>
+<circle cx="447.5" cy="118.6" r="2.4" fill="#b4532a"/>
+<circle cx="471.3" cy="118.6" r="2.4" fill="#b4532a"/>
+<circle cx="495.1" cy="118.6" r="2.4" fill="#b4532a"/>
+<circle cx="518.9" cy="118.6" r="2.4" fill="#b4532a"/>
+<circle cx="542.7" cy="118.6" r="2.4" fill="#b4532a"/>
+<circle cx="399.9" cy="192.4" r="2.4" fill="#b4532a"/>
+<circle cx="423.7" cy="192.4" r="2.4" fill="#b4532a"/>
+<circle cx="447.5" cy="192.4" r="2.4" fill="#b4532a"/>
+<circle cx="471.3" cy="192.4" r="2.4" fill="#b4532a"/>
+<circle cx="495.1" cy="192.4" r="2.4" fill="#b4532a"/>
+<circle cx="518.9" cy="192.4" r="2.4" fill="#b4532a"/>
+<circle cx="542.7" cy="192.4" r="2.4" fill="#b4532a"/>
+<circle cx="399.9" cy="130.3" r="2.4" fill="#b4532a"/>
+<circle cx="423.7" cy="130.3" r="2.4" fill="#b4532a"/>
+<circle cx="447.5" cy="130.3" r="2.4" fill="#b4532a"/>
+<circle cx="471.3" cy="130.3" r="2.4" fill="#b4532a"/>
+<circle cx="495.1" cy="130.3" r="2.4" fill="#b4532a"/>
+<circle cx="518.9" cy="130.3" r="2.4" fill="#b4532a"/>
+<circle cx="542.7" cy="130.3" r="2.4" fill="#b4532a"/>
+<circle cx="399.9" cy="180.7" r="2.4" fill="#b4532a"/>
+<circle cx="423.7" cy="180.7" r="2.4" fill="#b4532a"/>
+<circle cx="447.5" cy="180.7" r="2.4" fill="#b4532a"/>
+<circle cx="471.3" cy="180.7" r="2.4" fill="#b4532a"/>
+<circle cx="495.1" cy="180.7" r="2.4" fill="#b4532a"/>
+<circle cx="518.9" cy="180.7" r="2.4" fill="#b4532a"/>
+<circle cx="542.7" cy="180.7" r="2.4" fill="#b4532a"/>
+<text x="388.0" y="247.5" fill="#22303a" font-weight="bold">GFRP, bars to the code</text>
+<text x="388.0" y="264.5" fill="#22303a" font-weight="normal">700 mm wall</text>
+<text x="388.0" y="281.5" fill="#22303a" font-weight="normal">6 layers of #9 at 140 mm</text>
+<text x="388.0" y="298.5" fill="#6b7780" font-weight="normal">bar stress 136 MPa</text>
+<text x="388.0" y="315.5" fill="#b4532a" font-weight="normal">crack 0.98 mm</text>
+<text x="388.0" y="332.5" fill="#6b7780" font-weight="normal">radius grows 37 mm</text>
+<rect x="571.0" y="96.0" width="170.0" height="85.0" fill="#d9dcdc" stroke="#22303a" stroke-width="1"/>
+<line x1="571.0" y1="94.0" x2="741.0" y2="94.0" stroke="#4f8f86" stroke-width="3"/>
+<circle cx="582.0" cy="106.7" r="2.2" fill="#b4532a"/>
+<circle cx="604.1" cy="106.7" r="2.2" fill="#b4532a"/>
+<circle cx="626.2" cy="106.7" r="2.2" fill="#b4532a"/>
+<circle cx="648.4" cy="106.7" r="2.2" fill="#b4532a"/>
+<circle cx="670.5" cy="106.7" r="2.2" fill="#b4532a"/>
+<circle cx="692.5" cy="106.7" r="2.2" fill="#b4532a"/>
+<circle cx="714.6" cy="106.7" r="2.2" fill="#b4532a"/>
+<circle cx="736.8" cy="106.7" r="2.2" fill="#b4532a"/>
+<circle cx="582.0" cy="170.3" r="2.2" fill="#b4532a"/>
+<circle cx="604.1" cy="170.3" r="2.2" fill="#b4532a"/>
+<circle cx="626.2" cy="170.3" r="2.2" fill="#b4532a"/>
+<circle cx="648.4" cy="170.3" r="2.2" fill="#b4532a"/>
+<circle cx="670.5" cy="170.3" r="2.2" fill="#b4532a"/>
+<circle cx="692.5" cy="170.3" r="2.2" fill="#b4532a"/>
+<circle cx="714.6" cy="170.3" r="2.2" fill="#b4532a"/>
+<circle cx="736.8" cy="170.3" r="2.2" fill="#b4532a"/>
+<circle cx="582.0" cy="117.8" r="2.2" fill="#b4532a"/>
+<circle cx="604.1" cy="117.8" r="2.2" fill="#b4532a"/>
+<circle cx="626.2" cy="117.8" r="2.2" fill="#b4532a"/>
+<circle cx="648.4" cy="117.8" r="2.2" fill="#b4532a"/>
+<circle cx="670.5" cy="117.8" r="2.2" fill="#b4532a"/>
+<circle cx="692.5" cy="117.8" r="2.2" fill="#b4532a"/>
+<circle cx="714.6" cy="117.8" r="2.2" fill="#b4532a"/>
+<circle cx="736.8" cy="117.8" r="2.2" fill="#b4532a"/>
+<circle cx="582.0" cy="159.2" r="2.2" fill="#b4532a"/>
+<circle cx="604.1" cy="159.2" r="2.2" fill="#b4532a"/>
+<circle cx="626.2" cy="159.2" r="2.2" fill="#b4532a"/>
+<circle cx="648.4" cy="159.2" r="2.2" fill="#b4532a"/>
+<circle cx="670.5" cy="159.2" r="2.2" fill="#b4532a"/>
+<circle cx="692.5" cy="159.2" r="2.2" fill="#b4532a"/>
+<circle cx="714.6" cy="159.2" r="2.2" fill="#b4532a"/>
+<circle cx="736.8" cy="159.2" r="2.2" fill="#b4532a"/>
+<text x="571.0" y="247.5" fill="#22303a" font-weight="bold">GFRP, high modulus</text>
+<text x="571.0" y="264.5" fill="#22303a" font-weight="normal">500 mm wall</text>
+<text x="571.0" y="281.5" fill="#22303a" font-weight="normal">4 layers of #8 at 130 mm</text>
+<text x="571.0" y="298.5" fill="#6b7780" font-weight="normal">bar stress 243 MPa</text>
+<text x="571.0" y="315.5" fill="#b4532a" font-weight="normal">crack 1.30 mm</text>
+<text x="571.0" y="332.5" fill="#6b7780" font-weight="normal">radius grows 50 mm</text>
+<text x="20" y="357.5" fill="#6b7780">The liner is taken to bridge a crack of 0.41 mm. Wider cracks are in orange. The proposed option has the heavy outline.</text>
+</svg>

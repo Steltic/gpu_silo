@@ -3,7 +3,7 @@
 | | |
 | --- | --- |
 | Document | GS-STR-001 |
-| Revision | D, 2026-11-22 |
+| Revision | E, 2026-11-22 |
 | Status | Preliminary, issued for review. Not checked. Not for construction. |
 | Prepared by | Claude (Anthropic), for Steltic |
 | Checked by | Not yet checked |
@@ -12,11 +12,12 @@
 | Revision | Date | Changes |
 | --- | --- | --- |
 | A | 2026-11-21 | First issue. Register of checks, basis of design, pod truss, loads on the shaft. |
-| D | 2026-11-22 | Check 3 carried out for the liquid load: walls without post-tensioning, in 50 MPa concrete, with the liner as the liquid barrier. Thicknesses proposed, not yet adopted in the model. |
 | B | 2026-11-22 | Access round the shaft widened from 0.50 m to 0.62 m. Truss limit changed from span/1,000 to 5 mm. Shaft confirmed as fixed, with the levels turning on it, and held at its top by the support rig. Check 1 carried out. Checks 7, 8 and 9 added. |
 | C | 2026-11-22 | Limits on tip movement set by the project: 5 mm from any one part and 10 mm accumulated. Support rig steel set straight after the cage, generator sets landed on it later. Turbine level given its own mounts and cast-in anchors, as check 10. |
+| D | 2026-11-22 | Check 3 carried out for the liquid load: walls without post-tensioning, in 50 MPa concrete, with the liner as the liquid barrier. Thicknesses proposed, not yet adopted in the model. |
+| E | 2026-11-22 | Check 5 carried out, first pass: the store has to be layered. Inner wall raised to 500 mm for creep in warm concrete. Reinforcement of the outer wall compared: stainless steel proposed, which makes the outer wall 400 mm throughout. |
 
-This report is generated from [project.json](project.json) by `python -m gpu_silo calcs`. Every number in it is calculated by [structure.py](../gpu_silo/structure.py) from the inputs in that file. To change a result, change an input and run the command.
+This report is generated from [project.json](project.json) by `python -m gpu_silo calcs`. Every number in it is calculated from the inputs in that file by [structure.py](../gpu_silo/structure.py), [walls.py](../gpu_silo/walls.py), [thermal.py](../gpu_silo/thermal.py) and [reinforcement.py](../gpu_silo/reinforcement.py). To change a result, change an input and run the command.
 
 ## Contents
 
@@ -28,9 +29,11 @@ This report is generated from [project.json](project.json) by `python -m gpu_sil
 6. [Check 6: root connection and level drive, design loads](#6-check-6-root-connection-and-level-drive-design-loads)
 7. [Checks 7 to 10: support rig, shaft connector and wall mounts, design loads](#7-checks-7-to-10-support-rig-shaft-connector-and-wall-mounts-design-loads)
 8. [Check 3: silo walls](#8-check-3-silo-walls)
-9. [Open items](#9-open-items)
-10. [Appendix A: member forces in the pod truss](#appendix-a-member-forces-in-the-pod-truss)
-11. [Appendix B: section properties](#appendix-b-section-properties)
+9. [Check 5: heat balance of the store](#9-check-5-heat-balance-of-the-store)
+10. [Reinforcement of the outer wall: options](#10-reinforcement-of-the-outer-wall-options)
+11. [Open items](#11-open-items)
+12. [Appendix A: member forces in the pod truss](#appendix-a-member-forces-in-the-pod-truss)
+13. [Appendix B: section properties](#appendix-b-section-properties)
 
 ## 1. Purpose and scope
 
@@ -43,7 +46,9 @@ This revision covers:
 - check 1, the central shaft, sized for gravity load;
 - the loads at the pod root and the rotating mass of a level, for check 6;
 - the loads on the support rig, the shaft connector and the wall mounts of both power levels, for checks 7 to 10;
-- check 3, the silo walls, for the liquid load.
+- check 3, the silo walls, for the liquid load;
+- check 5, the heat balance of the store, as a first pass;
+- a comparison of reinforcement for the outer wall, using the temperatures from check 5.
 
 Lateral load is not covered by any check yet, because the site is not fixed. It is the main limitation of this revision.
 
@@ -53,9 +58,9 @@ Lateral load is not covered by any check yet, because the site is not fixed. It 
 | ---: | --- | --- | --- | --- |
 | 1 | Steel shaft | Axial load, out-of-balance bending, shortening and lean of the central shaft, fixed at its base and held at its top | Wall thickness sized for gravity load. For review. | [Section 5](#5-check-1-central-shaft) |
 | 2 | Pod trusses | The two welded side trusses that carry each 4SU pod as a cantilever | Sized for gravity load to a 5 mm tip deflection. For review. | [Section 4](#4-check-2-pod-truss) |
-| 3 | Silo wall thickness | Hoop tension in the outer wall, external pressure on the inner wall, wall thickness and reinforcement, without post-tensioning | Thickness and reinforcement proposed for liquid load. For review. Not yet in the model. | [Section 8](#8-check-3-silo-walls) |
+| 3 | Silo wall thickness | Hoop tension in the outer wall, external pressure on the inner wall, wall thickness and reinforcement, without post-tensioning | Proposed for liquid load and temperature: outer wall 400 mm with stainless steel bars, inner wall 500 mm. For review. Not yet in the model. | [Section 8](#8-check-3-silo-walls) |
 | 4 | Foundation | Base slab, bearing pressure, and the anchorage of the shaft base | Not started |  |
-| 5 | Heat balance of the store | Water-glycol temperatures, mixing and ride-through in the store | Not started |  |
+| 5 | Heat balance of the store | Water-glycol temperatures, mixing and ride-through in the store | First pass complete. The store has to be layered. For review. | [Section 9](#9-check-5-heat-balance-of-the-store) |
 | 6 | Pod-to-shaft connection and level drive | Root connection of the pod, the hub at each level, and the capacity of the drive that turns a level on the fixed shaft | Design loads issued. Design not started. | [Section 6](#6-check-6-root-connection-and-level-drive-design-loads) |
 | 7 | Top support rig | The steel rig at the crown that carries the diesel generator sets and holds the top of the shaft. Set on its mounts straight after the cage. | Design loads issued. Design not started. | [Section 7](#7-checks-7-to-10-support-rig-shaft-connector-and-wall-mounts-design-loads) |
 | 8 | Shaft-top connector | The connector that puts the horizontal force from the top of the shaft into the support rig | Design loads issued. Design not started. | [Section 7](#7-checks-7-to-10-support-rig-shaft-connector-and-wall-mounts-design-loads) |
@@ -75,7 +80,11 @@ Lateral load is not covered by any check yet, because the site is not fixed. It 
 | Liquid-containing concrete | ACI 350-06, *Code Requirements for Environmental Engineering Concrete Structures*, to be confirmed against ACI 350-20 |
 | Structural concrete | ACI 318-19, *Building Code Requirements for Structural Concrete* |
 | Reinforcing bar | ASTM A615/A615M, Grade 60 |
-| Crack width | ACI 224.2R, *Cracking of Concrete Members in Direct Tension* |
+| Crack width | ACI 224.2R, *Cracking of Concrete Members in Direct Tension*, and ACI 224R-01, *Control of Cracking in Concrete Structures* |
+| Stainless reinforcing bar | ASTM A955/A955M, Grade 75 |
+| Glass FRP reinforcement | ACI CODE-440.11-22 with bars to ASTM D7957/D7957M |
+| Creep of warm concrete | fib *Model Code for Concrete Structures 2010* |
+| Crack bridging of the liner | EN 1062-7 |
 | Section dimensions | AISC *Steel Construction Manual*, 16th edition, Table 1-11 and Table 1-12 |
 
 The pods and the shaft are equipment supports inside a structure, and the specification is applied to them as it would be to a building frame. A crane or machinery standard may also apply to the hoisting and the rotation. That is to be settled under check 6.
@@ -171,7 +180,7 @@ The truss and the shaft are each the lightest that meets its own 5 mm, and toget
 | HSS5×3×3/16 and HSS2-1/2×2-1/2×1/4 | 1-1/4 | 3.93 | 4.73 | 8.66 | 1.34 | 13 |
 | HSS5×3×3/16 and HSS2-1/2×2-1/2×1/4 | 2 | 3.93 | 3.05 | 6.98 | 3.02 | 25 |
 
-No change is made to the sizes in this revision. The choice is open item 5.
+No change is made to the sizes in this revision. The choice is open item 11.
 
 ## 4. Check 2: pod truss
 
@@ -604,7 +613,7 @@ Clause numbers in this section are those of ACI 350-06. ACI 350-20 has replaced 
 | Pressure at the base | 318 kPa | |
 | Load factor on the liquid | 1.4 | ACI 350-06 Section 9.2.1, U = 1.4(D + F) |
 
-Only the liquid load is in this revision. Section 8.12 lists what is left out. Temperature is the most important omission and waits for check 5.
+Only the liquid load is in this section. Section 8.12 lists what is left out. Temperature is taken up in sections 9.12 and 10.9.
 
 ### 8.3 The walls as now drawn
 
@@ -708,15 +717,15 @@ Buckling governs. The check relies on the wall being held round at the base by t
 | Reinforcement in the walls | allowance | **about 447 t** | 305 t of it is hoop steel in the outer wall. Excludes the feet, openings and couplers. |
 | Reinforcement in the lowest lift | | about 72 t | |
 
-**The jumpform programme is affected.** The programme has one lift a day with a crew that includes six ironworkers. The lowest lift now has about 72 t of bar and 262 m³ of concrete. That is not a day's work for the present crew. Prefabricated cages lifted in by crane, a larger crew or a longer cycle for the lower lifts is needed. This is open item 1.
+**The jumpform programme is affected.** The programme has one lift a day with a crew that includes six ironworkers. The lowest lift now has about 72 t of bar and 262 m³ of concrete. That is not a day's work for the present crew. Prefabricated cages lifted in by crane, a larger crew or a longer cycle for the lower lifts is needed. This is open item 9.
 
-The heat that the store can absorb falls with its volume, by 13%. Check 5 is to use the new volume.
+The heat that the store can absorb falls with its volume, by 13%. Check 5 uses the new volume (section 9.7).
 
 ### 8.9 Alternative: tie the two walls together
 
 The liquid stretches the outer wall and squeezes the inner wall. On a cut through the whole silo the liquid acts only on the width of the store, so the net hoop force is the pressure times that width: 1,112 kN/m at the base as drawn. That is 29% of the tension that the outer wall takes when it works alone. If the walls were tied across the store, by radial concrete fins or by steel ties, the compression in the inner wall would cancel most of the tension in the outer wall, and the hoop steel would fall by about 71%.
 
-It is not adopted here. Ties or fins complicate the jumpform, divide the store into cells, pass through the liner and obstruct the spray stages, which goes against buildability. It is recorded because the saving is large. This is open item 2.
+It is not adopted here. Ties or fins complicate the jumpform, divide the store into cells, pass through the liner and obstruct the spray stages, which goes against buildability. It is recorded because the saving is large. This is open item 10.
 
 ### 8.10 Verification
 
@@ -734,9 +743,11 @@ Without post-tensioning, the outer wall needs to be 750 mm thick at the base, st
 
 These thicknesses are a proposal. They are not yet in the design file, the model or the calculations, because they change the store, the programme and the look of the silo. They hold for the liquid load only.
 
+**Sections 9 and 10 take this further.** Check 5 raises the inner wall to 500 mm, because warm concrete creeps more. Section 10 then proposes stainless steel bars for the outer wall, which bring it down to 400 mm for its whole height.
+
 ### 8.12 Not covered by this check
 
-1. **Temperature.** A warm store and cold outside air bend the outer wall and add hoop tension at its outside face. This can add a large amount of hoop steel. It depends on the temperatures from check 5 and on whether the outer wall is insulated.
+1. **Temperature.** A warm store and cold outside air stretch the outside face of the outer wall. It is not in this section. Sections 9.12 and 10.9 cover it.
 2. **The ground entry.** The entry passes through both walls and the store at the base, where the hoop forces are largest. It cuts the hoop steel of the outer wall and the compression ring of the inner wall. Framing it is a design task of its own.
 3. **Other openings and fixings.** The 64 service sleeves in the inner wall, the cooler conduits in the outer wall, and the loads from the mounts of the support rig and the turbine level (checks 9 and 10) and from the cooler frames.
 4. **Earthquake**, including the sloshing of the store. It waits for the site.
@@ -744,21 +755,426 @@ These thicknesses are a proposal. They are not yet in the design file, the model
 6. **Vertical load** from the lid, the power levels and the walls themselves, and wind on the empty silo. Both are small beside the liquid load.
 7. **The base slab** and how firmly it holds the feet of the walls. Part of check 4.
 
-## 9. Open items
+## 9. Check 5: heat balance of the store
+
+### 9.1 What the store does
+
+The store is the water-glycol between the two walls. Each pod has a CDU that takes the heat of its 4 racks and gives it to the store. Each dry cooler draws liquid from the store, cools it in the outside air and returns it. In a steady state the coolers take out what the pods put in. When they cannot, the store warms, and that reserve is what this check measures.
+
+This is a first pass, with a simple model of each part. Its purpose is to find what governs the performance, to give the temperatures for the design of the walls, and to list what the detailed design has to settle. Every number is calculated by [thermal.py](../gpu_silo/thermal.py).
+
+### 9.2 Inputs and assumptions
+
+The site is not fixed. The outside air temperatures are therefore assumptions, and so is the rating condition of the coolers. They are marked.
+
+| Quantity | Value | Basis |
+| --- | ---: | --- |
+| Heat from the racks | 50.0 MW | 256 racks at 195.3 kW |
+| Heat from the pumps | 1.5%, 0.75 MW | allowance. The power of the CDU pumps and cooler pumps ends up in the liquid. |
+| **Heat to reject** | **50.75 MW** | |
+| Warmest coolant into a rack | 45 °C | NVIDIA, for the Vera Rubin generation |
+| Rise across the racks | 10 K | input. NVIDIA gives about 55 °C leaving the rack. |
+| Approach of the CDU | 3 K | **assumption.** The CDU has a plate heat exchanger between the rack loop and the store, so store liquid does not pass through the cold plates. |
+| Dry coolers | 30 of 2 MW | input |
+| Rating condition of a cooler | liquid 55 °C in and 45 °C out, air 35 °C in and 47 °C out | **assumption** for the temperatures. The liquid drop and air rise are inputs. |
+| Outside air, summer design | 35 °C | **assumption** |
+| Outside air, extreme | 40 °C | **assumption** |
+| Outside air, winter design | -20 °C | **assumption** |
+| Outside air, yearly mean and daily range | 12 °C and 12 K | **assumption** |
+| Liquid | 25% propylene glycol by volume | input, and the mixture NVIDIA designs for |
+| Density of the liquid | 1,023 kg/m³ at 10 °C, 1,010 at 42 °C, 1,005 at 52 °C | water tables and the density of glycol, mixed to a specific gravity of 1.022 at 15.6 °C. To be replaced with the supplier's table. |
+| Freezing and bursting | slush forms at -10 °C, pipes burst below about -18 °C | Dow data for inhibited propylene glycol at this strength |
+| Heat held by the liquid | 3.98 MJ/m³·K | 1,020 kg/m³ × 3.9 kJ/kg·K, as in the other calculations. Supplier data at 47 °C gives 3.97. |
+| Concrete | conducts 2 W/m·K, expands 10 × 10⁻⁶ per K | typical values |
+| Surface coefficients | liquid 300, outside in wind 25, outside in still air 10, bore 8 W/m²·K | typical values |
+| Liner | 2 mm, 0.2 W/m·K | input thickness |
+| Insulation on the outer wall, if fitted | 100 mm at 0.035 W/m·K | for comparison only |
+| Air in the bore | 30 °C | **assumption.** The bore has to be ventilated to hold it. |
+| Temperature at which the structure is built | 15 °C | assumption, for movements |
+
+### 9.3 Temperatures the store has to run at
+
+A rack may take coolant at 45 °C. The CDU needs 3 K to pass the heat on. So:
+
+- the store may supply the CDUs at **42 °C** at most;
+- the liquid comes back from the CDUs at **52 °C**;
+- 1,301 kg/s, 1.29 m³/s, passes through the pods, and the same through the coolers.
+
+Each kelvin of CDU approach moves both temperatures by one kelvin. If the store liquid went straight through the racks they would be 45 °C and 55 °C.
+
+### 9.4 One dry cooler
+
+From its rating, a cooler passes on 60% of the most heat that the air could take: an effectiveness of 0.60, 1.34 transfer units, a conductance of 223 kW/K. With its fans at full speed and its rated flow, the heat it rejects is in proportion to the difference between the liquid entering and the air entering: **100 kW for each kelvin.** At its rating that difference is 20 K.
+
+So the temperature of the liquid that the coolers draw is worth as much as the weather. Ten kelvin warmer liquid is the same as ten kelvin cooler air.
+
+### 9.5 A mixed store against a layered store
+
+The store can run in two ways.
+
+- **Mixed.** The liquid is at one temperature throughout. The pods must be supplied at 42 °C or less, so the whole store is at 42 °C or less, and that is what the coolers draw.
+- **Layered.** Warm liquid floats on cool liquid. The pods draw the cool layer at 42 °C and return to the warm layer at 52 °C. The coolers draw the warm layer and return to the cool one. The coolers work on liquid 10 K warmer.
+
+| Outside air, °C | Layered: one cooler, MW | Layered: 30 coolers, MW | Layered: coolers needed | Mixed: store settles at, °C | Mixed: supply against 42 °C |
+| ---: | ---: | ---: | ---: | ---: | --- |
+| -20 | 2.00 | 60.0 | 26 | -3.1 | within |
+| 0 | 2.00 | 60.0 | 26 | 16.9 | within |
+| 12 | 2.00 | 60.0 | 26 | 28.9 | within |
+| 25 | 2.00 | 60.0 | 26 | 41.9 | within |
+| 30 | 2.00 | 60.0 | 26 | 46.9 | 4.9 K too warm |
+| 35 | 1.60 | 48.1 | more than 30 | 51.9 | 9.9 K too warm |
+| 40 | 0.87 | 26.2 | more than 30 | 56.9 | 14.9 K too warm |
+
+![Heat rejected against outside air temperature](figures/heat_rejection.svg)
+
+| | Mixed store | Layered store |
+| --- | ---: | ---: |
+| Warmest outside air at which 30 coolers carry the load | 25.1 °C | **34.3 °C** |
+| The same with 26 coolers | 22.5 °C | 32.4 °C |
+| Coolers needed on the 35 °C design day | 73 | 32, see section 9.8 |
+
+**The store has to be layered. This is the main finding of check 5.** A mixed store with the 30 coolers holds its supply temperature only up to 25 °C outside. On the design day it would settle about 10 K too warm, and it would take 73 coolers to prevent that.
+
+With the pump heat included, 26 coolers are needed at their rating, not 25. That leaves 4 spare.
+
+### 9.6 What layering needs
+
+As drawn, each pod reaches the store through sleeves at its own level, and each cooler through conduits at its own level. Warm liquid rises and cool liquid sinks, so the store would layer partly by itself. But the pods on the upper levels would draw warmer liquid than those below, and the result could not be predicted. Layering has to be designed:
+
+1. **Pods draw from the bottom of the store and return to the top.** One pair of vertical pipes in the store for each of the 8 bays would serve the 8 pods above one another.
+2. **Coolers draw from the top and return to the bottom.** One pair of vertical pipes for each of the 10 frames.
+3. **Liquid enters slowly and sideways.** The warm and cool layers differ by 5.2 kg/m³, about eight times the difference in a chilled-water store, where layered tanks are routine. Spread round the store, the whole flow can enter through an opening 124 mm high without stirring the layers (densimetric Froude number of 1).
+4. **The two flows are kept equal.** The boundary between the layers then stays where it is. The coolers need variable flow, and the store needs temperature sensors up its height to show where the boundary is.
+5. **The boundary is re-made often.** Conduction thickens it by about 230 mm in a day. Running it to the top of the store each night, as section 9.8 describes, keeps it thin.
+
+This check takes 90% of the store as usable, which is in the usual range for a layered tank. The pipes and their openings are new equipment inside the store, fixed through the liner. They are open item 1.
+
+### 9.7 Ride-through
+
+Ride-through is how long the pods keep their supply temperature after the coolers stop.
+
+| Walls | Store, m³ | Heat held, GJ/K | Minutes to warm 1 K | Layered | Mixed, 12 °C outside | Mixed, 35 °C outside |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| As drawn | 7,331 | 29.2 | 9.6 | **86 min** | 125 min | none |
+| Check 3, carbon steel bars | 6,373 | 25.4 | 8.3 | **75 min** | 109 min | none |
+| Section 10, stainless steel bars | 6,524 | 26.0 | 8.5 | **77 min** | 112 min | none |
+
+- **Layered**, the ride-through is one pass of the store through the pods, less the part lost at the boundary. The supply stays at 42 °C the whole time, then rises by 10 K at once when the cool layer is used up. It does not depend on the weather, provided the store was full of cool liquid when the coolers stopped. In cool weather the coolers can hold the cool layer below 42 °C, which lengthens the ride-through. This check does not count on it.
+- **Mixed**, the supply warms from the first minute, and the ride-through is the time to reach 42 °C from wherever the store sat. In mild weather that is long. On the design day there is none.
+
+The 97 minutes in the [design calculations](calcs.md) is a 10 K swing of the store as drawn. It is the mixed case with the store held 10 K below its limit, which the coolers can do only below about 15 °C outside.
+
+The concrete is not counted. In an hour only the first 70 mm or so of each wet face follows the liquid, which adds 2 to 3%.
+
+### 9.8 Hot afternoons and cool nights
+
+The layered store also carries the plant through air that is too warm for the coolers. Figures are for the store of section 10.
+
+| Outside air | 30 coolers reject | Store makes up | For |
+| --- | ---: | ---: | ---: |
+| 35 °C, summer design | 48.1 MW | 2.6 MW | 24.6 h |
+| 40 °C, extreme | 26.2 MW | 24.6 MW | 2.6 h |
+| 23 °C, the night after a design day | 60.0 MW | 9.3 MW to spare | refills a spent store in 7.0 h |
+
+Above 34 °C the coolers fall behind and the cool layer is drawn down. At night they catch up. Whether 30 coolers are enough therefore depends on how many hours a day the site spends above 34 °C, which needs the site's weather record. A site hotter than the one assumed needs more coolers or a smaller CDU approach.
+
+### 9.9 The liquid rises as it warms
+
+| From | To | Rise of the surface |
+| --- | --- | ---: |
+| Filled at 10 °C | all at 42 °C | 387 mm |
+| Filled at 10 °C | all at 52 °C | **552 mm** |
+| All at 42 °C | all at 52 °C, as at the end of a ride-through | 164 mm |
+| | each kelvin, near 47 °C | 16 mm |
+
+The freeboard is 250 mm. A store filled cold to 31.75 m would overflow by about 302 mm of depth when it warmed. So:
+
+- the 31.75 m level is to be the level of a store that is warm throughout, and the cold fill stops at **31.20 m**;
+- an overflow to a catch tank is needed in any case, because the level cannot be relied on.
+
+The liquid is 1% lighter at 47 °C than the 1,020 kg/m³ used for the pressure on the walls in check 3, which is on the safe side. The rise is worked out for walls that do not move and a store of even width.
+
+### 9.10 Cold weather
+
+At 25% glycol the liquid turns to slush at -10 °C and can burst a pipe below about -18 °C. The winter design temperature assumed is -20 °C.
+
+A cooler that is running is full of warm liquid and is safe. A cooler that is stopped is not: the 4 spares in normal running, and all 30 when the pods are off. Each stopped cooler needs a small flow from the store, or to be drained. More glycol is not a good answer, because 25% is the mixture the racks are designed for.
+
+The store itself is in no danger. With the pods off in the design winter it cools by about 3 K a day.
+
+### 9.11 Heat through the walls and from the surface
+
+| Path | Heat | Note |
+| --- | ---: | --- |
+| Outer wall to the outside air, winter design | 612 kW | 1.2% of the load. It helps the coolers and is left out of the balance. |
+| Outer wall, yearly mean | 246 kW | |
+| Inner wall into the bore | 79 kW | with the bore at 30 °C. 4.7 kW for each kelvin between store and bore. |
+| Surface of the store, if open | about 231 kW and 8 t of water a day | pool formula for still air over 208 m² at 52 °C |
+
+Two requirements follow.
+
+- **The bore needs ventilation** that removes about 79 kW from the walls, as well as what the pods give to the air, to hold 30 °C.
+- **The top of the store has to be closed**, with a breather. An open surface would lose water every day, which thickens the glycol, and would put that water into the power levels above.
+
+### 9.12 Temperatures for the design of the walls
+
+The outer wall has the store on one face and the weather on the other. The severe case is the winter design day with wind, with warm liquid against the wall. The warm layer can stand anywhere up the wall, so 52 °C is used at every lift. The walls are those of check 3.
+
+| Lift | Thickness, mm | Heat flow, W/m² | Wet face, °C | Outside face, °C | Difference across the wall, K | Outside face if insulated, °C | Difference if insulated, K |
+| ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| 1 | 750 | 168 | 50 | -13 | **63** | 43 | **8** |
+| 2 | 650 | 190 | 49 | -12 | **62** | 44 | **7** |
+| 3 | 600 | 204 | 49 | -12 | **61** | 45 | **7** |
+| 4 | 500 | 237 | 49 | -11 | **59** | 46 | **6** |
+| 5 | 500 | 237 | 49 | -11 | **59** | 46 | **6** |
+| 6 | 400 | 284 | 48 | -9 | **57** | 47 | **5** |
+| 7 | 400 | 284 | 48 | -9 | **57** | 47 | **5** |
+| 8 | 400 | 284 | 48 | -9 | **57** | 47 | **5** |
+| 9 | 400 | 284 | 48 | -9 | **57** | 47 | **5** |
+| 10 | 400 | 284 | 48 | -9 | **57** | 47 | **5** |
+
+- **Outer wall.** About 57 to 63 K across the wall in winter if it is not insulated, and 5 to 8 K if it is. The wall cannot curve to suit, so the outside face is stretched. Section 10.9 gives what this does to the hoop bars of each option.
+- **Inner wall.** The store is at 47 °C on average and the bore at 30 °C. The difference across the wall is 11 K and the concrete is at 41 °C on average.
+- **Both walls and the liner** are at 42 to 52 °C on the wet face for the life of the plant.
+
+**The inner wall has to be thicker than check 3 found.** Concrete creeps faster when warm. Check 3 took a creep coefficient of 2. At 41 °C it is about 2.7, by the rule for warm concrete in the fib Model Code 2010. Creep sets the buckling pressure of the inner wall: at 450 mm the design buckling pressure falls to 419 kPa against 445 kPa. **The inner wall becomes 500 mm.** Section 10 uses this thickness.
+
+### 9.13 Movement of the walls against the steel inside them
+
+The walls warm with the store. The shaft and the pods stand in the bore air. From 15 °C:
+
+| Movement | Value | Note |
+| --- | ---: | --- |
+| Inner wall rises at the top pod level, 20.8 m | 5.4 mm | wall at 41 °C on average |
+| Shaft rises at the same level | 3.7 mm | bore at 30 °C |
+| Difference at the top pod level | 1.7 mm, and up to 5.4 mm while the store is warm and the bore is still cold | wall sleeve against pod tip |
+| Inner wall and shaft at the support rig, 23.8 m | 6.2 mm and 4.3 mm | the collar must let the shaft slide by the difference, as check 1 already asks |
+| Bore radius grows with temperature | 2.2 mm | |
+| Bore radius shrinks under the liquid, lowest pod level | 1.4 mm at once, 5.2 mm with creep | inner wall of 500 mm |
+| Bore radius shrinks under the liquid, top pod level | 0.5 mm at once, 1.9 mm with creep | |
+| A pod grows in length | 1.5 mm | |
+
+These are the same size as the 5 mm and 10 mm limits on the movement of a pod tip. The coupling between a pod and its wall sleeve has to take them. This adds to open item 14.
+
+### 9.14 Verification
+
+| Check | Value | Independent value | Agreement |
+| --- | ---: | ---: | --- |
+| Cooler model at its rating condition | 2.000 MW, liquid out at 45.0 °C | 2.000 MW, 45.0 °C | equal |
+| Heat rejected by 30 coolers at the layered limit of 34.3 °C | 50.75 MW | heat to reject, 50.75 MW | equal |
+| Layered limit less mixed limit, 26 coolers at rated flow | 9.9 K | rise across the pods, 10 K | close. The liquid flow of a cooler differs between the two cases. |
+| Ride-through of the store of section 10, by hand | 0.9 × 6,524 m³ × 3.978 MJ/m³·K × 10 K ÷ 50.75 MW = 76.7 min | 76.7 min | equal |
+| Heat flow through the lowest lift | 168.1 W/m² overall | 168.1 W/m² through the concrete alone | equal |
+
+The first, second and fifth are checked at every build by [thermal.py](../gpu_silo/thermal.py).
+
+### 9.15 Conclusion
+
+The balance closes: 30 coolers of 2 MW reject the 50.75 MW in outside air up to 34 °C, and the store carries the plant for 77 minutes with no coolers at all. Both statements hold only for a layered store, with the pods fed from the bottom and the coolers from the top. A mixed store falls short by 10 K, which the weather cannot be relied on to give back.
+
+The check also finds that the fill level has to allow 552 mm for the liquid to swell, that the store has to be closed at the top, that stopped coolers need protecting below -10 °C, and that the inner wall has to be 500 mm because warm concrete creeps more.
+
+The confidence in these results is limited by the assumptions in section 9.2. The air temperatures, the CDU approach and the cooler rating each move the limit kelvin for kelvin.
+
+### 9.16 Not covered by this check
+
+1. **The site's weather.** Hours above the limit, and the coldest and hottest days.
+2. **The design of the layering.** The pipes, their openings and the control of the two flows. A flow model or a test should confirm the 90%.
+3. **Hydraulics.** Pump heads, pipe sizes, and priming of the coolers, which stand beside the store and partly above mid-height.
+4. **Selection of the CDU and the cooler** from suppliers, including the high air speed through the coolers noted in the design calculations.
+5. **Start-up and upsets.** Warming the store from cold, the loss of some pods or some coolers, and the supply of power to the coolers and pumps when the turbines stop.
+6. **The liquid over time.** The life of the glycol and its inhibitors at 52 °C, and of the liner in it.
+7. **Heat from the turbine level** into the top of the store and the bore.
+
+## 10. Reinforcement of the outer wall: options
+
+### 10.1 Purpose
+
+Check 3 reinforced the outer wall with ordinary carbon steel bars and found a wall of 750 mm at the base with 4 layers of bars. The project asked whether a different bar would let the wall be thinner: stainless steel or a high-strength fibre-reinforced polymer (FRP), with cost not a consideration, and with cages made up off the wall and dropped in. This section compares the options, using the temperatures of check 5, and proposes one. Every number is calculated by [reinforcement.py](../gpu_silo/reinforcement.py).
+
+### 10.2 What sets the thickness
+
+The outer wall is a tie. The concrete cracks and the bars carry all of the hoop tension. The wall has to be thick enough to hold the bars and to be built, and no thicker. So the thickness follows the bar area, and the bar area follows the stress the bar is allowed in service. Four things can limit that stress:
+
+1. **Strength.** Design strength of the bar against 1.4 times the tension.
+2. **The durability rule of ACI 350**, which holds ordinary bars to 138 MPa in direct tension so that cracks stay fine enough to protect them and to hold liquid.
+3. **The crack that the liner can bridge.** The liner is the liquid barrier here, and it is sprayed before the store is filled, so every crack opens underneath it.
+4. **For FRP, creep rupture.** A glass bar under load for years breaks at a fraction of its short-term strength.
+
+The stiffness of the bar then decides how wide the cracks are and how far the wall stretches at a given stress. Steel, of either kind, is 200 GPa. Glass FRP is 45 to 60 GPa.
+
+In check 3, rule 2 governed: 138 MPa is a third of the strength of the bar. That is why the wall is thick. **The thickness comes from the reinforcement, so the reinforcement is worth changing.**
+
+### 10.3 The limit common to every option
+
+Rule 3 applies whatever the bar is made of. The crack width limit is taken as **0.41 mm**, the value ACI 224R-01 Table 4.1 gives as reasonable for a member with a protective membrane. Crack widths are estimated as in check 3, by ACI 224.2R, with the stress scaled to the stiffness of the bar and a bond factor of 1.2 for FRP.
+
+The liner specification should ask for more than this, because crack widths scatter: bridging of a new crack of 1.25 mm (class A4 of EN 1062-7), shown at 52 °C and after ageing in warm glycol.
+
+### 10.4 The options compared
+
+| Option | Bar | Stress in service, MPa | Bar area at the base, mm²/m | Hoop bars at the base, mm | Wall, base to top, mm | Crack width, mm | Within 0.41 mm | Radius grows, mm | Bars in the outer wall, t | Heaviest lift, t | Store, m³ |
+| --- | --- | --- | ---: | --- | ---: | ---: | --- | ---: | ---: | ---: | ---: |
+| Carbon steel | ASTM A615 Grade 60 | 138, the ACI 350 rule | 28,743 | 4 of #11 at 140 | 750 to 400 | 0.18 to 0.21 | Yes | 8 | 353 | 62 | 6,284 |
+| **Duplex stainless steel** | ASTM A955 Grade 75, duplex alloy such as UNS S32304 | 212 to 270, by the crack limit | 15,477 | 2 of #11 at 130 | **400** | 0.38 to 0.41 | Yes | 17 | 204 | 34 | 6,524 |
+| GFRP, bars to the code | ASTM D7957 glass FRP, 44.8 GPa | 140, against creep rupture | 27,643 | 6 of #9 at 140 | 700 to 400 | 0.98 to 1.23 | No | 38 | 92 | 16 | 6,283 |
+| GFRP, high modulus | Glass FRP of 60 GPa and 1,000 MPa, outside ASTM D7957 | 255, against creep rupture | 15,692 | 4 of #8 at 130 | 500 to 400 | 1.30 to 1.70 | No | 52 | 56 | 9 | 6,476 |
+
+All four use the inner wall of 500 mm from section 9.12. The masses are for hoop and vertical bars in the outer wall, without the foot, openings, laps or couplers. The growth of the radius is that of the bars alone, with no help from the concrete between cracks, so it is an upper estimate.
+
+![One metre of the lowest lift for each option](figures/wall_options.svg)
+
+### 10.5 Carbon steel
+
+This is check 3. It is the only option that follows ACI 350 as written. It gives the thickest wall and the most layers.
+
+Carbon steel could be designed to the crack limit of section 10.3 in place of rule 2, and the wall would come out the same as the stainless one. It is not proposed. The cracks pass through the wall, so they are open to rain on the outside face whatever the liner does on the inside, and ordinary bars crossing cracks of 0.4 mm in the weather will corrode. Rule 2 exists to prevent that.
+
+### 10.6 Stainless steel: proposed
+
+**Bar.** ASTM A955 Grade 75 (520 MPa yield) in a duplex alloy such as UNS S32304. It has the stiffness and ductility of ordinary bar, it is cut, bent and coupled in the same way, with tooling kept for stainless, and it is rolled in the same sizes up to #11.
+
+**Design.** Strength to ACI 318-19: design strength 0.9 f<sub>y</sub> against 1.4 times the tension. Then the bar area is increased until the crack width is within 0.41 mm. The crack limit governs at every lift but the top one, so the bars work at 63 to 81% of their design strength.
+
+| Lift | Pressure, kPa | Hoop tension, kN/m | Thickness, mm | Hoop bars | Provided, mm²/m | Ratio | Stress in service, MPa | Share of design strength used | Crack width, mm | Radius grows, mm | Bars in the lift, t |
+| ---: | ---: | ---: | ---: | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| 1 | 318 | 3,843 | **400** | 2 layers of #11 at 130 mm | 15,477 | 3.9% | 248 | 0.74 | 0.38 | 15 | 33.7 |
+| 2 | 286 | 3,456 | **400** | 2 layers of #11 at 140 mm | 14,371 | 3.6% | 240 | 0.72 | 0.38 | 15 | 31.6 |
+| 3 | 254 | 3,068 | **400** | 2 layers of #10 at 140 mm | 11,700 | 2.9% | 262 | 0.78 | 0.41 | 16 | 26.4 |
+| 4 | 222 | 2,681 | **400** | 2 layers of #9 at 130 mm | 9,923 | 2.5% | 270 | 0.81 | 0.40 | 17 | 23.0 |
+| 5 | 190 | 2,294 | **400** | 2 layers of #9 at 140 mm | 9,214 | 2.3% | 249 | 0.74 | 0.38 | 15 | 21.6 |
+| 6 | 158 | 1,906 | **400** | 2 layers of #8 at 140 mm | 7,286 | 1.8% | 262 | 0.78 | 0.39 | 16 | 17.9 |
+| 7 | 126 | 1,519 | **400** | 2 layers of #8 at 170 mm | 6,000 | 1.5% | 253 | 0.76 | 0.40 | 16 | 15.4 |
+| 8 | 94 | 1,132 | **400** | 2 layers of #8 at 210 mm | 4,857 | 1.2% | 233 | 0.70 | 0.40 | 14 | 13.2 |
+| 9 | 62 | 744 | **400** | 2 layers of #8 at 290 mm | 3,517 | 0.9% | 212 | 0.63 | 0.40 | 13 | 10.6 |
+| 10 | 30 | 357 | **400** | 2 layers of #8 at 300 mm | 3,400 | 0.9% | 105 | 0.31 | 0.20 | 6 | 10.4 |
+
+**Result.** The outer wall is **400 mm for its whole height**, with **two layers of hoop bars**, one at each face. The thickness is set by the room the bars need: 50 mm cover, a #11 hoop bar and a vertical bar at each face, and a 150 mm core. There are no steps, so the jumpform keeps one setting.
+
+**Departure from ACI 350.** This design does not apply the durability factor of ACI 350 (rule 2). The reasons are that the liner, not the concrete, holds the liquid, and that the bars do not corrode. It is a departure from the standard named in the basis of design, and the checker and the authority have to agree to it. It is open item 4.
+
+**Foot of the wall.**
+
+| Quantity | Value | Basis |
+| --- | ---: | --- |
+| Moment at the foot | 436 kN·m/m | long cylinder with a fixed foot, unfactored. A thinner wall attracts less than the 789 kN·m/m of check 3. |
+| Vertical bars on the store face | 4,293 mm²/m: 1 layer of #9 at 150 mm | strength |
+| Factored shear against the most the section can carry | 737 kN/m against 1,485 kN/m | ACI 318-19 Section 22.5 |
+| Shear ties | 4,072 mm² for each square metre of wall | the concrete alone carries 304 kN/m |
+
+The foot works, with heavy shear ties in the lowest part of the first lift. A local thickening of the wall at its foot would lighten them and is worth drawing.
+
+### 10.7 Glass FRP
+
+**Bars to the code.** ACI CODE-440.11-22 covers glass FRP bars to ASTM D7957, with a modulus of 44.8 GPa. A guaranteed strength of 550 MPa is taken for the larger sizes. The stress under sustained load is limited to 0.3 of the design strength, which is 140 MPa. The liquid load is sustained for the life of the store. So the code allows glass bars the same stress as rule 2 allows ordinary steel, and the bar area is the same. But the bar has less than a quarter of the stiffness:
+
+- cracks of 1.0 to 1.2 mm, against a limit of 0.41 mm;
+- the radius grows by 38 mm;
+- the largest bar is #10, so the base needs 6 layers, and the wall is 700 mm;
+- to meet the crack limit would take 65,904 mm² of bar a metre at the base, which cannot be placed.
+
+**High-modulus bars.** Bars of 60 GPa and 1,000 MPa are made, but ACI CODE-440.11-22 does not cover them. By the same method they could work at 255 MPa. The wall comes down to 500 mm at the base and 400 mm above, but the cracks are 1.3 to 1.7 mm and the radius grows by 52 mm.
+
+**Other matters**, each of which counts against FRP in this wall:
+
+1. **Temperature.** The wall is at 42 to 52 °C for life. ASTM D7957 qualifies a bar's resistance to alkali by 90 days at 60 °C and accepts the loss of a fifth of its strength. The store would hold the bars close to that test temperature permanently, under load. The limits in the code were not derived for that.
+2. **Splices.** No coupler in general use develops the strength of a glass bar. The hoops would be closed by laps. For steel, ACI 318-19 Section 25.5.7.4 does not allow lap splices in a tension tie, which is what this wall is.
+3. **No yield.** FRP is elastic until it breaks. Stresses from temperature and restraint add directly to the stress that breaks it. In steel they are shed by yielding.
+4. **Fabrication.** The bars cannot be bent on site. Every hoop is made curved at the factory.
+5. **Fire.** The resin softens at about 100 °C.
+
+**Conclusion on glass FRP.** It does not suit the outer wall. Its strength cannot be used, because the load is permanent, and its low stiffness opens cracks three to four times wider than the liner limit. It could suit the **inner wall**, which is in compression and has only the least reinforcement, as light cages. That would need the fire case for the bore to be settled first.
+
+### 10.8 Carbon FRP
+
+Carbon FRP is strong and does not creep to rupture as glass does, but it is less stiff than steel, about 140 GPa. To hold the same crack width as the stainless design the bars could work at only 145 MPa, 7% of their strength, and the base would need 26,532 mm² a metre. Bars are commonly made only up to about #5, of which four layers at 125 mm give 6,368 mm² a metre. The ACI code and the ASTM specification used here cover glass bars only. Carbon FRP is not readily available as bar and it does not make the wall thinner.
+
+### 10.9 Temperature
+
+On the winter design day the outside face is 63 K or so colder than the wet face (section 9.12). A ring cannot curve, so the bars at the cold face are stretched further and those at the wet face are relieved. In a wall cracked through, the change in bar stress is E α ΔT times the distance of the bar from the middle of the wall over the thickness.
+
+| Option | Difference across the lowest lift, K | Bar stress from the liquid, MPa | Change at the outside face, not insulated, MPa | Outside face in winter, MPa | Crack at the outside face, mm | Change if insulated, MPa | Vertical bars from the same cause, MPa |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| Carbon steel | 63 | 130 | +45 | 175 | 0.25 | +6 | 91 |
+| Duplex stainless steel | 57 | 248 | +38 | 286 | 0.44 | +3 | 70 |
+| GFRP, bars to the code | 62 | 136 | +9 | 144 | 1.04 | +1 | 22 |
+| GFRP, high modulus | 59 | 243 | +11 | 254 | 1.35 | +1 | 26 |
+
+- **Carbon steel** goes over its 138 MPa limit by up to 28%. It would need that much more hoop steel at the outside face, or insulation.
+- **Stainless steel** reaches 286 MPa at the outside face, 55% of yield, and the crack there opens to 0.48 mm. That face has no liner and the bars do not corrode, so this is accepted. The crack at the liner closes a little in winter.
+- **The least vertical reinforcement** is enough for the bending up the wall from the same cause.
+
+**The outer wall does not need insulating if its bars are stainless.** Insulation would remove most of the effect, but it is another trade working at height round the cooler frames, and the heat it would save is heat the coolers are there to reject. In summer the difference across the wall is small and can reverse in the sun, by a few kelvin.
+
+### 10.10 Cages
+
+Cages made up off the wall and lifted in help with any bar. They take the bar fixing off the critical path of the lift, which is where check 3 found the programme was exposed.
+
+| | Carbon steel | Stainless steel | Glass FRP, to the code |
+| --- | ---: | ---: | ---: |
+| Layers of hoop bars in the lowest lift | 4 | 2 | 6 |
+| Bars in the lowest lift of the outer wall | 62 t | 34 t | 16 t |
+| One cage, with the lift in 8 | 7.8 t | **4.2 t** | 2.0 t |
+
+An FRP cage is lighter, but lightness is not what limits a cage here. A stainless cage for one eighth of the lowest lift is 9.7 m round the curve, 3.2 m high and 4.2 t, with one layer of hoops at each face. That is an easy lift for the cranes on site and a simple cage to make. The hoop bars are joined between cages with couplers that can join two bars already in place, staggered. With carbon steel the same cage has four layers and twice the weight.
+
+### 10.11 The walls with stainless reinforcement
+
+| Quantity | As drawn | Check 3, carbon steel | Proposed, stainless steel |
+| --- | ---: | ---: | ---: |
+| Outer wall | 250 mm | 750 mm to 400 mm, in 5 steps | **400 mm throughout** |
+| Layers of hoop bars | | up to 4 | **2** |
+| Inner wall | 250 mm | 450 mm, 500 mm after check 5 | **500 mm** |
+| Width of the store | 3.50 m | 2.75 m to 3.10 m | 3.10 m |
+| Volume of the store | 7,331 m³ | 6,284 m³ | **6,524 m³** against a target of 5,678 m³ |
+| Ride-through, layered | 86 min | 74 min | **77 min** |
+| Concrete in the walls | 1,056 m³ | 2,110 m³ | **1,869 m³** |
+| Bars in the outer wall | | 353 t | **204 t** |
+| Bars in the lowest lift of the outer wall | | 62 t | **34 t** |
+| Crack width under the liner | | 0.21 mm | 0.41 mm |
+
+The carbon steel column uses the 500 mm inner wall, so that the three can be compared. Its store is smaller than the 6,373 m³ in section 8.8 for that reason.
+
+### 10.12 What the proposal depends on
+
+1. **Agreement to the departure from ACI 350** (section 10.6).
+2. **The liner.** It has to bridge new cracks of 0.4 mm, and wider ones with a margin, at 52 °C in glycol, for life. If the supplier cannot show this, the crack limit comes down and the bars go up: at 125 mm spacing two layers of #11 give a crack of about 0.36 mm in the same 400 mm wall. Below that the wall thickens again.
+3. **The wall stretches when the store is first filled.** The radius grows by about 17 mm, which is 1.24 mm in every metre round the wall. Whatever is fixed to the outer wall over a length has to allow for it or be fixed after the first fill. A cooler frame is anchored over 11 m, which stretches by 14 mm. With carbon steel it would be 7 mm.
+4. **Anchors in cracked concrete.** The cast-in mounts and anchors of checks 9 and 10 and of the cooler frames sit in a wall with cracks of about 0.4 mm, and are to be designed for that.
+5. **Supply.** Stainless #8 to #11 bar in Grade 75, and couplers for it, are standard products but are usually made to order. The lead time belongs in the programme.
+6. **The first fill is the proof test.** The stretch of the wall and the cracks should be measured as the store is filled, in stages.
+
+### 10.13 Conclusion
+
+The thickness of the outer wall is set by its reinforcement, and by one rule: the 138 MPa that ACI 350 allows an ordinary bar in direct tension. Stainless steel bars make it reasonable to set that rule aside, because they do not corrode at a crack and the liner holds the liquid. Designed for strength and for the crack the liner can bridge, **the outer wall is 400 mm for its whole height with two layers of bars, where carbon steel needs 750 mm and four layers at the base.**
+
+FRP does not do the same. Glass is too flexible and cannot use its strength under a permanent load. Carbon is not stiff enough either and is not readily available.
+
+Cages are worth having with stainless bars: eight to a lift, about 4 t each at the base.
+
+The walls are not yet changed in the design file, the model or the calculations.
+
+## 11. Open items
 
 | No. | Item | Affects | Needed from |
 | ---: | --- | --- | --- |
-| 1 | Jumpform programme and crew for the heavier walls: about 72 t of reinforcement in the lowest lift (section 8.8) | programme, check 3 | project |
-| 2 | Tie the two walls together, or keep them separate as proposed (section 8.9) | check 3 | project |
-| 3 | Adopt the proposed wall thicknesses in the design file, the model and the calculations | everything that uses the store or the walls | project |
-| 4 | Temperatures of the store and the outside air, and whether the outer wall is insulated | checks 3 and 5 | check 5 |
-| 5 | Allowance for the root connection within the 10 mm accumulated limit: 0.4 mm is left with the present sizes (section 3.7) | checks 1, 2 and 6 | project, with check 6 |
-| 6 | Site and seismic design category, for the lateral case | all structural checks | project |
-| 7 | Weight of a rack in operation, and of the CDU, pump and coolant | checks 1, 2, 4 and 6 | equipment supplier |
-| 8 | Tolerance of the wall coupling, to confirm the limits on tip movement | checks 1, 2 and 6 | coupling supplier |
-| 9 | Weight of the hub, bearing and access floor at each level | checks 1 and 6 | check 6 |
-| 10 | Comparison of section properties with the AISC Manual, and of the ACI 350-06 clauses with ACI 350-20 | check 2 | checker |
-| 11 | The films still show the support rig arriving with the generator sets | animation | next render |
+| 1 | Layer the store: vertical pipes and openings inside the store for the pods and the coolers, and control of the two flows (section 9.6) | check 5, the liner, the model | project |
+| 2 | Weather record of the site, and the CDU approach and cooler rating from suppliers (section 9.2) | check 5 | project, suppliers |
+| 3 | Adopt the walls of section 10.11 in the design file, the model and the calculations: outer wall 400 mm with stainless steel bars, inner wall 500 mm | everything that uses the store or the walls | project |
+| 4 | Agreement to design the lined outer wall without the durability factor of ACI 350 (section 10.6) | check 3 | checker, authority |
+| 5 | Liner: bridging of new cracks at 52 °C in glycol (section 10.12) | check 3 | liner supplier |
+| 6 | Close the top of the store, add an overflow and catch tank, and set the cold fill level (sections 9.9 and 9.11) | check 5, the model | project |
+| 7 | Frost protection for stopped coolers, and ventilation of the bore (sections 9.10 and 9.11) | check 5 | project |
+| 8 | Fixings to the outer wall, to allow for its stretch at first fill and for cracked concrete (section 10.12) | cooler frames, checks 9 and 10 | project |
+| 9 | Jumpform programme and crew, with the reinforcement as cages: about 34 t in the lowest lift of the outer wall with stainless bars, 62 t with carbon steel (sections 8.8 and 10.10) | programme, check 3 | project |
+| 10 | Tie the two walls together, or keep them separate as proposed (section 8.9) | check 3 | project |
+| 11 | Allowance for the root connection within the 10 mm accumulated limit: 0.4 mm is left with the present sizes (section 3.7) | checks 1, 2 and 6 | project, with check 6 |
+| 12 | Site and seismic design category, for the lateral case | all structural checks | project |
+| 13 | Weight of a rack in operation, and of the CDU, pump and coolant | checks 1, 2, 4 and 6 | equipment supplier |
+| 14 | Tolerance of the wall coupling, to confirm the limits on tip movement, with the movements of the walls in section 9.13 | checks 1, 2 and 6 | coupling supplier |
+| 15 | Weight of the hub, bearing and access floor at each level | checks 1 and 6 | check 6 |
+| 16 | Comparison of section properties with the AISC Manual, of the ACI 350-06 clauses with ACI 350-20, and of the values taken from ACI CODE-440.11-22, ASTM A955 and ASTM D7957 with the documents | checks 2 and 3 | checker |
+| 17 | The films still show the support rig arriving with the generator sets, and walls of 250 mm | animation | next render |
 
 ## Appendix A: member forces in the pod truss
 
