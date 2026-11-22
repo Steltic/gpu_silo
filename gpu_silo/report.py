@@ -782,4 +782,16 @@ def write():
 
 
 def current():
-    return all(path.is_file() and path.read_text(encoding="utf-8") == text for path, text in outputs().items())
+    return not differences()
+
+
+def differences():
+    """The first line that differs in each generated file that no longer matches the design file."""
+    found = []
+    for path, text in outputs().items():
+        old = path.read_text(encoding="utf-8") if path.is_file() else ""
+        if old == text: continue
+        pairs = zip(old.split("\n") + [""] * 99999, text.split("\n"))
+        line, (was, now) = next(((n, pair) for n, pair in enumerate(pairs, 1) if pair[0] != pair[1]), (0, ("", "")))
+        found.append(f"{path.name} line {line}\n  committed: {was[:300]}\n  generated: {now[:300]}")
+    return found

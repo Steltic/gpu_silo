@@ -35,7 +35,7 @@ def main():
         from . import calcs, report, structure
         if args.check:
             if not calcs.current():
-                parser.exit(1, "design/calcs.md or design/report.md is out of date. Run: python -m gpu_silo calcs\n")
+                parser.exit(1, "A generated design document is out of date. Run: python -m gpu_silo calcs\n" + "\n".join(calcs.differences()) + "\n")
             structure.check()
             print("design/calcs.md and design/report.md match design/project.json")
             return

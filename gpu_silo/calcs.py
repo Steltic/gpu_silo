@@ -699,5 +699,10 @@ def write(path=FILE):
 
 
 def current(path=FILE):
+    return not differences(path)
+
+
+def differences(path=FILE):
     from . import report
-    return Path(path).is_file() and Path(path).read_text(encoding="utf-8") == markdown() and report.current()
+    found = [] if Path(path).is_file() and Path(path).read_text(encoding="utf-8") == markdown() else [f"{Path(path).name} differs"]
+    return found + report.differences()
