@@ -58,7 +58,12 @@ Add a dated entry when a choice changes. Say what the viewer should see, the dim
 | 2026-11-21 | Design checks and a design report | Six design checks are worked through in order to give confidence in the predicted performance: steel shaft, pod trusses, silo wall thickness, foundation, heat balance of the store, and the pod connection with the drive. They are written up as a professional design report in the repository, to US steel specifications. | Calculations without a structural report | [Design report](report.md) |
 | 2026-11-21 | Access round the shaft cut to 0.5 m | The access round the steel shaft is kept but narrowed to 0.5 m. The grey CDU and pump section is extended to fill the gap this leaves between the pod and the silo wall. | 2.28 m walkway ring and a 0.5 m grey section | Both films, every pod scene. [Report 3.4](report.md#34-geometry) |
 | 2026-11-21 | Pod carried by a cantilevered welded truss | Each pod is a cantilevered steel truss, fully welded, carrying the distributed weight of the racks, coolant and pump. It is designed to a limit on the downward deflection of the tip. Chords are rectangular hollow sections with the long side vertical. | An undesigned frame with a weight allowance | Both films, every pod. [Report 4](report.md#4-check-2-pod-truss) |
-| 2026-11-21 | Fixed base for the shaft | The base of the shaft is to be a very heavy fixed connection to the foundation, because of the out-of-balance loads. | Base not considered | [Report 5](report.md#5-check-1-central-shaft-design-loads) |
+| 2026-11-21 | Fixed base for the shaft | The base of the shaft is to be a very heavy fixed connection to the foundation, because of the out-of-balance loads. | Base not considered | [Report 5](report.md#5-check-1-central-shaft) |
+| 2026-11-22 | Hold the top of the shaft | The top of the shaft is stabilised. A connector puts its sideways force into the support rig for the diesel generators. | A shaft standing free on its fixed base | Amber collar and arms under the diesel level, short film 2:04. [Report 5](report.md#5-check-1-central-shaft) |
+| 2026-11-22 | Three more design checks | The connector, the top support rig and the cast-in mounts to the silo are added to the checklist, because they are now a structural load path. | Six checks | [Register](report.md#2-register-of-design-checks) |
+| 2026-11-22 | Fixed shaft | The shaft is fixed and does not turn. | Open question | [Report 5.1](report.md#51-arrangement) |
+| 2026-11-22 | 5 mm deflection limit | A 5 mm deflection limit is imposed. | span/1,000, which was 7.3 mm | [Report 3.7](report.md#37-serviceability) |
+| 2026-11-22 | Access round the shaft 0.62 m | The access is widened to 0.62 m to give 100 mm between pod frames at their roots. | 0.5 m and 25 mm | Both films, every pod scene. [Calculations](calcs.md#clearance-at-the-pod-roots) |
 
 ## Assumptions made while applying these decisions
 
@@ -139,8 +144,19 @@ These were needed to draw the decisions. Each one is an input in [project.json](
 | 2026-11-21 | The hoist picks a pod up at panel points 1 and 4. | The pickups have to be at panel points and either side of the centre of gravity. | `structure.pod_truss` |
 | 2026-11-21 | Pods travel two side by side on a flatbed. | Two 7.28 m pods no longer fit end to end on a 14.6 m deck. | [calcs.md](calcs.md#pods-the-heaviest-legal-load) |
 | 2026-11-21 | The gangway from the shaft to each wedge deck now starts 2.04 m from the axis. | Inside that radius the pods are too close together to pass between. | [pod_scene.py](../gpu_silo/pod_scene.py) |
-| 2026-11-21 | The shaft is taken as fixed, with each level turning on it, when working out the loads. | This is what the animation shows. It is to be confirmed under check 6. | [Report 5.1](report.md#51-arrangement-assumed) |
+| 2026-11-21 | The shaft is taken as fixed, with each level turning on it, when working out the loads. | This is what the animation shows. It is to be confirmed under check 6. | [Report 5.1](report.md#51-arrangement) |
 | 2026-11-21 | A 50 mm wall and a 5 mm tip drop are used to look ahead at the lean of the shaft. | Trial values for a comparison, not design values. | `structure.shaft_look_ahead` |
+| 2026-11-22 | The 5 mm limit is applied twice: to the dead-load deflection of the truss, and to the movement of a pod tip caused by the shaft. | The first can be set out when a pod is built. The second develops after docking and is what the wall coupling has to follow. Whether one 5 mm is meant to cover both is to be confirmed. | [Report 3.7](report.md#37-serviceability) |
+| 2026-11-22 | Shaft tip movement is its shortening under the full store plus its lean in the worst filling state. | Both lower or tilt a docked pod. Adding them is on the safe side. | [structure.py](../gpu_silo/structure.py) |
+| 2026-11-22 | The shaft is a tube rolled from A572 Grade 50 plate, sized from a list of plate thicknesses. | A 1.16 m tube is outside the range of rolled hollow sections. | `structure.shaft` |
+| 2026-11-22 | Strength of the shaft is checked for an uncontrolled fill as well as the planned sequence. | So a mistake in the fill order cannot overload it. It does not govern. | [Report 5.4](report.md#54-design-criteria) |
+| 2026-11-22 | 3 t a level for the hub, bearing and access floor, and 300 kg/m for services inside the shaft. | Allowances until check 6. | `structure.shaft` |
+| 2026-11-22 | The support rig is the deck steel of the diesel generator level. | "The support rig for the diesel gens." | [plant.py](../gpu_silo/plant.py) |
+| 2026-11-22 | The connector is a collar the shaft slides in, with four arms to the ring beam. It passes sideways force only. | So the shaft can shorten and the weight of the rig stays off it. | [plant.py](../gpu_silo/plant.py), [Report 7.1](report.md#71-description) |
+| 2026-11-22 | 16 wall mounts, each a 0.6 m × 0.95 m plate cast flush with studs, and a shoe on the rig welded to each. | The cage has to pass down the bore, so nothing cast in can stand proud of the wall. Number and size are not designed. | `structure.top_rig` |
+| 2026-11-22 | The mounts are drawn in every view, including the cutaways. | They are a load path to be looked at, unlike the other wall fittings. | [pod_scene.py](../gpu_silo/pod_scene.py) |
+| 2026-11-22 | The shaft is drawn 0.45 m above the crown, into the collar, and the girder over the axis stops at the collar. | The connector is at mid-depth of the rig. | [pod_scene.py](../gpu_silo/pod_scene.py), [plant.py](../gpu_silo/plant.py) |
+| 2026-11-22 | The programme and the films are not changed: the rig still arrives with the diesel sets on days 19 to 21, after the pods. | Moving it is a programme decision. The report records that the shaft must be held before the first pod. | [Report 5.10](report.md#510-the-shaft-before-the-support-rig-is-in-place) |
 
 ## Open questions
 

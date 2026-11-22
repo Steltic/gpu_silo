@@ -1,0 +1,51 @@
+name: Check the design
+
+# Runs for every change. It does not render the films: see render.yml for that.
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: check-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install -r requirements.txt
+      - name: Check that the calculations and the design report match the design file
+        run: python -m gpu_silo calcs --check
+      - name: Export and check the model of the long film
+        run: |
+          python -m gpu_silo build --scene-only
+          python -m gpu_silo check
+      - name: Export and check the model of the short film
+        run: |
+          python -m gpu_silo build --scene-only --film short
+          python -m gpu_silo check --film short
+      - name: Install the renderer toolchain and panel typefaces
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends mono-mcs libmono-system-drawing4.0-cil libgdiplus \
+            fonts-liberation fonts-inter fonts-dejavu-core
+      - name: Render review stills from both films
+        run: |
+          python -m gpu_silo stills 700 1700 3300 5600 7900 --output renders/stills/long
+          python -m gpu_silo stills --film short 640 1900 2800 3250 3900 4700 --output renders/stills/short
+      - uses: actions/upload-artifact@v4
+        with:
+          name: gpu-silo-stills
+          path: renders/stills
+          if-no-files-found: error
+          retention-days: 14

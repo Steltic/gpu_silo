@@ -9,10 +9,11 @@ Open a [design idea](../../issues/new/choose). Say what should change, what the 
 ### Make a change in GitHub
 
 1. Open [design/project.json](design/project.json) and click the pencil. Edit the value, select **Create a new branch**, then open a pull request. You can also clone the repository and edit the same file locally.
-2. Regenerate the calculations with `python -m gpu_silo calcs` and commit `design/calcs.md` with your change. The render check fails if the two disagree.
+2. Regenerate the calculations and the design report with `python -m gpu_silo calcs` and commit the files it writes with your change. The design check fails if they disagree with the design file.
 3. Add a dated entry to the [decision log](design/history.md) with the reason, the affected shots and the decision it replaces. Put changes to geometry, motion or cameras in the subsystem listed in the [design index](design/README.md).
-4. Open the pull request's **Render the animation** check. On the run page, download the artifact beginning with **gpu-silo-animation-** under **Artifacts**. It contains both films and their animated GLBs built together. Watch the changed chapter and the scenes on either side of it.
-5. Merge the reviewed change. On `main` the workflow publishes the verified files as a release, and the movie link in the README follows the latest release.
+4. Open the pull request's **Check the design** check. It checks the calculations, the report and both models, and renders a few stills from each film. On the run page, download **gpu-silo-stills** under **Artifacts** to look at them.
+5. Merge the reviewed change.
+6. The films are not rendered for every change. When several changes are in and the films should catch up, run the **Render the animation** workflow on `main` from the Actions tab, or put `[render]` in the message of the merge commit. It renders and verifies both films and publishes them as a release, and the movie links in the README follow the latest release.
 
 ### Build locally
 
@@ -56,7 +57,7 @@ The panel text uses the first installed typeface from a short list (Georgia or L
 
 ### Try a one-value change
 
-In `storage`, change `"shaft_access_m": 0.5` to `0.62`. Every 4SU starts 0.12 m further from the shaft and its light-grey CDU and pump section shortens to 2.16 m, so the wall end stays where it was. The trusses are sized again, and the pod weight, the loads on the shaft and the clearance at the pod roots follow in the calculations and the design report. The gantry pick, footprint, service plug and installed copy follow in the film. Run `python -m gpu_silo calcs` and look at section 5 of the calculations: the clearance at the pod roots grows from 25 mm to about 100 mm. Then run the checks and inspect the dock at 0:47.
+In `storage`, change `"shaft_access_m": 0.62` to `0.7`. Every 4SU starts 0.08 m further from the shaft and its light-grey CDU and pump section shortens to 2.08 m, so the wall end stays where it was. The trusses are sized again, and the pod weight, the loads on the shaft and the clearance at the pod roots follow in the calculations and the design report. The gantry pick, footprint, service plug and installed copy follow in the film. Run `python -m gpu_silo calcs` and look at section 5 of the calculations: the clearance at the pod roots grows from 100 mm to about 150 mm. Then run the checks and inspect the dock at 0:47.
 
 To change one unit only, add it to `cdu_pump_section_m_by_unit`, for example `{"1": 0.25}`. A pod too long for the bore is rejected with a message that says so.
 

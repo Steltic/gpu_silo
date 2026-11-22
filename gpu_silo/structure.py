@@ -33,6 +33,13 @@ CDU_ZONE = cfg.SECTION
 SPAN = RACK_ZONE + CDU_ZONE
 TIP_R = ROOT + SPAN
 TRUSS_SPACING = round(cfg.BODY_WIDTH + (cfg.FRAME_WIDTH - cfg.BODY_WIDTH) / 2, 6)
+LIMIT = T["tip_deflection_limit_mm"] / 1000
+SHAFT = P["shaft"]
+RIG = P["top_rig"]
+SHAFT_D = 2 * SHAFT_R
+FY_SHAFT = SHAFT["fy_mpa"] * 1e6
+# The shaft is fixed at the top of the foundation and held sideways at mid-depth of the support rig.
+SHAFT_TOP = cfg.CROWN + cfg.POWER["floor_structure_m"] / 2
 
 
 def inches(value):
@@ -216,7 +223,7 @@ def analyse(chord, web):
                             compression=max(r["compression"] for r in chosen), ratio=max(r["ratio"] for r in chosen),
                             slenderness=max(r["slenderness"] for r in chosen), length=max(r["length"] for r in chosen),
                             docked_max=max(r["docked"] for r in chosen), docked_min=min(r["docked"] for r in chosen))
-    ok = dict(deflection=tip <= SPAN / T["tip_deflection_span_over"] + 1e-12,
+    ok = dict(deflection=tip <= LIMIT + 1e-12,
               strength=max(r["ratio"] for r in rows) <= 1,
               slenderness=max(r["slenderness"] for r in rows) <= limit,
               walls=max(chord["wall"], web["wall"]) <= WALL_LIMIT,
@@ -234,11 +241,11 @@ def candidates():
     return sorted(found, key=lambda c: (round(c["steel"], 3), c["tip"]))
 
 
-def lightest(ratio=None):
-    """Lightest pair of sections that passes every criterion, for a tip deflection limit of span/ratio."""
-    ratio = ratio or T["tip_deflection_span_over"]
+def lightest(limit=None):
+    """Lightest pair of sections that passes every criterion, for a tip deflection limit in metres."""
+    limit = LIMIT if limit is None else limit
     for c in candidates():
-        ok = dict(c["ok"], deflection=c["tip"] <= SPAN / ratio + 1e-12)
+        ok = dict(c["ok"], deflection=c["tip"] <= limit + 1e-12)
         if all(ok.values()): return c
     return None
 
@@ -268,11 +275,7 @@ def hand_check(design):
 
 
 def sensitivity():
-    rows = []
-    for ratio in T["sensitivity_span_over"]:
-        c = lightest(ratio)
-        rows.append((ratio, SPAN / ratio, c))
-    return rows
+    return [(mm / 1000, lightest(mm / 1000)) for mm in T["sensitivity_limits_mm"]]
 
 
 def unbalance(moment):
@@ -305,36 +308,138 @@ def level_height(level):
     return cfg.STORE["lowest_berth_m"] + (level - 1) * cfg.STORE["pitch_m"] + cfg.FRAME_HEIGHT / 2
 
 
-def shaft_lean(parts, ei, propped):
-    """Slope of a base-fixed shaft at each loaded level under couples applied at those levels.
+def tube(wall_in):
+    """A round tube of the shaft diameter, rolled from plate. The design wall is the nominal thickness."""
+    wall = wall_in * INCH
+    d, inner = SHAFT_D, SHAFT_D - 2 * wall
+    area = math.pi / 4 * (d * d - inner * inner)
+    i = math.pi / 64 * (d**4 - inner**4)
+    return dict(name=f"{d*1000:.0f} mm OD × {inches(wall_in)} in", wall_in=wall_in, wall=wall, d=d, area=area, i=i, s=i / (d / 2),
+                z=(d**3 - inner**3) / 6, r=math.sqrt(i / area), kg_m=area * RHO, ratio=d / wall)
 
-    parts lists the couples from the top level down. A propped shaft is held in position at the crown.
+
+def beam(couples, ei, stiffness=None):
+    """The shaft as a beam: fixed at the base, couples applied at given heights, held at the top.
+
+    stiffness is that of the top restraint in N/m: None for a rigid hold, 0 for a free top.
     """
-    height = cfg.CROWN
-    levels = [cfg.LEVELS - i for i in range(len(parts))]
-    total = sum(parts)
-    along = total / abs(total)
-    # Each couple is resolved onto the direction of the resultant.
-    points = sorted((level_height(level), (m * along.conjugate()).real) for level, m in zip(levels, parts))
-    z = np.linspace(0, height, 4801)
+    height = SHAFT_TOP
+    z = np.linspace(0, height, 4759)
     moment = np.zeros_like(z)
-    for elevation, m in points:
+    for elevation, m in couples:
         moment[z <= elevation] += m
     step = z[1] - z[0]
-    slope = np.concatenate([[0], np.cumsum((moment[1:] + moment[:-1]) / 2) * step]) / ei
-    sway = np.concatenate([[0], np.cumsum((slope[1:] + slope[:-1]) / 2) * step])
-    reaction = 0.
-    if propped:
-        reaction = 3 * ei * sway[-1] / height**3
-        slope = slope - reaction * (height * z - z * z / 2) / ei
-        sway = sway - reaction * (height * z * z / 2 - z**3 / 6) / ei
-    at_levels = np.interp([level_height(level) for level in range(1, cfg.LEVELS + 1)], z, slope)
-    return dict(slope=float(np.abs(at_levels).max()), sway=float(np.abs(sway).max()), reaction=float(reaction),
-                base=float(abs(moment[0] - reaction * height)))
+    integrate = lambda y: np.concatenate([[0], np.cumsum((y[1:] + y[:-1]) / 2) * step])
+    slope = integrate(moment) / ei
+    sway = integrate(slope)
+    flexibility = height**3 / (3 * ei)
+    reaction = 0. if stiffness == 0 else sway[-1] / (flexibility + (0 if stiffness is None else 1 / stiffness))
+    moment = moment - reaction * (height - z)
+    slope = slope - reaction * (height * z - z * z / 2) / ei
+    sway = sway - reaction * (height * z * z / 2 - z**3 / 6) / ei
+    hubs = np.interp([level_height(level) for level in range(1, cfg.LEVELS + 1)], z, slope)
+    return dict(z=z, moment=moment, slope=slope, sway=sway, reaction=float(reaction), base=float(moment[0]),
+                peak=float(np.abs(moment).max()), lean=float(np.abs(hubs).max()), top=float(sway[-1]))
 
 
-def tube_ei(diameter, wall):
-    return E * math.pi / 64 * (diameter**4 - (diameter - 2 * wall)**4)
+def states(c):
+    """Loading states of the shaft: couples and vertical loads at each level, from the pods as designed."""
+    weight, moment, u = c["weight"], c["moment_axis"], c["unbalance"]
+    levels = list(range(cfg.LEVELS, 0, -1))                       # from the top down
+    hub = SHAFT["hub_and_floor_t_per_level"] * 1000 * G
+    along = u["vector"] / abs(u["vector"])
+    full = [(level_height(level), cfg.BAYS * weight + hub) for level in levels]
+    sequence_couples = [(level_height(level), (m * along.conjugate()).real) for level, m in zip(levels, u["parts"])]
+    sequence_loads = [(level_height(level), hub + weight * (cfg.BAYS if k < u["full"] else u["placed"] if k == u["full"] else 0))
+                      for k, level in enumerate(levels)]
+    half = max(range(cfg.BAYS + 1), key=lambda n: abs(sum(complex(math.cos(2 * math.pi / cfg.BAYS * k), math.sin(2 * math.pi / cfg.BAYS * k)) for k in range(n))))
+    return [dict(key="complete", name="Store complete, every level at the storage pitch", couples=[], loads=full, pods=cfg.TOTAL),
+            dict(key="sequence", name=f"Worst state of the filling sequence: {u['full']} levels full and bunched, {u['placed']} pods on the next",
+                 couples=sequence_couples, loads=sequence_loads, pods=u["full"] * cfg.BAYS + u["placed"]),
+            dict(key="uncontrolled", name=f"Uncontrolled fill: {half} pods on the same side of every level",
+                 couples=[(level_height(level), u["partial_max"]) for level in levels],
+                 loads=[(level_height(level), half * weight + hub) for level in levels], pods=half * cfg.LEVELS)]
+
+
+def shortening(section, c):
+    """Drop of each hub as the pods are hung, from the shortening of the shaft below it. Top level last."""
+    heights = [level_height(level) for level in range(1, cfg.LEVELS + 1)]
+    load = cfg.BAYS * c["weight"]
+    return [sum(load * min(a, b) for b in heights) / (E * section["area"]) for a in heights]
+
+
+def shaft_check(section, c, stiffness=None):
+    """Strength to AISC 360-22 and the movement of the pod tips, for one wall thickness."""
+    ei = E * section["i"]
+    length = SHAFT_TOP
+    line = (section["kg_m"] + SHAFT["services_kg_per_m"]) * G
+    slender = SHAFT["effective_length_factor"] * length / section["r"]
+    fe = math.pi**2 * E / slender**2
+    fcr = .658**(FY_SHAFT / fe) * FY_SHAFT if slender <= 4.71 * math.sqrt(E / FY_SHAFT) else .877 * fe
+    pc = PHI_C * fcr * section["area"]
+    lam, compact, limit = section["ratio"], .07 * E / FY_SHAFT, .31 * E / FY_SHAFT
+    mn = FY_SHAFT * section["z"] if lam <= compact else (.021 * E / lam + FY_SHAFT) * section["s"]
+    mc = .90 * mn
+    vc = .90 * .6 * FY_SHAFT * section["area"] / 2
+    euler = math.pi**2 * ei / length**2
+    factor = T["dead_load_factor"]
+    cases = []
+    for state in states(c):
+        result = beam(state["couples"], ei, stiffness)
+        axial = sum(p for _, p in state["loads"]) + line * length
+        pu = factor * axial
+        b1 = 1 / (1 - pu / euler)
+        mu = factor * b1 * result["peak"]
+        ratio = pu / pc + 8 / 9 * mu / mc if pu / pc >= .2 else pu / (2 * pc) + mu / mc
+        cases.append(dict(state, result=result, axial=axial, pu=pu, mu=mu, b1=b1, ratio=ratio, vu=factor * abs(result["reaction"]),
+                          shear=factor * abs(result["reaction"]) / vc))
+    drops = shortening(section, c)
+    lean = next(k for k in cases if k["key"] == "sequence")["result"]["lean"]
+    movement = dict(shortening=max(drops), lean=lean, lean_drop=lean * TIP_R, total=max(drops) + lean * TIP_R, by_level=drops)
+    ok = dict(wall=lam <= .11 * E / FY_SHAFT, flexure=lam < .45 * E / FY_SHAFT, strength=max(k["ratio"] for k in cases) <= 1,
+              slenderness=slender <= T["max_slenderness"], movement=movement["total"] <= SHAFT["tip_drop_limit_mm"] / 1000 + 1e-12)
+    return dict(section=section, ei=ei, line=line, slender=slender, fcr=fcr, pc=pc, mc=mc, vc=vc, compact=lam <= compact, cases=cases,
+                movement=movement, ok=ok, passes=all(ok.values()), ratio=max(k["ratio"] for k in cases),
+                mass=section["kg_m"] * length)
+
+
+def shaft_design(c):
+    walls = [shaft_check(tube(size), c) for size in SHAFT["wall_sizes_in"]]
+    chosen = next((w for w in walls if w["passes"]), None)
+    if chosen is None:
+        raise ValueError("No wall thickness in structure.shaft meets the criteria. Add thicker plate, a larger shaft or relax the limit.")
+    section = chosen["section"]
+    limit = SHAFT["tip_drop_limit_mm"] / 1000
+    free = shaft_check(section, c, 0)
+    springs = [(k, shaft_check(section, c, k * 1e6)) for k in SHAFT["rig_stiffness_kn_per_mm"]]
+    # Stiffness of the top restraint at which the movement just meets the limit.
+    lo, hi = 1e3, 1e12
+    needed = None
+    if free["movement"]["total"] > limit >= chosen["movement"]["total"]:
+        for _ in range(80):
+            mid = math.sqrt(lo * hi)
+            lo, hi = (mid, hi) if shaft_check(section, c, mid)["movement"]["total"] > limit else (lo, mid)
+        needed = hi
+    return dict(walls=walls, chosen=chosen, free=free, springs=springs, needed=needed, limit=limit, length=SHAFT_TOP)
+
+
+def rig_loads(c):
+    """Design loads for the support rig, the shaft-top connector and the cast-in wall mounts."""
+    shaft = c["shaft"]
+    mounts = RIG["wall_mounts"]
+    power, diesel = cfg.POWER, cfg.PROJECT["diesel"]
+    deck = cfg.PROJECT["logistics"]["power_fabrication"]["deck_steel_t"]
+    tank = math.pi / 4 * diesel["day_tank_diameter_m"]**2 * diesel["day_tank_length_m"] * 850 / 1000
+    diesel_level = diesel["sets"] * diesel["set_weight_t"] + diesel["day_tanks"] * tank + deck
+    turbine_level = power["modules"] * power["set_weight_t"] + deck
+    out = dict(mounts=mounts, diesel_t=diesel_level, turbine_t=turbine_level, tank_t=tank, deck_t=deck, cases=[])
+    for case in shaft["chosen"]["cases"]:
+        r = abs(case["result"]["reaction"])
+        out["cases"].append(dict(key=case["key"], name=case["name"], reaction=r, factored=T["dead_load_factor"] * r,
+                                 mount=2 * r / mounts))
+    out["vertical_mount"] = diesel_level * 1000 * G / mounts
+    out["vertical_mount_both"] = (diesel_level + turbine_level) * 1000 * G / mounts
+    return out
 
 
 def compute():
@@ -342,7 +447,7 @@ def compute():
     if design is None:
         raise ValueError("No pair of sections in structure.pod_truss meets the criteria. Add heavier sections or relax the limit.")
     split = hand_check(design)
-    c = dict(design=design, limit=SPAN / T["tip_deflection_span_over"], hand=split["total"], split=split)
+    c = dict(design=design, limit=LIMIT, hand=split["total"], split=split)
     pod = design["pod"]
     weight = design["weight"]
     arm = ROOT + design["centre"]
@@ -350,23 +455,8 @@ def compute():
              level_weight=cfg.BAYS * weight, store_weight=cfg.TOTAL * weight,
              inertia_pod=design["inertia"], inertia_level=cfg.BAYS * design["inertia"])
     c["unbalance"] = unbalance(c["moment_axis"])
-    look = P["shaft_look_ahead"]
-    diameter = 2 * SHAFT_R
-    wall = look["trial_wall_mm"] / 1000
-    ei = tube_ei(diameter, wall)
-    free = shaft_lean(c["unbalance"]["parts"], ei, False)
-    held = shaft_lean(c["unbalance"]["parts"], ei, True)
-    allowed = look["tip_drop_limit_mm"] / 1000
-    c["shaft"] = dict(diameter=diameter, wall=wall, ei=ei, free=free, held=held, allowed=allowed,
-                      drop_free=free["slope"] * TIP_R, drop_held=held["slope"] * TIP_R,
-                      ei_free=ei * free["slope"] * TIP_R / allowed, ei_held=ei * held["slope"] * TIP_R / allowed,
-                      ei_solid=tube_ei(diameter, diameter / 2))
-    # Diameter of a free-standing tube with the trial wall that would meet the trial limit.
-    lo, hi = diameter, 10.
-    for _ in range(60):
-        mid = (lo + hi) / 2
-        lo, hi = (mid, hi) if tube_ei(mid, wall) < c["shaft"]["ei_free"] else (lo, mid)
-    c["shaft"]["diameter_free"] = hi
+    c["shaft"] = shaft_design(c)
+    c["rig"] = rig_loads(c)
     drive = P["level_drive"]
     c["index_alpha"] = 4 * (2 * math.pi / cfg.BAYS) / drive["index_seconds"]**2
     c["index_torque"] = c["inertia_level"] * c["index_alpha"]
@@ -387,10 +477,22 @@ def check():
     assert abs(sum(d["lifting"]) - d["weight"] / 2) < 1e-6 * d["weight"] and min(d["lifting"]) > .25 * d["weight"] / 2
     reference = hss(6, 3, .25)       # AISC Manual Table 1-11 lists A = 3.84 in² and 13.91 lb/ft for HSS6×3×1/4
     assert abs(reference["area"] / INCH**2 - 3.84) < .04 and abs(reference["kg_m"] / 1.48816 - 13.91) < .14
+    # The shaft: a single couple on a propped cantilever has a closed-form reaction, and the held top does not move.
+    shaft = C["shaft"]
+    ei, height, a = shaft["chosen"]["ei"], SHAFT_TOP, level_height(cfg.LEVELS)
+    one = beam([(a, 1e6)], ei)
+    assert abs(one["reaction"] - 3 * 1e6 * a * (2 * height - a) / (2 * height**3)) < 1e-3 * one["reaction"] and abs(one["top"]) < 1e-9
+    for case in shaft["chosen"]["cases"]:
+        total = sum(m for _, m in case["couples"])
+        assert abs(case["result"]["base"] - (total - case["result"]["reaction"] * height)) < 1e-6 * max(1., abs(total))
+    assert shaft["chosen"]["passes"] and shaft["chosen"]["movement"]["total"] <= shaft["limit"]
 
 
 def summary():
     d = C["design"]
+    s = C["shaft"]["chosen"]
     return (f"Pod truss: {d['chord']['name']} chords and {d['web']['name']} web, tip deflection {d['tip']*1000:.1f} mm "
             f"against {C['limit']*1000:.1f} mm, highest strength ratio {max(r['ratio'] for r in d['rows']):.2f}. "
-            f"A pod weighs {C['pod_t']:.2f} t. The hand check agrees to {abs(C['hand']-d['tip'])/d['tip']*100:.2f}%.")
+            f"A pod weighs {C['pod_t']:.2f} t. The hand check agrees to {abs(C['hand']-d['tip'])/d['tip']*100:.2f}%.\n"
+            f"Shaft: {s['section']['name']} wall, held at the top. Pod tips move {s['movement']['total']*1000:.1f} mm "
+            f"against {C['shaft']['limit']*1000:.1f} mm, highest strength ratio {s['ratio']:.2f}.")

@@ -13,8 +13,9 @@ The animation is the working drawing for this project. Design decisions are made
 | Design basis | Value |
 | --- | ---: |
 | GPU racks | 256 × NVIDIA Vera Rubin NVL72, 195 kW each |
-| 4SU pods | 64, eight per level on eight levels, 2.77 m apart vertically. Each is 7.28 m long and 8.84 t: 5 m of racks at the shaft end and a 2.28 m CDU and pump section out to the wall. |
-| Pod structure | Two welded side trusses, HSS4×3×3/16 chords and HSS2×2×3/16 web, cantilevering from the shaft. Tip deflection 5.3 mm. [Design report](design/report.md) |
+| 4SU pods | 64, eight per level on eight levels, 2.77 m apart vertically. Each is 7.16 m long and 8.93 t: 5 m of racks at the shaft end and a 2.16 m CDU and pump section out to the wall. |
+| Pod structure | Two welded side trusses, HSS6×3×3/16 chords and HSS2×2×3/16 web, cantilevering from the shaft. Tip deflection 4.9 mm against a 5 mm limit. [Design report](design/report.md) |
+| Central shaft | 1.16 m diameter steel tube with a 1-1/4 in (31.8 mm) wall, fixed to the foundation and held at its top by the support rig under the diesel level, through 16 plates cast into the inner wall. The levels turn on it. 0.62 m of access round it. |
 | CDUs and CDU pumps | 64 + 64, one of each per pod |
 | Liquid heat load | 50 MW |
 | Silo | 25 m outside, 17 m inside, 32 m high |
@@ -76,7 +77,7 @@ These figures are written by `python -m gpu_silo calcs` and also appear on scree
 ### Propose a design idea
 
 1. **Describe it.** Open a [design idea](../../issues/new/choose) and say what a viewer should see and why.
-2. **Or try it.** Edit a value in [design/project.json](design/project.json), run `python -m gpu_silo calcs` and open a pull request. The render check builds both films and their GLBs for review.
+2. **Or try it.** Edit a value in [design/project.json](design/project.json), run `python -m gpu_silo calcs` and open a pull request. The design check verifies the calculations, the report and both models, and renders stills for review. The films are rendered on request, so they can be a few changes behind the design.
 3. **Record it.** An accepted change adds a line to the [decision log](design/history.md).
 
 [Contributor quick start](CONTRIBUTING.md) · [Design decisions](design/README.md) · [Design calculations](design/calcs.md) · [Structural design report](design/report.md) · [Decision log](design/history.md)

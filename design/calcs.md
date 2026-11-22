@@ -113,9 +113,9 @@ Ten 13 m frames need 130 m of wall and the silo has 78.5 m, so they cannot share
 
 | Quantity | Value | Basis |
 | --- | ---: | --- |
-| 4SU length | 7.28 m | 5 m rack housing + 2.28 m CDU and pump section, which fills the pod out to 140 mm from the wall |
-| Access round the shaft | 0.50 m | input |
-| Root radius | 1.08 m | 0.58 m shaft radius + access |
+| 4SU length | 7.16 m | 5 m rack housing + 2.16 m CDU and pump section, which fills the pod out to 140 mm from the wall |
+| Access round the shaft | 0.62 m | input |
+| Root radius | 1.20 m | 0.58 m shaft radius + access |
 | Wall-end radius | 8.36 m | |
 | Corner radius of the rotating frame | 8.369 m | 0.76 m wide frame |
 | Clear bore radius | 8.50 m | |
@@ -128,9 +128,9 @@ The pods come closest to each other at their roots, and a narrower access round 
 
 | Quantity | Value | Basis |
 | --- | ---: | --- |
-| Between frames, stored at 45° | 124 mm | at the root corners |
-| Between frames, bunched at 40° | 25 mm | at the root corners |
-| Between a pod being lifted and the pods either side of the lifting lane | 23 mm | lane 80° wide between centre lines |
+| Between frames, stored at 45° | 216 mm | at the root corners |
+| Between frames, bunched at 40° | 107 mm | at the root corners |
+| Between a pod being lifted and the pods either side of the lifting lane | 100 mm | lane 80° wide between centre lines |
 | Access that would give 100 mm in both cases | 0.62 m | |
 
 ### Pod structure and weight
@@ -139,13 +139,16 @@ The side trusses are sized in the [design report](report.md#4-check-2-pod-truss)
 
 | Quantity | Value | Basis |
 | --- | ---: | --- |
-| Chords | HSS4×3×3/16 | long side vertical, ASTM A500 Grade C |
+| Chords | HSS6×3×3/16 | long side vertical, ASTM A500 Grade C |
 | Verticals and diagonals | HSS2×2×3/16 | |
-| Tip deflection under dead load | 5.3 mm | span/1,362; limit span/1,000 = 7.3 mm |
-| Frame and housing | 1.44 t | 0.92 t of steel, 0.09 t of connections, 0.42 t of housing |
-| **One pod, operating** | **8.84 t** | 4 racks × 1.6 t, 0.6 t of CDU and pump, 0.4 t of coolant and piping, frame and housing |
-| Moment of one pod about the shaft axis | 352 kN·m | centre of gravity 4.07 m from the axis |
-| Weight on the shaft, 64 pods | 5,546 kN | 565 t |
+| Tip deflection under dead load | 4.9 mm | span/1,463; limit 5 mm |
+| Frame and housing | 1.53 t | 1.01 t of steel, 0.10 t of connections, 0.42 t of housing |
+| **One pod, operating** | **8.93 t** | 4 racks × 1.6 t, 0.6 t of CDU and pump, 0.4 t of coolant and piping, frame and housing |
+| Moment of one pod about the shaft axis | 366 kN·m | centre of gravity 4.18 m from the axis |
+| Weight on the shaft, 64 pods | 5,605 kN | 572 t |
+| Shaft | 1160 mm diameter, 31.8 mm wall | fixed at the base and held at the top by the support rig. [Design report](report.md#5-check-1-central-shaft) |
+| Movement of a pod tip from the shaft | 4.7 mm | shortening and lean in the worst filling state; limit 5 mm |
+| Sideways force at the top of the shaft | 119 kN | worst filling state, into the support rig and its 16 cast-in wall mounts |
 
 ## 6. Power
 
@@ -240,10 +243,10 @@ After the last pour 432 loads arrive in 28 days. The busiest days are day 16: 27
 
 | Quantity | Value | Basis |
 | --- | ---: | --- |
-| One 4SU pod | 8.8 t | 4 racks × 1.6 t, 1.44 t of frame and housing as designed, 0.6 t of CDU and pump, 0.4 t of coolant and piping |
+| One 4SU pod | 8.9 t | 4 racks × 1.6 t, 1.53 t of frame and housing as designed, 0.6 t of CDU and pump, 0.4 t of coolant and piping |
 | Flatbed | 14.6 × 2.59 m deck, 21.8 t payload | five-axle tractor and trailer |
 | Pods that fit on the deck | 2 | 1 end to end × 2 across |
-| Pods the payload allows | 2 | 2 × 8.8 t = 17.7 t |
+| Pods the payload allows | 2 | 2 × 8.9 t = 17.9 t |
 | **Pods on each truck** | **2** | space and weight agree |
 | Height on the road | 3.90 m | limit 4.11 m |
 | **Trucks for 64 pods** | **32** | |
@@ -383,8 +386,8 @@ The walls take 10 days at 1 lift a day and are outside the 28 days. The pod cage
 9. **Lifts.** Each power level is shown lowered as one assembly. The crane, the lifting sequence and the removal route for a turbine or generator are not designed.
 10. **Fuel.** 913 m³ of propane runs the site for about 43 hours. Separation distances, bunding, the vaporiser and the resupply rate have not been checked. Fuel stored inside is limited to the day tanks, and the limit that applies has not been checked.
 11. **Power in the shaft.** 50 MW passes down the steel shaft to 64 pods, 781 kW each. The busbar, its cooling and the connection at each level are not designed.
-12. **Pod support.** The pod trusses are sized in the [design report](report.md). The shaft, its base, the hub at each level, the root connection and the drive are checks 1 and 6 of that report and are not designed yet. With 0.5 m of access the pod frames pass within 23 mm of each other at their roots.
-13. **Pod weight.** A pod weighs 8.8 t with the frame as designed. The rack, CDU and coolant weights in it are allowances: NVIDIA has not published a shipping weight for this rack. The load is 2 pods a truck, side by side, because a 7.28 m pod no longer fits twice along the deck.
+12. **Pod support.** The pod trusses and the shaft wall are sized in the [design report](report.md) for gravity load. The base of the shaft, the hub at each level, the root connection, the drive, the support rig, its shaft connector and the wall mounts are still to be designed. The support rig holds the top of the shaft but arrives after the pods in the programme, and the shaft cannot be loaded without it.
+13. **Pod weight.** A pod weighs 8.9 t with the frame as designed. The rack, CDU and coolant weights in it are allowances: NVIDIA has not published a shipping weight for this rack. The load is 2 pods a truck, side by side, because a 7.16 m pod no longer fits twice along the deck.
 14. **Liner and fill.** The liner goes on from day 11, when the youngest concrete is 11 days old, and the fill starts on day 15. Most coatings ask for 28-day-old, dry concrete, so the liner system and its moisture limits need a supplier's check. The pod sleeves, frame conduits and the door blockout all pass through the liner and need detailing.
 15. **A lift a day.** 1 lift a day is fast for a jumpform. Slower lifts lengthen the work before day 0 and leave the 28 days after it unchanged.
 16. **Fuel line across the ring.** The propane and diesel lines run on the ground from the tanks to the wall and cross both ring lanes. They need to be buried or bridged there.

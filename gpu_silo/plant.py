@@ -104,6 +104,44 @@ def deck_steel(m,lines):
     s.sector(m,r-.14,r+.14,-DECK+.05,-.05,math.pi/2+ACCESS_HALF,math.pi/2+s.TAU-ACCESS_HALF,40,[STRUCT]*4,caps=True)
 
 
+# The load path that holds the top of the shaft is drawn in one colour: connector, seats and cast-in plates.
+HOLD="c8862e"
+RIG=cfg.PROJECT["structure"]["top_rig"]
+SHAFT_R=cfg.STORE["shaft_radius_m"]
+COLLAR=SHAFT_R+.24
+SEAT_Z=-DECK+.05
+PLATE_W,PLATE_H=RIG["mount_plate_m"]
+
+
+def mount_angles():
+    """Bearings of the wall mounts in the frame of the power level: evenly round the ring beam, clear of the access wedge."""
+    n=RIG["wall_mounts"]
+    start=math.pi/2+ACCESS_HALF+math.radians(5);arc=s.TAU-2*(ACCESS_HALF+math.radians(5))
+    return [start+k*arc/(n-1) for k in range(n)]
+
+
+def shaft_connector(m):
+    """Collar round the top of the shaft with arms out to the ring beam. It passes sideways force only: the shaft can slide in it."""
+    s.sector(m,SHAFT_R+.03,COLLAR,-DECK+.04,-.04,0,s.TAU,32,[HOLD]*4,caps=True)
+    for k in range(RIG["arms"]):
+        a=math.pi/4+k*s.TAU/RIG["arms"]
+        s.bar(m,s.polar(COLLAR-.04,a,-DECK/2),s.polar(s.RI-.34,a,-DECK/2),.26,HOLD,DECK-.18)
+    # A shoe under the ring beam at every mount, welded to the plate cast into the wall once the rig is down.
+    for a in mount_angles():
+        s.bar(m,s.polar(s.RI-.46,a,SEAT_Z-.07),s.polar(s.RI-.056,a,SEAT_Z-.07),.40,HOLD,.14)
+        s.bar(m,s.polar(s.RI-.085,a,SEAT_Z+.22),s.polar(s.RI-.056,a,SEAT_Z+.22),.50,HOLD,.44)
+
+
+def mount_plate():
+    """A plate cast into the inner wall, flush with the bore, with studs back into the concrete. Local x points out through the wall."""
+    m=mesh("Top rig | cast-in wall plate and studs")
+    closed(m,-.014,-PLATE_W/2,.02,PLATE_W/2,-.45,PLATE_H-.45,HOLD)
+    for y in (-PLATE_W/2+.1,PLATE_W/2-.1):
+        for z in (-.33,-.05,.22,.38):
+            closed(m,.02,y-.02,.21,y+.02,z-.02,z+.02,"5d6468")
+    return m
+
+
 def chord(y,r=None):
     r=r or s.RI-.3
     half=math.sqrt(r*r-y*y)
@@ -129,7 +167,10 @@ def diesel_set(m,cx,cy,deg):
 def power_mesh(index):
     if index==0:
         m=mesh(f"Power level 1 | {len(GEN_AT)} backup diesel sets, {len(DAY_TANKS)} day tanks and deck steel")
-        deck_steel(m,[chord(y) for y in (.3,-1.5,-4.0,-5.8)]+[((x,-4.4),(x,3.0)) for x in (-6.55,-4.75,4.75,6.55)])
+        # The girder over the axis stops at the collar that holds the top of the shaft.
+        (x0,y0),(x1,y1)=chord(.3)
+        deck_steel(m,[((x0,y0),(-COLLAR+.03,y0)),((COLLAR-.03,y1),(x1,y1))]+[chord(y) for y in (-1.5,-4.0,-5.8)]+[((x,-4.4),(x,3.0)) for x in (-6.55,-4.75,4.75,6.55)])
+        shaft_connector(m)
         for cx,cy,deg in GEN_AT:
             diesel_set(m,cx,cy,deg)
         r,l=D["day_tank_diameter_m"]/2,D["day_tank_length_m"]
@@ -459,6 +500,15 @@ def add(scene,node,p):
         vals=[fn(i) for i in range(END)]
         return [(0,vals[0])]+[(p.FILLED+f,v) for f,v in p.flat_keys(vals)] if len(set(vals))>1 else [(0,vals[0])]
     rig=addmesh(bridle())
+    # Plates for the support rig are set in the forms of the wall lift that holds them, like the cooler fixings.
+    from . import cooler_frames
+    plate=addmesh(mount_plate())
+    seat=power_base(p.CROWN,0)+SEAT_Z
+    start,cast=cooler_frames.pour_frames(seat,-.45)
+    for k,a in enumerate(mount_angles()):
+        x,y,_=s.polar(s.RI,POWER_YAW+a,0)
+        node(f"Top rig mount {k+1:02} | cast-in wall plate",plate,"Rig mounts",ang=POWER_YAW+a,
+             tracks={"scale":show(start),"translation":[(0,(x,y,seat+.46)),(start,(x,y,seat+.46)),(cast,(x,y,seat))]})
     crib=mesh("Power-unit ground crib | bearing strips")
     for x in (-5.2,0,5.2):
         closed(crib,x-.25,-6.0,x+.25,6.0,0,GROUND-DECK+.05,"93846b")

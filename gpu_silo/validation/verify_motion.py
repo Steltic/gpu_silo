@@ -110,7 +110,7 @@ def main(path):
     xyz=get(rack,"translation",[0,0,0])
     steel=points(names["Steel module | shaft, bearings, rim girders and braced columns"])
     outer_r=np.linalg.norm(steel[:,:2],axis=1).max();floor=steel[:,2].min()
-    assert outer_r<p.s.RI and np.isclose(steel[:,2].max(),p.CROWN,atol=.001)
+    assert outer_r<p.s.RI and p.structure.SHAFT_TOP<=steel[:,2].max()<p.CROWN+p.cfg.POWER['floor_structure_m']      # the shaft runs up into the collar of the rig
     for x,z,_ in xyz[p.C:p.FIRST_POD]:
         if abs(x)+outer_r>p.s.RI and abs(x)-outer_r<p.s.RO: assert z+floor>p.s.WALL_HEIGHT
     assert np.allclose(xyz[p.FIRST_POD:],0) and np.allclose(xyz[p.C+8],[p.PICK_X,0,0])
@@ -259,7 +259,9 @@ def main(path):
         pts=points(body)
         # Every level fits in the bore, sits on its floor structure and stays under the lid.
         assert np.linalg.norm(pts[:,:2],axis=1).max()<p.s.RI-.05
-        assert np.isclose(np.min(pts[:,2]),-a.DECK+.05,atol=.02)
+        # The diesel level is the support rig: its shoes hang below the ring beam and still clear the crown of the cage.
+        assert np.isclose(np.min(pts[:,2]),a.SEAT_Z-.14 if j==0 else -a.DECK+.05,atol=.02)
+        assert a.power_base(p.CROWN,0)+a.SEAT_Z-.14>p.CROWN-.10
         first=p.FILLED+a.PICK_STARTS[j]
         landing=first+a.PICK_LENGTH
         assert np.allclose(xyz[first],[a.PICK_SITES[j][0],a.GROUND,-a.PICK_SITES[j][1]],atol=.00003)
@@ -267,7 +269,7 @@ def main(path):
         assert abs(get(body,"rotation",[0])[-1,0]-a.POWER_YAW)<.00002
         while_crossing=(np.linalg.norm(xyz[:,[0,2]],axis=1)>1.e-4)&(np.linalg.norm(xyz[:,[0,2]],axis=1)<15.)
         assert np.min(xyz[while_crossing,1]+pts[:,2].min())>p.s.WALL_HEIGHT+2
-        assert xyz[-1,1]+pts[:,2].min()>=p.CROWN-.001 and xyz[-1,1]+pts[:,2].max()<a.LID_Z
+        assert xyz[-1,1]+pts[:,2].min()>=p.CROWN-(.10 if j==0 else .001) and xyz[-1,1]+pts[:,2].max()<a.LID_Z
         assert get(body,"scale",[1,1,1])[p.FILLED+(a.FAB_DONE-1 if short else 0),0]<.001
     assert a.power_base(p.CROWN,1)-a.power_base(p.CROWN,0)>=a.GEN_H+a.DECK-1e-9
     assert a.power_base(p.CROWN,1)+a.SET_H<=a.LID_Z
@@ -339,6 +341,25 @@ def main(path):
         hinged(p,a,names,get,points,floor)
     assert abs(p.crew.POWER_FLOOR-floor)<1e-9 and p.cfg.POWER["modules"]*p.cfg.POWER["module_output_mw"]>=p.calcs.C["heat_mw"]-1e-9
     walkways_and_fuel(p,a,doc,names,parents,get,points,ids,planar_overlap,roof,floor,short)
+    # The support rig holds the top of the shaft. Its plates are cast into the wall before their pour, the shaft runs up
+    # into the collar, and the deck girders stop clear of the shaft.
+    rig=p.structure.RIG;seat=a.power_base(p.CROWN,0)+a.SEAT_Z
+    mounts=[i for name,i in names.items() if name.startswith("Top rig mount")]
+    assert len(mounts)==rig["wall_mounts"]>=8
+    pour=p.services.lift_start(int((seat-.45)//p.s.LIFT))
+    for i in mounts:
+        where=get(i,"translation",[0,0,0]);final=where[-1]
+        assert abs(np.hypot(final[0],final[2])-p.s.RI)<1e-5 and abs(final[1]-seat)<1e-5,"a wall plate is not on the bore face at the seat level"
+        assert get(i,"scale",[1,1,1])[pour-1,0]>.999 and np.allclose(where[pour-1:],final,atol=1e-5),"a wall plate is not in the forms before its pour"
+        bearing=(math.atan2(-final[2],final[0])-a.POWER_YAW-math.pi/2+math.pi)%(2*math.pi)-math.pi
+        assert abs(bearing)>a.ACCESS_HALF,"a wall plate is in the access wedge"
+    assert seat-.45>p.CROWN-1 and seat-.45+a.PLATE_H<p.s.WALL_HEIGHT
+    crown=points(names["Steel module | crown and hoist beams"]) if "Steel module | crown and hoist beams" in names else points(names["Steel module | shaft, bearings, rim girders and braced columns"])
+    assert crown[:,2].max()>=p.structure.SHAFT_TOP,"the shaft does not reach the connector"
+    deck=points(names["Power level 01 | diesel deck assembly"])
+    inside=deck[(np.hypot(deck[:,0],deck[:,1])<p.SHAFT+.02)&(deck[:,2]<-.01)]
+    assert len(inside)==0 and a.COLLAR>p.SHAFT+.05,"the rig steel must stop at the collar round the shaft"
+    assert p.structure.SHAFT_TOP<a.power_base(p.CROWN,0) and p.structure.C["shaft"]["chosen"]["passes"]
     fuel=p.fuel
     if short:
         from .verify_short import check

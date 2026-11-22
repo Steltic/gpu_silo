@@ -1,8 +1,9 @@
 name: Render the animation
 
+# The films are rendered on request, not for every change: run this workflow by hand,
+# or put [render] in the message of a commit pushed to main. Every change is still
+# checked by check.yml.
 on:
-  pull_request:
-    branches: [main]
   push:
     branches: [main]
   workflow_dispatch:
@@ -16,6 +17,7 @@ concurrency:
 
 jobs:
   source:
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[render]')
     runs-on: ubuntu-latest
     permissions:
       contents: read
