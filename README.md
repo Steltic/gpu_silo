@@ -18,8 +18,8 @@ The animation is the working drawing for this project. Design decisions are made
 | Central shaft | 1.16 m diameter steel tube with a 1-1/4 in (31.8 mm) wall, fixed to the foundation and held at its top by the support rig under the diesel level, through 16 plates cast into the inner wall. The levels turn on it. 0.62 m of access round it. |
 | CDUs and CDU pumps | 64 + 64, one of each per pod |
 | Liquid heat load | 50 MW |
-| Silo | 25 m outside, 17 m inside, 32 m high |
-| Water-glycol store | 7,331 m³ (1.94 M US gal) between the walls, 97 minutes of full load on a 10 K swing. [Check 5](design/report.md#9-check-5-heat-balance-of-the-store) finds it has to run layered, cool below warm: 86 minutes with the coolers off, in any weather. |
+| Silo | 25 m outside, 17 m inside, 32 m high. Outer wall 400 mm with stainless steel hoop bars, inner wall 500 mm, no post-tensioning. |
+| Water-glycol store | 6,524 m³ (1.72 M US gal) between the walls. It runs layered, cool below warm, through a pair of vertical pipes for each bay of pods and each cooler frame: 77 minutes of full load with the coolers off, in any weather. [Check 5](design/report.md#9-check-5-heat-balance-of-the-store) |
 | Dry coolers | 30 × 2 MW in 10 screened steel frames, one pump each. 25 carry the load, 5 are spare. |
 | Power | 2 × 25 MW in-line gas turbine generator sets, side by side on the top level |
 | Backup | 4 × 2.5 MW diesel sets on the level below, day tanks inside, 64 m³ bulk tank outside |

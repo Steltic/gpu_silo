@@ -8,6 +8,7 @@ from .. import clock
 from .. import cooler_frames as fr
 from .. import fuel
 from .. import jumpform
+from .. import layering
 from .. import logistics
 from .. import pod_scene as p
 from .. import silo_model as s
@@ -151,6 +152,14 @@ def check(path):
         assert abs(math.hypot(spot[0],spot[1])-site.LAYBY_R)<.6
     print(f"{len(tankers)} water tankers, {len(traffic.mixer_visits())} truck mixers, {fuel.COUNT+1} tank deliveries and {fuel.TRANSPORTS} propane transports are shown. The lift crew of {lg['crew']} rides the forms.")
     print("Every berth has a shaft root lock.")
+    # Layered store: a pair of pipes for every bay and every cooler frame, a cover and an overflow, all in place when the fill begins.
+    layering.check()
+    fill=layering.start(p.liquid_level(f) for f in range(p.FRAMES))
+    pipes=[i for i,n in enumerate(nodes) if n["name"].endswith("| store pipes")]
+    assert len(pipes)==p.BAYS+fr.N
+    for i in pipes+[ids["Store cover | sealed deck"],ids["Store overflow | standpipe"]]:
+        assert not shown(i,max(0,fill-2)) and shown(i,fill) and shown(i,p.FRAMES-1), nodes[i]["name"]
+    print(f"{len(pipes)} pairs of store pipes, the cover and the overflow are in place when the fill begins. Cold fill to {layering.COLD_FILL:.2f} m, overflow at {layering.OVERFLOW_Z:.2f} m.")
 
 
 if __name__=="__main__":check(sys.argv[1])

@@ -288,6 +288,18 @@ def ground(scene):
     services.pipe(details, foot, wall, .16, "5f8f9a", n=8)
     services.pipe(details, wall, (wall[0], wall[1], 1.4), .16, "5f8f9a", n=8)
     services.pipe(details, (wall[0], wall[1], 1.4), s.polar(s.RO - .05, WATER_BEARING, 1.4), .16, "49666b", n=8)
+    # The overflow from the store leaves beside the fill line, is buried under the ring with it and ends in a catch tank by the pump skid.
+    o = cfg.PROJECT["thermal"]["overflow"]
+    side = lambda radius, z: services.beside(WATER_BEARING, o["offset_from_fill_line_m"], radius, z)
+    bore = o["pipe_diameter_m"] / 2
+    services.pipe(details, side(s.RO + .2, .9), side(s.RO + .2, .45), bore, "8d9896", n=8)
+    services.pipe(details, side(s.RO + .2, .45), side(s.RO + 1.3, .45), bore, "8d9896", n=8)
+    tx, ty, _ = services.beside(WATER_BEARING, o["catch_tank_from_pump_skid_m"], 71.5, 0)
+    services.pipe(details, side(R_RUN + HALF + 1.2, .45), (tx, ty, .45), bore, "8d9896", n=8)
+    radius = o["catch_tank_diameter_m"] / 2
+    height = o["catch_tank_m3"] / (math.pi * radius**2)
+    services.pipe(details, (tx, ty, 0), (tx, ty, .12), radius + .25, "a2997b", n=20)
+    services.pipe(details, (tx, ty, .12), (tx, ty, .12 + height), radius, "9fb0ad", n=20)
 
 
 # ---------------------------------------------------------------------------------------------

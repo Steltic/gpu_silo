@@ -143,6 +143,11 @@ def creep_at(temperature):
     return walls.W["inner_wall_buckling"]["creep_coefficient"] * math.exp(CONCRETE["creep_per_k_above_20c"] * (temperature - 20))
 
 
+def calcs_volume():
+    """The store with the walls in the design file."""
+    return math.pi * ((walls.R_OUT - cfg.SILO["outer_wall_m"])**2 - (walls.R_BORE + cfg.SILO["inner_wall_m"])**2) * walls.LIQUID
+
+
 def compute():
     c = dict(heat=HEAT, load=LOAD, cold=COLD, hot=HOT)
     c["flow"] = LOAD / (cfg.FLUID["specific_heat_kj_kgk"] * 1e3 * RISE)                       # kg/s through the pods
@@ -155,7 +160,7 @@ def compute():
         rows.append(dict(air=air, each=each, flow=flow, capacity=INSTALLED * each, needed=math.ceil(LOAD / each - 1e-9) if each else None,
                          mixed=mixed_store(air), mixed_duty=mixed_store(air, DUTY)))
     c["rows"] = rows
-    c["rides"] = dict(drawn=ride(walls.C["now_volume"]), proposed=ride(walls.C["volume"]))
+    c["rides"] = dict(drawn=ride(walls.C["now_volume"]), proposed=ride(walls.C["volume"]), adopted=ride(calcs_volume()))
 
     # Layering: the height of opening that lets the flow enter without stirring the layers (densimetric Froude number of 1).
     buoyancy = walls.G * (density(COLD) - density(HOT)) / density(MEAN)
@@ -164,6 +169,14 @@ def compute():
     per_metre = volume_flow / (2 * ring)                       # the flow leaves a ring both ways
     c["layering"] = dict(buoyancy=buoyancy, difference=density(COLD) - density(HOT), flow=volume_flow, ring=ring,
                          opening=(per_metre**2 / buoyancy)**(1 / 3), conduction=math.sqrt(4 * 1.5e-7 * 86400))
+
+    # The pipes as modelled: one pair for each bay of pods and one for each cooler frame, every open end facing a plate.
+    pipes = T["layering"]
+    bore = math.pi * (pipes["riser_diameter_m"] / 2 - pipes["riser_wall_mm"] / 1000)**2
+    edge = math.pi * pipes["diffuser_diameter_m"]
+    def froude(count): return volume_flow / (count * edge) / math.sqrt(buoyancy * pipes["diffuser_gap_m"]**3)
+    c["pipes"] = dict(pairs=cfg.BAYS + cfg.FRAMES, pod_speed=volume_flow / cfg.BAYS / bore, cooler_speed=volume_flow / cfg.FRAMES / bore,
+                      warm_froude=froude(cfg.BAYS), cool_froude=froude(cfg.FRAMES))
 
     # The liquid swells as it warms.
     depth, fill = walls.LIQUID, T["fill_temperature_c"]
@@ -249,9 +262,11 @@ def check():
     wall = c["lifts"][0]["bare"]
     assert abs(wall["flux"] - wall["gradient"] * CONCRETE["conductivity_w_mk"] / c["lifts"][0]["t"]) < 1e-9 * wall["flux"]
     assert 0 < FOM <= 1 and COLD < HOT
+    # The openings of the store pipes are slow enough not to stir the layers.
+    assert max(c["pipes"]["warm_froude"], c["pipes"]["cool_froude"]) <= 1, "the openings of the store pipes are too small to keep the store layered"
 
 
 def summary():
     c = C
     return (f"Store: supply {COLD:.0f} °C, return {HOT:.0f} °C. Layered, {INSTALLED} coolers carry {LOAD/1e6:.2f} MW up to {c['limit'][INSTALLED, False]:.1f} °C outside; "
-            f"mixed, only up to {c['limit'][INSTALLED, True]:.1f} °C. Ride-through {c['rides']['proposed']['layered']/60:.0f} min layered.")
+            f"mixed, only up to {c['limit'][INSTALLED, True]:.1f} °C. Ride-through {c['rides']['adopted']['layered']/60:.0f} min layered.")
