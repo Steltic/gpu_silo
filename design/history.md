@@ -68,6 +68,10 @@ Add a dated entry when a choice changes. Say what the viewer should see, the dim
 | 2026-11-22 | Limits on tip movement | 5 mm anywhere on its own, or 10 mm for accumulated deflections. | 5 mm applied to the truss and to the shaft separately, with no limit on the total | [Report 3.7](report.md#37-serviceability) |
 | 2026-11-22 | Turbine level on its own mounts | The turbine level has its own mounts and cast-in anchors, and they are added to the design task list. | Open question | Amber plates at the turbine level. [Report 7](report.md#7-checks-7-to-10-support-rig-shaft-connector-and-wall-mounts-design-loads) |
 | 2026-11-22 | Films rendered on request | The video is not re-rendered for every task. Several tasks are done first. | A full render with every change | [Workflows](../.github/workflows) |
+| 2026-11-22 | Walls without post-tensioning | No post-tensioning. Thicker walls and more reinforcement. If the jumpform allows it, very thick at the base and thinner higher up. | Open question on post-tensioning | [Report 8](report.md#8-check-3-silo-walls). Not yet in the model. |
+| 2026-11-22 | Concrete standards | ACI 350 for the liquid-containing walls, with ACI 318. | None chosen | [Report 3.1](report.md#31-codes-and-standards) |
+| 2026-11-22 | High-strength concrete | About 50 MPa, readily available. Buildability comes before cost, and the strength is used to reduce thickness. | Strength not set | [Report 8.1](report.md#81-arrangement) |
+| 2026-11-22 | The liner is the liquid barrier | The spray liner keeps the liquid in, not the concrete. | Not stated | [Report 8.5](report.md#85-outer-wall) |
 
 ## Assumptions made while applying these decisions
 
@@ -166,6 +170,13 @@ These were needed to draw the decisions. Each one is an input in [project.json](
 | 2026-11-22 | The turbine level has 16 mounts like those of the rig, cast into the next wall lift. | Not designed. Flush plates let the rig pass them on its way down. | `structure.turbine_mounts`, [plant.py](../gpu_silo/plant.py) |
 | 2026-11-22 | The model still lifts the rig in with the generator sets. | The re-cut waits for the next render. | [sequence.md](../docs/sequence.md) |
 | 2026-11-22 | Truss and shaft sizes are not changed, although they leave 0.4 mm of the 10 mm for the root connection. | Which part gives up allowance is a decision for check 6. | [Report 3.7](report.md#37-serviceability) |
+| 2026-11-22 | The outside face of the outer wall and the bore face of the inner wall stay plumb. The walls thicken into the store. | The cooler frames hang on one and the cage and pods pass the other. The outside diameter and the bore are fixed by other decisions. | [walls.py](../gpu_silo/walls.py) |
+| 2026-11-22 | Hoop steel at 138 MPa under unfactored load. | ACI 350 for direct tension in normal exposure, taken from the 2006 edition. To be confirmed against ACI 350-20. | `structure.walls` |
+| 2026-11-22 | Hoop steel is limited to 4% of the section, in at most two layers a face of #8 to #11 bar at 125 mm or more. | Buildability. It is this limit, not concrete stress, that sets the thickness of the outer wall. | `structure.walls` |
+| 2026-11-22 | The inner wall has one thickness for its whole height, set by a buckling check with allowances for creep and imperfection chosen in the report. | One form setting. No code gives a formula for this case. | [Report 8.7](report.md#87-inner-wall) |
+| 2026-11-22 | The walls are built into the base slab. | The usual detail. It puts bending and shear into the feet of the walls. | [Report 8.6](report.md#86-foot-of-the-outer-wall) |
+| 2026-11-22 | The proposed thicknesses are not put into the design file, the model or the calculations yet. | They change the store volume, the programme and the look of the silo, and tying the walls together is still open. | [Report 8.11](report.md#811-conclusion) |
+| 2026-11-22 | Temperature, earthquake and the ground entry are left out of check 3. | Temperature waits for check 5 and earthquake for the site. The entry is a design task of its own. | [Report 8.12](report.md#812-not-covered-by-this-check) |
 
 ## Open questions
 

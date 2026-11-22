@@ -597,11 +597,60 @@
     },
     "level_drive": {
       "index_seconds": 60
+    },
+    "walls": {
+      "standards": "ACI 350-06 with ACI 318-19",
+      "concrete_fc_mpa": 50,
+      "rebar": "ASTM A615 Grade 60",
+      "fy_mpa": 420,
+      "service_steel_stress_mpa": 138,
+      "shear_steel_stress_mpa": 165,
+      "fluid_load_factor": 1.4,
+      "cover_mm": 50,
+      "min_thickness_mm": 300,
+      "thickness_step_mm": 50,
+      "bars": [
+        [
+          "#8",
+          25.4,
+          510
+        ],
+        [
+          "#9",
+          28.7,
+          645
+        ],
+        [
+          "#10",
+          32.3,
+          819
+        ],
+        [
+          "#11",
+          35.8,
+          1006
+        ]
+      ],
+      "vertical_bar_mm": 25.4,
+      "max_layers_per_face": 2,
+      "min_bar_spacing_mm": 125,
+      "max_bar_spacing_mm": 300,
+      "layer_gap_mm": 40,
+      "core_mm": 150,
+      "max_hoop_steel_ratio": 0.04,
+      "min_steel_ratio": 0.005,
+      "shrinkage_strain": 0.0003,
+      "poisson": 0.2,
+      "inner_wall_buckling": {
+        "creep_coefficient": 2.0,
+        "imperfection_factor": 0.5,
+        "strength_reduction": 0.65
+      }
     }
   },
   "design_checks": {
     "document": "GS-STR-001",
-    "revision": "C",
+    "revision": "D",
     "date": "2026-11-22",
     "status": "Preliminary, issued for review. Not checked. Not for construction.",
     "prepared_by": "Claude (Anthropic), for Steltic",
@@ -625,9 +674,9 @@
       {
         "id": 3,
         "title": "Silo wall thickness",
-        "scope": "Hoop tension in the outer wall, external pressure on the inner wall, and wall thickness",
-        "status": "Not started",
-        "section": ""
+        "scope": "Hoop tension in the outer wall, external pressure on the inner wall, wall thickness and reinforcement, without post-tensioning",
+        "status": "Thickness and reinforcement proposed for liquid load. For review. Not yet in the model.",
+        "section": "8"
       },
       {
         "id": 4,

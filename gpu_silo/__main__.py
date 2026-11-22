@@ -32,14 +32,16 @@ def main():
         print(f"{path} ({seconds:.1f} s)")
         return
     if args.command == "calcs":
-        from . import calcs, report, structure
+        from . import calcs, report, structure, walls
         if args.check:
             if not calcs.current():
                 parser.exit(1, "A generated design document is out of date. Run: python -m gpu_silo calcs\n" + "\n".join(calcs.differences()) + "\n")
             structure.check()
+            walls.check()
             print("design/calcs.md and design/report.md match design/project.json")
             return
         structure.check()
+        walls.check()
         print(calcs.write())
         print(report.FILE)
         return
@@ -62,6 +64,9 @@ def main():
         parser.exit(1, "design/calcs.md or design/report.md is out of date. Run: python -m gpu_silo calcs\n")
     structure.check()
     print(structure.summary())
+    from . import walls
+    walls.check()
+    print(walls.summary())
     verify_motion.main(args.model)
     verify_logistics.check(args.model)
     verify_frames.check(args.model)

@@ -3,7 +3,7 @@
 | | |
 | --- | --- |
 | Document | GS-STR-001 |
-| Revision | C, 2026-11-22 |
+| Revision | D, 2026-11-22 |
 | Status | Preliminary, issued for review. Not checked. Not for construction. |
 | Prepared by | Claude (Anthropic), for Steltic |
 | Checked by | Not yet checked |
@@ -12,6 +12,7 @@
 | Revision | Date | Changes |
 | --- | --- | --- |
 | A | 2026-11-21 | First issue. Register of checks, basis of design, pod truss, loads on the shaft. |
+| D | 2026-11-22 | Check 3 carried out for the liquid load: walls without post-tensioning, in 50 MPa concrete, with the liner as the liquid barrier. Thicknesses proposed, not yet adopted in the model. |
 | B | 2026-11-22 | Access round the shaft widened from 0.50 m to 0.62 m. Truss limit changed from span/1,000 to 5 mm. Shaft confirmed as fixed, with the levels turning on it, and held at its top by the support rig. Check 1 carried out. Checks 7, 8 and 9 added. |
 | C | 2026-11-22 | Limits on tip movement set by the project: 5 mm from any one part and 10 mm accumulated. Support rig steel set straight after the cage, generator sets landed on it later. Turbine level given its own mounts and cast-in anchors, as check 10. |
 
@@ -26,9 +27,10 @@ This report is generated from [project.json](project.json) by `python -m gpu_sil
 5. [Check 1: central shaft](#5-check-1-central-shaft)
 6. [Check 6: root connection and level drive, design loads](#6-check-6-root-connection-and-level-drive-design-loads)
 7. [Checks 7 to 10: support rig, shaft connector and wall mounts, design loads](#7-checks-7-to-10-support-rig-shaft-connector-and-wall-mounts-design-loads)
-8. [Open items](#8-open-items)
-9. [Appendix A: member forces in the pod truss](#appendix-a-member-forces-in-the-pod-truss)
-10. [Appendix B: section properties](#appendix-b-section-properties)
+8. [Check 3: silo walls](#8-check-3-silo-walls)
+9. [Open items](#9-open-items)
+10. [Appendix A: member forces in the pod truss](#appendix-a-member-forces-in-the-pod-truss)
+11. [Appendix B: section properties](#appendix-b-section-properties)
 
 ## 1. Purpose and scope
 
@@ -40,7 +42,8 @@ This revision covers:
 - check 2, the pod trusses, sized for gravity load;
 - check 1, the central shaft, sized for gravity load;
 - the loads at the pod root and the rotating mass of a level, for check 6;
-- the loads on the support rig, the shaft connector and the wall mounts of both power levels, for checks 7 to 10.
+- the loads on the support rig, the shaft connector and the wall mounts of both power levels, for checks 7 to 10;
+- check 3, the silo walls, for the liquid load.
 
 Lateral load is not covered by any check yet, because the site is not fixed. It is the main limitation of this revision.
 
@@ -50,7 +53,7 @@ Lateral load is not covered by any check yet, because the site is not fixed. It 
 | ---: | --- | --- | --- | --- |
 | 1 | Steel shaft | Axial load, out-of-balance bending, shortening and lean of the central shaft, fixed at its base and held at its top | Wall thickness sized for gravity load. For review. | [Section 5](#5-check-1-central-shaft) |
 | 2 | Pod trusses | The two welded side trusses that carry each 4SU pod as a cantilever | Sized for gravity load to a 5 mm tip deflection. For review. | [Section 4](#4-check-2-pod-truss) |
-| 3 | Silo wall thickness | Hoop tension in the outer wall, external pressure on the inner wall, and wall thickness | Not started |  |
+| 3 | Silo wall thickness | Hoop tension in the outer wall, external pressure on the inner wall, wall thickness and reinforcement, without post-tensioning | Thickness and reinforcement proposed for liquid load. For review. Not yet in the model. | [Section 8](#8-check-3-silo-walls) |
 | 4 | Foundation | Base slab, bearing pressure, and the anchorage of the shaft base | Not started |  |
 | 5 | Heat balance of the store | Water-glycol temperatures, mixing and ride-through in the store | Not started |  |
 | 6 | Pod-to-shaft connection and level drive | Root connection of the pod, the hub at each level, and the capacity of the drive that turns a level on the fixed shaft | Design loads issued. Design not started. | [Section 6](#6-check-6-root-connection-and-level-drive-design-loads) |
@@ -69,6 +72,10 @@ Lateral load is not covered by any check yet, because the site is not fixed. It 
 | Loads and combinations | ASCE/SEI 7-22, *Minimum Design Loads and Associated Criteria for Buildings and Other Structures* |
 | Hollow sections | ASTM A500/A500M, Grade C |
 | Plate for the shaft | ASTM A572/A572M, Grade 50 |
+| Liquid-containing concrete | ACI 350-06, *Code Requirements for Environmental Engineering Concrete Structures*, to be confirmed against ACI 350-20 |
+| Structural concrete | ACI 318-19, *Building Code Requirements for Structural Concrete* |
+| Reinforcing bar | ASTM A615/A615M, Grade 60 |
+| Crack width | ACI 224.2R, *Cracking of Concrete Members in Direct Tension* |
 | Section dimensions | AISC *Steel Construction Manual*, 16th edition, Table 1-11 and Table 1-12 |
 
 The pods and the shaft are equipment supports inside a structure, and the specification is applied to them as it would be to a building frame. A crane or machinery standard may also apply to the hoisting and the rotation. That is to be settled under check 6.
@@ -164,7 +171,7 @@ The truss and the shaft are each the lightest that meets its own 5 mm, and toget
 | HSS5×3×3/16 and HSS2-1/2×2-1/2×1/4 | 1-1/4 | 3.93 | 4.73 | 8.66 | 1.34 | 13 |
 | HSS5×3×3/16 and HSS2-1/2×2-1/2×1/4 | 2 | 3.93 | 3.05 | 6.98 | 3.02 | 25 |
 
-No change is made to the sizes in this revision. The choice is open item 1.
+No change is made to the sizes in this revision. The choice is open item 5.
 
 ## 4. Check 2: pod truss
 
@@ -572,17 +579,186 @@ None of this weight comes onto the shaft. Before the generator sets are landed, 
 2. The rig set, welded to its mounts and connected to the shaft before the first pod is hung. It must be able to take the force in section 7.2 without the weight of the generator sets on it.
 3. No vertical load from the rig onto the shaft, and freedom for the shaft to shorten by 3 mm or more inside the collar.
 
-## 8. Open items
+## 8. Check 3: silo walls
+
+### 8.1 Arrangement
+
+The store is the space between two concentric concrete walls, 32 m high, filled with water-glycol to 31.75 m. The liquid pushes the outer wall outwards and puts it in hoop tension. It pushes the inner wall inwards and puts it in hoop compression. These decisions were made by the project for revision D.
+
+- **No post-tensioning.** The outer wall is conventionally reinforced: thicker walls and more reinforcement.
+- **Standards.** ACI 350 for liquid-containing structures, with ACI 318.
+- **Concrete.** A high strength that is readily available, f'<sub>c</sub> = 50 MPa (7,250 psi), to keep the walls thin. Buildability comes before cost.
+- **Liquid barrier.** The spray liner keeps the liquid in, not the concrete. The concrete may therefore crack under hoop tension, and the reinforcement limits the width of the cracks.
+- **Thickness may change up the height.** Jumpform is adjusted between lifts, so a wall can step in thickness at a lift joint. Each wall keeps one face plumb and steps on the other: the outside face of the outer wall, which carries the cooler frames, and the bore face of the inner wall, which the cage and the pods pass. The steps are on the faces in the store.
+
+The outside diameter of 25 m and the bore of 17 m do not change. The extra thickness comes out of the store. The two walls are not tied to each other. Section 8.9 looks at tying them.
+
+Clause numbers in this section are those of ACI 350-06. ACI 350-20 has replaced it with a different arrangement, and the values used here are to be confirmed against it at the checking stage.
+
+### 8.2 Loads
+
+| Quantity | Value | Basis |
+| --- | ---: | --- |
+| Density of the water-glycol | 1,020 kg/m³ | input |
+| Depth of liquid | 31.75 m | 32 m wall less 0.25 m of freeboard |
+| Pressure at the base | 318 kPa | |
+| Load factor on the liquid | 1.4 | ACI 350-06 Section 9.2.1, U = 1.4(D + F) |
+
+Only the liquid load is in this revision. Section 8.12 lists what is left out. Temperature is the most important omission and waits for check 5.
+
+### 8.3 The walls as now drawn
+
+Both walls are 250 mm thick in the model. They do not work.
+
+| Wall | Finding |
+| --- | --- |
+| Outer | Hoop tension at the base is 3,890 kN/m. At the steel stress in section 8.4 that needs 28,192 mm² of steel a metre, which is 11% of the section. It cannot be placed. |
+| Inner | The design buckling pressure of a 250 mm wall is 122 kPa against a factored pressure of 445 kPa. |
+| Both | ACI 350 asks for at least 300 mm in a wall over 3 m high that holds liquid. |
+
+### 8.4 Design criteria
+
+Outer wall, in hoop tension:
+
+| No. | Criterion | Limit | Basis |
+| ---: | --- | --- | --- |
+| 1 | Hoop reinforcement carries all the tension | A<sub>s</sub> = T / f<sub>s</sub>, with f<sub>s</sub> = 138 MPa (20,000 psi) | ACI 350-06 Section 9.2.6: the environmental durability factor for direct tension in normal exposure. It has the same effect as limiting the steel to this stress under unfactored load. |
+| 2 | Bars | #8 to #11, Grade 60, in at most 2 layers at each face, 125 mm to 300 mm apart | readily available bar, and room to place and vibrate concrete |
+| 3 | Hoop steel ratio | ≤ 4% of the section | a buildability limit set in this report |
+| 4 | Room for the layers | 50 mm cover, the hoop layers, the vertical bars and a 150 mm core | ACI 350-06 Section 7.7.1 for the cover |
+| 5 | Least thickness | 300 mm, in steps of 50 mm, never thicker above than below | ACI 350-06 Section 14.6.2 |
+| 6 | Least steel each way | 0.5% of the section | ACI 350-06 Section 7.12.2, Grade 60, no movement joints |
+
+Inner wall, in hoop compression:
+
+| No. | Criterion | Limit | Basis |
+| ---: | --- | --- | --- |
+| 7 | Buckling under the pressure of the store | factored pressure ≤ 0.65 × 0.5 × elastic critical pressure, with the modulus divided by 3 for creep | a method set in this report. ACI 318-19 requires the stability of a shell to be examined with creep, cracking and imperfections allowed for, and gives no formula. |
+| 8 | Crushing | factored hoop compression ≤ 0.65 × 0.80 × 0.85 f'<sub>c</sub> t | ACI 318-19 Section 22.4, concrete alone |
+| 9 | Thickness | uniform, and at least 300 mm | one form setting for the whole height |
+
+The thickness of the outer wall does not reduce its steel. All of the tension goes to the reinforcement whatever the thickness. The thickness is set by how much steel a wall can hold and still be built, which is why criterion 3 matters and why it is a judgement.
+
+### 8.5 Outer wall
+
+Each lift is designed for the pressure at its lower edge.
+
+| Lift | From, m | Pressure, kPa | Thickness, mm | Hoop tension, kN/m | Steel needed, mm²/m | Hoop bars | Steel provided, mm²/m | Ratio | Steel stress, MPa | Crack width, mm |
+| ---: | ---: | ---: | ---: | ---: | ---: | --- | ---: | ---: | ---: | ---: |
+| 1 | 0.0 | 318 | **750** | 3,732 | 27,041 | 4 layers of #11 at 140 mm | 28,743 | 3.8% | 130 | 0.19 |
+| 2 | 3.2 | 286 | **650** | 3,384 | 24,523 | 4 layers of #10 at 130 mm | 25,200 | 3.9% | 134 | 0.19 |
+| 3 | 6.4 | 254 | **600** | 3,017 | 21,866 | 4 layers of #10 at 140 mm | 23,400 | 3.9% | 129 | 0.18 |
+| 4 | 9.6 | 222 | **500** | 2,659 | 19,266 | 4 layers of #9 at 130 mm | 19,846 | 4.0% | 134 | 0.18 |
+| 5 | 12.8 | 190 | **500** | 2,275 | 16,483 | 4 layers of #9 at 150 mm | 17,200 | 3.4% | 132 | 0.19 |
+| 6 | 16.0 | 158 | **400** | 1,906 | 13,814 | 2 layers of #11 at 140 mm | 14,371 | 3.6% | 133 | 0.21 |
+| 7 | 19.2 | 126 | **400** | 1,519 | 11,007 | 2 layers of #10 at 140 mm | 11,700 | 2.9% | 130 | 0.20 |
+| 8 | 22.4 | 94 | **400** | 1,132 | 8,200 | 2 layers of #9 at 150 mm | 8,600 | 2.1% | 132 | 0.21 |
+| 9 | 25.6 | 62 | **400** | 744 | 5,394 | 2 layers of #8 at 180 mm | 5,667 | 1.4% | 131 | 0.21 |
+| 10 | 28.8 | 30 | **400** | 357 | 2,587 | 2 layers of #8 at 300 mm | 3,400 | 0.9% | 105 | 0.20 |
+
+![Half section through the walls as proposed](figures/walls.svg)
+
+The outer wall goes from **750 mm at the base to 400 mm at the top**, in 5 thicknesses. The lowest lift needs 4 layers of #11 bars at 140 mm, two layers at each face.
+
+Hoop bars in tension round a tank cannot rely on ordinary laps in one place. Mechanical couplers, staggered, are assumed for all hoop bars. This is to be detailed.
+
+**Cracking.** The concrete will crack under the full store. If it did not, its tensile stress would be 5.9 MPa at the base, against a tensile strength of about 2.9 MPa. Cracks are vertical and pass through the wall. Their width is estimated at about 0.2 mm by ACI 224.2R, and they open and close each time the level in the store changes. **The liner has to bridge moving cracks of this width.** That is a requirement on the liner and is to go in its specification.
+
+For comparison, a wall thick enough not to crack would have to be about 1.7 m at the base and 0.9 m at mid-height. That is the design if the concrete itself were the liquid barrier.
+
+### 8.6 Foot of the outer wall
+
+The wall is taken as built into the base slab. The slab holds the foot of the wall in, which bends the wall near its foot and puts shear into it.
+
+| Quantity | Value | Basis |
+| --- | ---: | --- |
+| Moment at the foot | 789 kN·m/m | long cylinder with a fixed foot, unfactored |
+| Shear at the foot | 708 kN/m | the same, unfactored |
+| Vertical steel on the store face | 9,241 mm²/m: 2 layers of #9 at 130 mm | at 138 MPa |
+| Factored shear | 992 kN/m | 1.4 F |
+| Design shear strength of the concrete | 620 kN/m | ACI 318-19 Section 22.5, with at least minimum shear reinforcement |
+| Shear ties needed | 2,344 mm² for each square metre of wall | ACI 350-06 Section 9.2.6, durability factor 1.36 on the shear carried by steel |
+
+Shear ties are needed in the lowest part of the first lift. The bending and shear fall off quickly with height: 4.6 m above the foot they are below 15% of these values.
+
+### 8.7 Inner wall
+
+| Quantity | Value | Basis |
+| --- | ---: | --- |
+| **Thickness** | **450 mm, uniform** | |
+| Elastic critical pressure | 1,609 kPa | cylinder 32 m long held round at both ends, modulus 11.1 GPa after creep |
+| Design buckling pressure | 523 kPa | criterion 7 |
+| Factored pressure at the base | 445 kPa | applied over the whole height, which is on the safe side |
+| Hoop compression at the base | 2,842 kN/m, 6.3 MPa | unfactored |
+| Factored hoop compression against design strength | 3,979 kN/m against 9,945 kN/m | criterion 8 |
+| Reinforcement each way | 2 layers of #8 at 300 mm | 0.5% |
+| Moment and shear at the foot | 350 kN·m/m and 471 kN/m | unfactored. Needs 7,272 mm²/m of vertical steel and 3,475 mm²/m² of shear ties at the foot. |
+
+Buckling governs. The check relies on the wall being held round at the base by the slab and near the top by the support rig and the turbine level, which are welded to it at their mounts. A ring with no help from its ends would need 650 mm at the base. The method is the least certain part of this check, and a shell buckling analysis is to confirm it.
+
+### 8.8 What the new walls change
+
+| Quantity | As drawn | As proposed | Note |
+| --- | ---: | ---: | --- |
+| Outer wall | 250 mm | 750 mm to 400 mm | |
+| Inner wall | 250 mm | 450 mm | |
+| Width of the store | 3.50 m | 2.80 m at the base, 3.15 m at the top | |
+| Volume of the store | 7,331 m³ | **6,373 m³** | target 5,678 m³. Still above the target. |
+| Concrete in the walls | 1,056 m³ | **2,019 m³** | 1.9 times |
+| Reinforcement in the walls | allowance | **about 447 t** | 305 t of it is hoop steel in the outer wall. Excludes the feet, openings and couplers. |
+| Reinforcement in the lowest lift | | about 72 t | |
+
+**The jumpform programme is affected.** The programme has one lift a day with a crew that includes six ironworkers. The lowest lift now has about 72 t of bar and 262 m³ of concrete. That is not a day's work for the present crew. Prefabricated cages lifted in by crane, a larger crew or a longer cycle for the lower lifts is needed. This is open item 1.
+
+The heat that the store can absorb falls with its volume, by 13%. Check 5 is to use the new volume.
+
+### 8.9 Alternative: tie the two walls together
+
+The liquid stretches the outer wall and squeezes the inner wall. On a cut through the whole silo the liquid acts only on the width of the store, so the net hoop force is the pressure times that width: 1,112 kN/m at the base as drawn. That is 29% of the tension that the outer wall takes when it works alone. If the walls were tied across the store, by radial concrete fins or by steel ties, the compression in the inner wall would cancel most of the tension in the outer wall, and the hoop steel would fall by about 71%.
+
+It is not adopted here. Ties or fins complicate the jumpform, divide the store into cells, pass through the liner and obstruct the spray stages, which goes against buildability. It is recorded because the saving is large. This is open item 2.
+
+### 8.10 Verification
+
+| Check | Value | Independent value | Agreement |
+| --- | ---: | ---: | --- |
+| Hoop tension in the outer wall less hoop compression in the inner wall, at the base | 889.2 kN/m | pressure × width of the store = 889.2 kN/m | equal |
+| Steel stress in every lift | at most 134 MPa | limit 138 MPa | within |
+| Volume of the store against its target | 6,373 m³ | 5,678 m³ | above |
+
+These are checked at every build by [walls.py](../gpu_silo/walls.py).
+
+### 8.11 Conclusion
+
+Without post-tensioning, the outer wall needs to be 750 mm thick at the base, stepping to 400 mm, with up to 4 layers of #11 hoop bars, and the inner wall 450 mm throughout, in 50 MPa concrete. The store keeps 6,373 m³, which is above its target. The walls take 1.9 times the concrete now allowed for and about 447 t of reinforcement.
+
+These thicknesses are a proposal. They are not yet in the design file, the model or the calculations, because they change the store, the programme and the look of the silo. They hold for the liquid load only.
+
+### 8.12 Not covered by this check
+
+1. **Temperature.** A warm store and cold outside air bend the outer wall and add hoop tension at its outside face. This can add a large amount of hoop steel. It depends on the temperatures from check 5 and on whether the outer wall is insulated.
+2. **The ground entry.** The entry passes through both walls and the store at the base, where the hoop forces are largest. It cuts the hoop steel of the outer wall and the compression ring of the inner wall. Framing it is a design task of its own.
+3. **Other openings and fixings.** The 64 service sleeves in the inner wall, the cooler conduits in the outer wall, and the loads from the mounts of the support rig and the turbine level (checks 9 and 10) and from the cooler frames.
+4. **Earthquake**, including the sloshing of the store. It waits for the site.
+5. **Lift joints.** Nine horizontal joints in each wall, and the steps in thickness at them.
+6. **Vertical load** from the lid, the power levels and the walls themselves, and wind on the empty silo. Both are small beside the liquid load.
+7. **The base slab** and how firmly it holds the feet of the walls. Part of check 4.
+
+## 9. Open items
 
 | No. | Item | Affects | Needed from |
 | ---: | --- | --- | --- |
-| 1 | Allowance for the root connection within the 10 mm accumulated limit: 0.4 mm is left with the present sizes (section 3.7) | checks 1, 2 and 6 | project, with check 6 |
-| 2 | Site and seismic design category, for the lateral case | all structural checks | project |
-| 3 | Weight of a rack in operation, and of the CDU, pump and coolant | checks 1, 2, 4 and 6 | equipment supplier |
-| 4 | Tolerance of the wall coupling, to confirm the limits on tip movement | checks 1, 2 and 6 | coupling supplier |
-| 5 | Weight of the hub, bearing and access floor at each level | checks 1 and 6 | check 6 |
-| 6 | Comparison of section properties with the AISC Manual | check 2 | checker |
-| 7 | The films still show the support rig arriving with the generator sets | animation | next render |
+| 1 | Jumpform programme and crew for the heavier walls: about 72 t of reinforcement in the lowest lift (section 8.8) | programme, check 3 | project |
+| 2 | Tie the two walls together, or keep them separate as proposed (section 8.9) | check 3 | project |
+| 3 | Adopt the proposed wall thicknesses in the design file, the model and the calculations | everything that uses the store or the walls | project |
+| 4 | Temperatures of the store and the outside air, and whether the outer wall is insulated | checks 3 and 5 | check 5 |
+| 5 | Allowance for the root connection within the 10 mm accumulated limit: 0.4 mm is left with the present sizes (section 3.7) | checks 1, 2 and 6 | project, with check 6 |
+| 6 | Site and seismic design category, for the lateral case | all structural checks | project |
+| 7 | Weight of a rack in operation, and of the CDU, pump and coolant | checks 1, 2, 4 and 6 | equipment supplier |
+| 8 | Tolerance of the wall coupling, to confirm the limits on tip movement | checks 1, 2 and 6 | coupling supplier |
+| 9 | Weight of the hub, bearing and access floor at each level | checks 1 and 6 | check 6 |
+| 10 | Comparison of section properties with the AISC Manual, and of the ACI 350-06 clauses with ACI 350-20 | check 2 | checker |
+| 11 | The films still show the support rig arriving with the generator sets | animation | next render |
 
 ## Appendix A: member forces in the pod truss
 

@@ -10,6 +10,7 @@ from . import calcs
 from . import design as cfg
 from . import logistics
 from . import structure as st
+from . import walls
 
 FOLDER = Path(__file__).resolve().parents[1] / "design"
 FILE = FOLDER / "report.md"
@@ -173,6 +174,47 @@ def shaft_figure():
     return svg(960, 496, out)
 
 
+def wall_figure():
+    """Half section through the two walls as proposed, with the present walls dashed and the pressure of the store."""
+    c = walls.C
+    inner = c["inner"]
+    sx, sy, x0, base = 62., 12.2, 150., 482.
+    X = lambda r: x0 + (r - walls.R_BORE) * sx
+    Y = lambda z: base - z * sy
+    out = [f'<text x="20" y="26" font-size="15" fill="{INK}" font-weight="bold">Figure 4. Half section through the walls as proposed</text>',
+           f'<text x="20" y="45" fill="{MUTED}">Horizontal scale five times the vertical. The walls as now drawn, {c["present"]["outer"]*1000:.0f} mm, are dashed.</text>',
+           f'<text x="20" y="61" fill="{MUTED}">Hoop tension in kN/m at the lower edge of each lift, unfactored.</text>']
+    top = Y(walls.HEIGHT)
+    liquid = Y(walls.LIQUID)
+    # Store
+    points = [f"{X(walls.R_BORE+inner['t']):.1f},{base}"]
+    for lift in c["lifts"]:
+        points += [f"{X(lift['radius']):.1f},{Y(lift['z0']):.1f}", f"{X(lift['radius']):.1f},{max(liquid, Y(lift['z1'])):.1f}"]
+    points.append(f"{X(walls.R_BORE+inner['t']):.1f},{liquid:.1f}")
+    out.append(f'<polygon points="{" ".join(points)}" fill="#cfe6ee"/>')
+    out.append(f'<rect x="{X(walls.R_BORE):.1f}" y="{top:.1f}" width="{inner["t"]*sx:.1f}" height="{base-top:.1f}" fill="#b9bdbd" stroke="{INK}" stroke-width="1"/>')
+    for lift in c["lifts"]:
+        out.append(f'<rect x="{X(lift["radius"]):.1f}" y="{Y(lift["z1"]):.1f}" width="{lift["t"]*sx:.1f}" height="{walls.LIFT*sy:.1f}" fill="#b9bdbd" stroke="{INK}" stroke-width="1"/>')
+        bars = lift["bars"]
+        out.append(f'<text x="{X(walls.R_OUT)+12:.1f}" y="{Y(lift["z0"]+walls.LIFT/2)+4:.1f}" fill="{INK}">{lift["t"]*1000:.0f} mm, {bars["layers"]} layers {bars["bar"]["name"]} at {bars["spacing"]*1000:.0f}</text>')
+        out.append(f'<text x="{X(walls.R_OUT)+250:.1f}" y="{Y(lift["z0"]+walls.LIFT/2)+4:.1f}" fill="{TENSION}" text-anchor="end">{lift["tension"]/1000:,.0f}</text>')
+        out.append(f'<text x="{X(walls.R_BORE)-10:.1f}" y="{Y(lift["z0"]+walls.LIFT/2)+4:.1f}" fill="{MUTED}" text-anchor="end">lift {lift["lift"]}</text>')
+    out.append(f'<text x="{X(walls.R_OUT)+250:.1f}" y="{top-8:.1f}" fill="{TENSION}" text-anchor="end">hoop tension</text>')
+    out.append(f'<text x="{X(walls.R_OUT)+12:.1f}" y="{top-8:.1f}" fill="{INK}">outer wall, hoop steel</text>')
+    for r in (walls.R_BORE + c["present"]["inner"], walls.R_OUT - c["present"]["outer"]):
+        out.append(f'<line x1="{X(r):.1f}" y1="{top:.1f}" x2="{X(r):.1f}" y2="{base}" stroke="{COMPRESSION}" stroke-width="1.2" stroke-dasharray="5 4"/>')
+    out.append(f'<line x1="{X(walls.R_BORE+inner["t"]):.1f}" y1="{liquid:.1f}" x2="{X(c["lifts"][-1]["radius"]):.1f}" y2="{liquid:.1f}" stroke="{TENSION}" stroke-width="1.2"/>')
+    middle = (X(walls.R_BORE + inner["t"]) + X(c["lifts"][0]["radius"])) / 2
+    out.append(f'<text x="{middle:.1f}" y="{liquid+16:.1f}" fill="{TENSION}" text-anchor="middle">liquid to {walls.LIQUID:.2f} m</text>')
+    out.append(f'<text x="{middle:.1f}" y="{Y(16):.1f}" fill="{INK}" text-anchor="middle">store</text>')
+    out.append(f'<text x="{middle:.1f}" y="{base-10:.1f}" fill="{INK}" text-anchor="middle">{c["gap_base"]:.2f} m, {walls.pressure(0)/1000:.0f} kPa</text>')
+    out.append(f'<text x="{middle:.1f}" y="{liquid+34:.1f}" fill="{INK}" text-anchor="middle">{c["gap_top"]:.2f} m</text>')
+    out.append(f'<text x="{X(walls.R_BORE)+inner["t"]*sx/2:.1f}" y="{base+18:.1f}" fill="{INK}" text-anchor="middle">inner wall, {inner["t"]*1000:.0f} mm</text>')
+    out.append(f'<text x="{X(walls.R_BORE)-10:.1f}" y="{top-8:.1f}" fill="{MUTED}" text-anchor="end">bore side</text>')
+    out.append(f'<line x1="{X(walls.R_BORE)-70:.1f}" y1="{base}" x2="{X(walls.R_OUT)+260:.1f}" y2="{base}" stroke="{INK}" stroke-width="2"/>')
+    return svg(760, 520, out)
+
+
 def members_table(d):
     lines = ["| Member | Panel | Length, m | Docked, kN | Hoisted, kN | Factored tension, kN | Factored compression, kN | KL/r | Ratio |",
              "| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |"]
@@ -192,7 +234,8 @@ def section_row(s):
 
 ANCHORS = {"4": "4-check-2-pod-truss", "5": "5-check-1-central-shaft",
            "6": "6-check-6-root-connection-and-level-drive-design-loads",
-           "7": "7-checks-7-to-10-support-rig-shaft-connector-and-wall-mounts-design-loads"}
+           "7": "7-checks-7-to-10-support-rig-shaft-connector-and-wall-mounts-design-loads",
+           "8": "8-check-3-silo-walls"}
 
 
 def markdown():
@@ -241,6 +284,12 @@ def markdown():
     level_rows = "\n".join(f"| {level} | {st.level_height(level):.2f} | {drop*1000:.2f} |" for level, drop in zip(range(1, cfg.LEVELS + 1), mv["by_level"]))
     hub = S["hub_and_floor_t_per_level"]
     plant_level = cfg.PROJECT["diesel"]["set_height_m"]
+    W, wc = walls.W, walls.C
+    first, last, inner, foot = wc["lifts"][0], wc["lifts"][-1], wc["inner"], wc["foot"]
+    outer_rows = "\n".join(
+        f"| {l['lift']} | {l['z0']:.1f} | {l['pressure']/1000:.0f} | **{l['t']*1000:.0f}** | {kn(l['tension'],0)} | {l['need']*1e6:,.0f} | "
+        f"{l['bars']['layers']} layers of {l['bars']['bar']['name']} at {l['bars']['spacing']*1000:.0f} mm | {l['bars']['provided']*1e6:,.0f} | {l['ratio']*100:.1f}% | {l['stress']/1e6:.0f} | {l['crack']*1000:.2f} |"
+        for l in wc["lifts"])
     options = []
     for limit, sizes in ((st.LIMIT, None), (st.LIMIT, (1.5,)), (st.LIMIT, (2,)), (.004, None), (.004, (2,))):
         truss = st.lightest(limit)
@@ -265,6 +314,7 @@ def markdown():
 | Revision | Date | Changes |
 | --- | --- | --- |
 | A | 2026-11-21 | First issue. Register of checks, basis of design, pod truss, loads on the shaft. |
+| D | 2026-11-22 | Check 3 carried out for the liquid load: walls without post-tensioning, in {walls.W['concrete_fc_mpa']} MPa concrete, with the liner as the liquid barrier. Thicknesses proposed, not yet adopted in the model. |
 | B | 2026-11-22 | Access round the shaft widened from 0.50 m to {st.ACCESS:.2f} m. Truss limit changed from span/1,000 to {c['limit']*1000:g} mm. Shaft confirmed as fixed, with the levels turning on it, and held at its top by the support rig. Check 1 carried out. Checks 7, 8 and 9 added. |
 | C | 2026-11-22 | Limits on tip movement set by the project: {st.TIP['single_mm']:g} mm from any one part and {st.TIP['accumulated_mm']:g} mm accumulated. Support rig steel set straight after the cage, generator sets landed on it later. Turbine level given its own mounts and cast-in anchors, as check 10. |
 
@@ -279,9 +329,10 @@ This report is generated from [project.json](project.json) by `python -m gpu_sil
 5. [Check 1: central shaft](#{ANCHORS['5']})
 6. [Check 6: root connection and level drive, design loads](#{ANCHORS['6']})
 7. [Checks 7 to 10: support rig, shaft connector and wall mounts, design loads](#{ANCHORS['7']})
-8. [Open items](#8-open-items)
-9. [Appendix A: member forces in the pod truss](#appendix-a-member-forces-in-the-pod-truss)
-10. [Appendix B: section properties](#appendix-b-section-properties)
+8. [Check 3: silo walls](#{ANCHORS['8']})
+9. [Open items](#9-open-items)
+10. [Appendix A: member forces in the pod truss](#appendix-a-member-forces-in-the-pod-truss)
+11. [Appendix B: section properties](#appendix-b-section-properties)
 
 ## 1. Purpose and scope
 
@@ -293,7 +344,8 @@ This revision covers:
 - check 2, the pod trusses, sized for gravity load;
 - check 1, the central shaft, sized for gravity load;
 - the loads at the pod root and the rotating mass of a level, for check 6;
-- the loads on the support rig, the shaft connector and the wall mounts of both power levels, for checks 7 to 10.
+- the loads on the support rig, the shaft connector and the wall mounts of both power levels, for checks 7 to 10;
+- check 3, the silo walls, for the liquid load.
 
 Lateral load is not covered by any check yet, because the site is not fixed. It is the main limitation of this revision.
 
@@ -313,6 +365,10 @@ Lateral load is not covered by any check yet, because the site is not fixed. It 
 | Loads and combinations | ASCE/SEI 7-22, *Minimum Design Loads and Associated Criteria for Buildings and Other Structures* |
 | Hollow sections | ASTM A500/A500M, Grade C |
 | Plate for the shaft | ASTM A572/A572M, Grade 50 |
+| Liquid-containing concrete | ACI 350-06, *Code Requirements for Environmental Engineering Concrete Structures*, to be confirmed against ACI 350-20 |
+| Structural concrete | ACI 318-19, *Building Code Requirements for Structural Concrete* |
+| Reinforcing bar | ASTM A615/A615M, Grade 60 |
+| Crack width | ACI 224.2R, *Cracking of Concrete Members in Direct Tension* |
 | Section dimensions | AISC *Steel Construction Manual*, 16th edition, Table 1-11 and Table 1-12 |
 
 The pods and the shaft are equipment supports inside a structure, and the specification is applied to them as it would be to a building frame. A crane or machinery standard may also apply to the hoisting and the rotation. That is to be settled under check 6.
@@ -404,7 +460,7 @@ The truss and the shaft are each the lightest that meets its own {st.TIP['single
 | --- | --- | ---: | ---: | ---: | ---: | ---: |
 {budget_rows}
 
-No change is made to the sizes in this revision. The choice is open item 1.
+No change is made to the sizes in this revision. The choice is open item 5.
 
 ## 4. Check 2: pod truss
 
@@ -779,17 +835,177 @@ None of this weight comes onto the shaft. Before the generator sets are landed, 
 2. The rig set, welded to its mounts and connected to the shaft before the first pod is hung. It must be able to take the force in section 7.2 without the weight of the generator sets on it.
 3. No vertical load from the rig onto the shaft, and freedom for the shaft to shorten by {mv['shortening']*1000:.0f} mm or more inside the collar.
 
-## 8. Open items
+## 8. Check 3: silo walls
+
+### 8.1 Arrangement
+
+The store is the space between two concentric concrete walls, {walls.HEIGHT:g} m high, filled with water-glycol to {walls.LIQUID:.2f} m. The liquid pushes the outer wall outwards and puts it in hoop tension. It pushes the inner wall inwards and puts it in hoop compression. These decisions were made by the project for revision D.
+
+- **No post-tensioning.** The outer wall is conventionally reinforced: thicker walls and more reinforcement.
+- **Standards.** ACI 350 for liquid-containing structures, with ACI 318.
+- **Concrete.** A high strength that is readily available, f'<sub>c</sub> = {W['concrete_fc_mpa']} MPa (7,250 psi), to keep the walls thin. Buildability comes before cost.
+- **Liquid barrier.** The spray liner keeps the liquid in, not the concrete. The concrete may therefore crack under hoop tension, and the reinforcement limits the width of the cracks.
+- **Thickness may change up the height.** Jumpform is adjusted between lifts, so a wall can step in thickness at a lift joint. Each wall keeps one face plumb and steps on the other: the outside face of the outer wall, which carries the cooler frames, and the bore face of the inner wall, which the cage and the pods pass. The steps are on the faces in the store.
+
+The outside diameter of {2*walls.R_OUT:g} m and the bore of {2*walls.R_BORE:g} m do not change. The extra thickness comes out of the store. The two walls are not tied to each other. Section 8.9 looks at tying them.
+
+Clause numbers in this section are those of ACI 350-06. ACI 350-20 has replaced it with a different arrangement, and the values used here are to be confirmed against it at the checking stage.
+
+### 8.2 Loads
+
+| Quantity | Value | Basis |
+| --- | ---: | --- |
+| Density of the water-glycol | {cfg.FLUID['density_kg_m3']:,.0f} kg/m³ | input |
+| Depth of liquid | {walls.LIQUID:.2f} m | {walls.HEIGHT:g} m wall less {cfg.FLUID['freeboard_m']:g} m of freeboard |
+| Pressure at the base | {walls.pressure(0)/1000:.0f} kPa | |
+| Load factor on the liquid | {W['fluid_load_factor']:g} | ACI 350-06 Section 9.2.1, U = 1.4(D + F) |
+
+Only the liquid load is in this revision. Section 8.12 lists what is left out. Temperature is the most important omission and waits for check 5.
+
+### 8.3 The walls as now drawn
+
+Both walls are {wc['present']['outer']*1000:.0f} mm thick in the model. They do not work.
+
+| Wall | Finding |
+| --- | --- |
+| Outer | Hoop tension at the base is {kn(wc['present_tension'],0)} kN/m. At the steel stress in section 8.4 that needs {wc['present_steel']*1e6:,.0f} mm² of steel a metre, which is {wc['present_ratio']*100:.0f}% of the section. It cannot be placed. |
+| Inner | The design buckling pressure of a {wc['present']['inner']*1000:.0f} mm wall is {wc['present_buckling'][1]/1000:.0f} kPa against a factored pressure of {W['fluid_load_factor']*walls.pressure(0)/1000:.0f} kPa. |
+| Both | ACI 350 asks for at least 300 mm in a wall over 3 m high that holds liquid. |
+
+### 8.4 Design criteria
+
+Outer wall, in hoop tension:
+
+| No. | Criterion | Limit | Basis |
+| ---: | --- | --- | --- |
+| 1 | Hoop reinforcement carries all the tension | A<sub>s</sub> = T / f<sub>s</sub>, with f<sub>s</sub> = {W['service_steel_stress_mpa']} MPa (20,000 psi) | ACI 350-06 Section 9.2.6: the environmental durability factor for direct tension in normal exposure. It has the same effect as limiting the steel to this stress under unfactored load. |
+| 2 | Bars | #8 to #11, Grade 60, in at most {W['max_layers_per_face']} layers at each face, {W['min_bar_spacing_mm']} mm to {W['max_bar_spacing_mm']} mm apart | readily available bar, and room to place and vibrate concrete |
+| 3 | Hoop steel ratio | ≤ {W['max_hoop_steel_ratio']*100:g}% of the section | a buildability limit set in this report |
+| 4 | Room for the layers | {W['cover_mm']} mm cover, the hoop layers, the vertical bars and a {W['core_mm']} mm core | ACI 350-06 Section 7.7.1 for the cover |
+| 5 | Least thickness | {W['min_thickness_mm']} mm, in steps of {W['thickness_step_mm']} mm, never thicker above than below | ACI 350-06 Section 14.6.2 |
+| 6 | Least steel each way | {W['min_steel_ratio']*100:g}% of the section | ACI 350-06 Section 7.12.2, Grade 60, no movement joints |
+
+Inner wall, in hoop compression:
+
+| No. | Criterion | Limit | Basis |
+| ---: | --- | --- | --- |
+| 7 | Buckling under the pressure of the store | factored pressure ≤ {W['inner_wall_buckling']['strength_reduction']:g} × {W['inner_wall_buckling']['imperfection_factor']:g} × elastic critical pressure, with the modulus divided by {1+W['inner_wall_buckling']['creep_coefficient']:g} for creep | a method set in this report. ACI 318-19 requires the stability of a shell to be examined with creep, cracking and imperfections allowed for, and gives no formula. |
+| 8 | Crushing | factored hoop compression ≤ 0.65 × 0.80 × 0.85 f'<sub>c</sub> t | ACI 318-19 Section 22.4, concrete alone |
+| 9 | Thickness | uniform, and at least {W['min_thickness_mm']} mm | one form setting for the whole height |
+
+The thickness of the outer wall does not reduce its steel. All of the tension goes to the reinforcement whatever the thickness. The thickness is set by how much steel a wall can hold and still be built, which is why criterion 3 matters and why it is a judgement.
+
+### 8.5 Outer wall
+
+Each lift is designed for the pressure at its lower edge.
+
+| Lift | From, m | Pressure, kPa | Thickness, mm | Hoop tension, kN/m | Steel needed, mm²/m | Hoop bars | Steel provided, mm²/m | Ratio | Steel stress, MPa | Crack width, mm |
+| ---: | ---: | ---: | ---: | ---: | ---: | --- | ---: | ---: | ---: | ---: |
+{outer_rows}
+
+![Half section through the walls as proposed](figures/walls.svg)
+
+The outer wall goes from **{first['t']*1000:.0f} mm at the base to {last['t']*1000:.0f} mm at the top**, in {len(set(l['t'] for l in wc['lifts']))} thicknesses. The lowest lift needs {first['bars']['layers']} layers of {first['bars']['bar']['name']} bars at {first['bars']['spacing']*1000:.0f} mm, two layers at each face.
+
+Hoop bars in tension round a tank cannot rely on ordinary laps in one place. Mechanical couplers, staggered, are assumed for all hoop bars. This is to be detailed.
+
+**Cracking.** The concrete will crack under the full store. If it did not, its tensile stress would be {first['uncracked']/1e6:.1f} MPa at the base, against a tensile strength of about {walls.FCT/1e6:.1f} MPa. Cracks are vertical and pass through the wall. Their width is estimated at about {max(l['crack'] for l in wc['lifts'])*1000:.1f} mm by ACI 224.2R, and they open and close each time the level in the store changes. **The liner has to bridge moving cracks of this width.** That is a requirement on the liner and is to go in its specification.
+
+For comparison, a wall thick enough not to crack would have to be about {first['no_crack']:.1f} m at the base and {wc['lifts'][len(wc['lifts'])//2]['no_crack']:.1f} m at mid-height. That is the design if the concrete itself were the liquid barrier.
+
+### 8.6 Foot of the outer wall
+
+The wall is taken as built into the base slab. The slab holds the foot of the wall in, which bends the wall near its foot and puts shear into it.
+
+| Quantity | Value | Basis |
+| --- | ---: | --- |
+| Moment at the foot | {kn(foot['moment'],0)} kN·m/m | long cylinder with a fixed foot, unfactored |
+| Shear at the foot | {kn(foot['shear'],0)} kN/m | the same, unfactored |
+| Vertical steel on the store face | {foot['vertical']*1e6:,.0f} mm²/m: {foot['bars']['layers']} {'layers' if foot['bars']['layers']>1 else 'layer'} of {foot['bars']['bar']['name']} at {foot['bars']['spacing']*1000:.0f} mm | at {W['service_steel_stress_mpa']} MPa |
+| Factored shear | {kn(foot['vu'],0)} kN/m | {W['fluid_load_factor']:g} F |
+| Design shear strength of the concrete | {kn(foot['vc'],0)} kN/m | ACI 318-19 Section 22.5, with at least minimum shear reinforcement |
+| Shear ties needed | {foot['ties']*1e6:,.0f} mm² for each square metre of wall | ACI 350-06 Section 9.2.6, durability factor {foot['sd']:.2f} on the shear carried by steel |
+
+Shear ties are needed in the lowest part of the first lift. The bending and shear fall off quickly with height: {2*foot['reach']:.1f} m above the foot they are below 15% of these values.
+
+### 8.7 Inner wall
+
+| Quantity | Value | Basis |
+| --- | ---: | --- |
+| **Thickness** | **{inner['t']*1000:.0f} mm, uniform** | |
+| Elastic critical pressure | {inner['critical']/1000:,.0f} kPa | cylinder {walls.HEIGHT:g} m long held round at both ends, modulus {inner['modulus']/1e9:.1f} GPa after creep |
+| Design buckling pressure | {inner['design']/1000:.0f} kPa | criterion 7 |
+| Factored pressure at the base | {W['fluid_load_factor']*inner['pressure']/1000:.0f} kPa | applied over the whole height, which is on the safe side |
+| Hoop compression at the base | {kn(inner['compression'],0)} kN/m, {inner['stress']/1e6:.1f} MPa | unfactored |
+| Factored hoop compression against design strength | {kn(inner['factored'],0)} kN/m against {kn(inner['strength'],0)} kN/m | criterion 8 |
+| Reinforcement each way | {inner['bars']['layers']} layers of {inner['bars']['bar']['name']} at {inner['bars']['spacing']*1000:.0f} mm | {W['min_steel_ratio']*100:g}% |
+| Moment and shear at the foot | {kn(inner['base']['moment'],0)} kN·m/m and {kn(inner['base']['shear'],0)} kN/m | unfactored. Needs {inner['base']['vertical']*1e6:,.0f} mm²/m of vertical steel and {inner['base']['ties']*1e6:,.0f} mm²/m² of shear ties at the foot. |
+
+Buckling governs. The check relies on the wall being held round at the base by the slab and near the top by the support rig and the turbine level, which are welded to it at their mounts. A ring with no help from its ends would need {inner['ring']*1000:.0f} mm at the base. The method is the least certain part of this check, and a shell buckling analysis is to confirm it.
+
+### 8.8 What the new walls change
+
+| Quantity | As drawn | As proposed | Note |
+| --- | ---: | ---: | --- |
+| Outer wall | {wc['present']['outer']*1000:.0f} mm | {first['t']*1000:.0f} mm to {last['t']*1000:.0f} mm | |
+| Inner wall | {wc['present']['inner']*1000:.0f} mm | {inner['t']*1000:.0f} mm | |
+| Width of the store | {cfg.WALL_GAP:.2f} m | {wc['gap_base']:.2f} m at the base, {wc['gap_top']:.2f} m at the top | |
+| Volume of the store | {wc['now_volume']:,.0f} m³ | **{wc['volume']:,.0f} m³** | target {wc['target']:,.0f} m³. {'Still above the target.' if wc['volume']>=wc['target'] else 'Below the target.'} |
+| Concrete in the walls | {wc['now_concrete']:,.0f} m³ | **{wc['concrete']:,.0f} m³** | {wc['concrete']/wc['now_concrete']:.1f} times |
+| Reinforcement in the walls | allowance | **about {wc['steel_t']:,.0f} t** | {wc['hoop_t']:,.0f} t of it is hoop steel in the outer wall. Excludes the feet, openings and couplers. |
+| Reinforcement in the lowest lift | | about {wc['lift_steel'][0]:,.0f} t | |
+
+**The jumpform programme is affected.** The programme has one lift a day with a crew that includes six ironworkers. The lowest lift now has about {wc['lift_steel'][0]:,.0f} t of bar and {wc['lifts'][0]['concrete']:,.0f} m³ of concrete. That is not a day's work for the present crew. Prefabricated cages lifted in by crane, a larger crew or a longer cycle for the lower lifts is needed. This is open item 1.
+
+The heat that the store can absorb falls with its volume, by {(1-wc['volume']/wc['now_volume'])*100:.0f}%. Check 5 is to use the new volume.
+
+### 8.9 Alternative: tie the two walls together
+
+The liquid stretches the outer wall and squeezes the inner wall. On a cut through the whole silo the liquid acts only on the width of the store, so the net hoop force is the pressure times that width: {kn(wc['tie_total'],0)} kN/m at the base as drawn. That is {wc['tie_total']/wc['present_tension']*100:.0f}% of the tension that the outer wall takes when it works alone. If the walls were tied across the store, by radial concrete fins or by steel ties, the compression in the inner wall would cancel most of the tension in the outer wall, and the hoop steel would fall by about {(1-wc['tie_total']/wc['present_tension'])*100:.0f}%.
+
+It is not adopted here. Ties or fins complicate the jumpform, divide the store into cells, pass through the liner and obstruct the spray stages, which goes against buildability. It is recorded because the saving is large. This is open item 2.
+
+### 8.10 Verification
+
+| Check | Value | Independent value | Agreement |
+| --- | ---: | ---: | --- |
+| Hoop tension in the outer wall less hoop compression in the inner wall, at the base | {kn(first['tension']-inner['compression'],1)} kN/m | pressure × width of the store = {kn(first['pressure']*first['gap'],1)} kN/m | equal |
+| Steel stress in every lift | at most {max(l['stress'] for l in wc['lifts'])/1e6:.0f} MPa | limit {W['service_steel_stress_mpa']} MPa | within |
+| Volume of the store against its target | {wc['volume']:,.0f} m³ | {wc['target']:,.0f} m³ | above |
+
+These are checked at every build by [walls.py](../gpu_silo/walls.py).
+
+### 8.11 Conclusion
+
+Without post-tensioning, the outer wall needs to be {first['t']*1000:.0f} mm thick at the base, stepping to {last['t']*1000:.0f} mm, with up to {first['bars']['layers']} layers of {first['bars']['bar']['name']} hoop bars, and the inner wall {inner['t']*1000:.0f} mm throughout, in {W['concrete_fc_mpa']} MPa concrete. The store keeps {wc['volume']:,.0f} m³, which is above its target. The walls take {wc['concrete']/wc['now_concrete']:.1f} times the concrete now allowed for and about {wc['steel_t']:,.0f} t of reinforcement.
+
+These thicknesses are a proposal. They are not yet in the design file, the model or the calculations, because they change the store, the programme and the look of the silo. They hold for the liquid load only.
+
+### 8.12 Not covered by this check
+
+1. **Temperature.** A warm store and cold outside air bend the outer wall and add hoop tension at its outside face. This can add a large amount of hoop steel. It depends on the temperatures from check 5 and on whether the outer wall is insulated.
+2. **The ground entry.** The entry passes through both walls and the store at the base, where the hoop forces are largest. It cuts the hoop steel of the outer wall and the compression ring of the inner wall. Framing it is a design task of its own.
+3. **Other openings and fixings.** The {cfg.TOTAL} service sleeves in the inner wall, the cooler conduits in the outer wall, and the loads from the mounts of the support rig and the turbine level (checks 9 and 10) and from the cooler frames.
+4. **Earthquake**, including the sloshing of the store. It waits for the site.
+5. **Lift joints.** Nine horizontal joints in each wall, and the steps in thickness at them.
+6. **Vertical load** from the lid, the power levels and the walls themselves, and wind on the empty silo. Both are small beside the liquid load.
+7. **The base slab** and how firmly it holds the feet of the walls. Part of check 4.
+
+## 9. Open items
 
 | No. | Item | Affects | Needed from |
 | ---: | --- | --- | --- |
-| 1 | Allowance for the root connection within the {st.TIP['accumulated_mm']:g} mm accumulated limit: {c['budget']['reserve']*1000:.1f} mm is left with the present sizes (section 3.7) | checks 1, 2 and 6 | project, with check 6 |
-| 2 | Site and seismic design category, for the lateral case | all structural checks | project |
-| 3 | Weight of a rack in operation, and of the CDU, pump and coolant | checks 1, 2, 4 and 6 | equipment supplier |
-| 4 | Tolerance of the wall coupling, to confirm the limits on tip movement | checks 1, 2 and 6 | coupling supplier |
-| 5 | Weight of the hub, bearing and access floor at each level | checks 1 and 6 | check 6 |
-| 6 | Comparison of section properties with the AISC Manual | check 2 | checker |
-| 7 | The films still show the support rig arriving with the generator sets | animation | next render |
+| 1 | Jumpform programme and crew for the heavier walls: about {wc['lift_steel'][0]:,.0f} t of reinforcement in the lowest lift (section 8.8) | programme, check 3 | project |
+| 2 | Tie the two walls together, or keep them separate as proposed (section 8.9) | check 3 | project |
+| 3 | Adopt the proposed wall thicknesses in the design file, the model and the calculations | everything that uses the store or the walls | project |
+| 4 | Temperatures of the store and the outside air, and whether the outer wall is insulated | checks 3 and 5 | check 5 |
+| 5 | Allowance for the root connection within the {st.TIP['accumulated_mm']:g} mm accumulated limit: {c['budget']['reserve']*1000:.1f} mm is left with the present sizes (section 3.7) | checks 1, 2 and 6 | project, with check 6 |
+| 6 | Site and seismic design category, for the lateral case | all structural checks | project |
+| 7 | Weight of a rack in operation, and of the CDU, pump and coolant | checks 1, 2, 4 and 6 | equipment supplier |
+| 8 | Tolerance of the wall coupling, to confirm the limits on tip movement | checks 1, 2 and 6 | coupling supplier |
+| 9 | Weight of the hub, bearing and access floor at each level | checks 1 and 6 | check 6 |
+| 10 | Comparison of section properties with the AISC Manual, and of the ACI 350-06 clauses with ACI 350-20 | check 2 | checker |
+| 11 | The films still show the support rig arriving with the generator sets | animation | next render |
 
 ## Appendix A: member forces in the pod truss
 
@@ -810,7 +1026,7 @@ Hollow sections, calculated as described in section 4.7.
 
 def outputs():
     return {FILE: markdown(), FIGURES / "pod_truss.svg": truss_figure(), FIGURES / "shaft_unbalance.svg": balance_figure(),
-            FIGURES / "shaft.svg": shaft_figure()}
+            FIGURES / "shaft.svg": shaft_figure(), FIGURES / "walls.svg": wall_figure()}
 
 
 def write():
