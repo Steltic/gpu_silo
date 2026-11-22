@@ -322,10 +322,10 @@ def foundation_figure():
     c = fd.C
     d = c["grounds"][fd.F["design_ground"]]
     x0, x1, y0, y1 = 70., 700., 150., 370.
-    deepest = math.ceil(max(g["settle"]["most"] for n, g in c["grounds"].items() if n != "soft") * 1000 / 2) * 2
+    deepest = math.ceil(d["settle"]["most"] * 1000 / 5) * 5
     X = lambda r: x0 + r / fd.RADIUS * (x1 - x0)
     Y = lambda w: y0 + w * 1000 / deepest * (y1 - y0)
-    out = [f'<text x="20" y="26" font-size="15" fill="{INK}" font-weight="bold">Figure 7. Settlement of the base slab along a radius, on {fd.F["design_ground"]} ground</text>',
+    out = [f'<text x="20" y="26" font-size="15" fill="{INK}" font-weight="bold">Figure 7. Settlement of the base slab along a radius, on {fd.F["design_ground"]}</text>',
            f'<text x="20" y="45" fill="{MUTED}">Slab {d["thickness"]:.2f} m thick. The centre of the silo is at the left. Settlement is drawn downwards, to a much larger scale than the slab.</text>']
     for name, (a, b), colour in (("store", fd.WET, "#cfe6ee"),):
         out.append(f'<rect x="{X(a):.1f}" y="{y0-34}" width="{X(b)-X(a):.1f}" height="34" fill="{colour}"/>')
@@ -334,7 +334,7 @@ def foundation_figure():
         out.append(f'<rect x="{X(r-half):.1f}" y="{y0-58}" width="{max(3, X(r+half)-X(r-half)):.1f}" height="58" fill="#b9bdbd" stroke="{INK}" stroke-width="1"/>')
         out.append(f'<text x="{X(r):.1f}" y="{y0-64}" fill="{INK}" text-anchor="middle">{label}</text>')
     out.append(f'<line x1="{x0}" y1="{y0}" x2="{x1}" y2="{y0}" stroke="{INK}" stroke-width="1.5"/>')
-    for mm in range(0, deepest + 1, 2):
+    for mm in range(0, deepest + 1, 5):
         out.append(f'<line x1="{x0}" y1="{Y(mm/1000):.1f}" x2="{x1}" y2="{Y(mm/1000):.1f}" stroke="#e3e6e8" stroke-width="1"/>')
         out.append(f'<text x="{x0-8}" y="{Y(mm/1000)+4:.1f}" fill="{MUTED}" text-anchor="end">{mm}</text>')
     out.append(f'<text x="24" y="{(y0+y1)/2:.1f}" fill="{INK}" text-anchor="middle" transform="rotate(-90 24 {(y0+y1)/2:.1f})">settlement, mm</text>')
@@ -412,13 +412,17 @@ ANCHORS = {"4": "4-check-2-pod-truss", "5": "5-check-1-central-shaft",
 def foundation_section():
     c = fd.C
     d, b, F = c["chosen"], c["base"], fd.F
+    ok = lambda o: o["shear_ok"] and o["punch"] <= o["punch_strength"]
+    sand, rock = list(c["grounds"])[0], list(c["grounds"])[-1]
+    differ = lambda o: (o["settle"]["fill_inner"] - o["settle"]["fill_shaft"]) * 1000
+    thick = next(o for o in c["options"] if abs(o["thickness"] - 2.0) < 1e-9)
     wt = c["weights"]
     weight_rows = "\n".join(f"| {name} | {wt[key]/1e6:,.1f} |" for key, name in (
         ("liquid", "Liquid in the store"), ("walls", "The two walls"), ("slab", f"Base slab, {d['thickness']:.2f} m"), ("shaft", "Shaft, hubs and 64 pods"),
         ("coolers", "Coolers and their frames"), ("power", "The two power levels"), ("lid", "Lid"), ("cage", "Cage posts and decks"), ("floor", "Load on the floor of the bore")))
     ground_rows = "\n".join(
-        f"| {name.capitalize()} | {fd.GROUND[name]/1e6:g} | {g['pressure']['least']/1e3:.0f} to {g['pressure']['most']/1e3:.0f} | {g['settle']['shaft']*1000:.1f} | {g['settle']['inner']*1000:.1f} | {g['settle']['outer']*1000:.1f} | "
-        f"**{(g['settle']['fill_inner']-g['settle']['fill_shaft'])*1000:.1f}** | {max(abs(v['moment']) for v in g['faces'].values())/1e3:,.0f} | {g['vu']/1e3:,.0f} |"
+        f"| {name.capitalize()} | {fd.MODULUS[name]/1e6:,.0f} | {fd.GROUND[name]/1e6:.1f} | {'Yes' if ok(c['as_drawn'][name]) else 'No'} | {g['thickness']:.2f} | {g['pressure']['least']/1e3:.0f} to {g['pressure']['most']/1e3:.0f} | "
+        f"{g['settle']['shaft']*1000:.0f} | {g['settle']['inner']*1000:.0f} | {g['settle']['outer']*1000:.0f} | **{(g['settle']['fill_inner']-g['settle']['fill_shaft'])*1000:.1f}** | {max(abs(v['moment']) for v in g['faces'].values())/1e3:,.0f} |"
         for name, g in c["grounds"].items())
     option_rows = "\n".join(
         f"| {'**' if o is d else ''}{o['thickness']:.2f}{'**' if o is d else ''} | {o['faces']['radial','top']['moment']/1e3:,.0f} | {o['faces']['radial','bottom']['moment']/1e3:,.0f} | {o['vu']/1e3:,.0f} | {o['plain']/1e3:,.0f} | {o['tied']/1e3:,.0f} | "
@@ -442,7 +446,8 @@ The site is not fixed and there is no ground investigation. This check therefore
 | Assumption | Value | Note |
 | --- | ---: | --- |
 | Ground | springs under the slab, each acting alone (Winkler) | the usual first model. Real ground spreads load sideways, so the differences in settlement found here are on the high side. |
-| Stiffness of the ground | soft {F['subgrade_modulus_mn_m3']['soft']}, medium {F['subgrade_modulus_mn_m3']['medium']}, stiff {F['subgrade_modulus_mn_m3']['stiff']} MN/m³ | **assumption.** Loose sand or firm clay, dense sand or stiff clay, very dense gravel or weak rock. |
+| Stiffness of the ground | modulus of {', '.join(f"{v:,} MPa for {n}" for n, v in F['ground_modulus_mpa'].items())} | **assumption.** Typical values for each kind of ground. |
+| Spring under the slab | 4 E ÷ (π D (1 − ν²)), with ν = {F['ground_poisson']:g} | the spring that gives a stiff round slab of diameter D its settlement on an elastic ground. It falls as the slab gets wider, so values from a plate test cannot be used for a slab {2*fd.RADIUS:.0f} m across. |
 | Concrete | f'<sub>c</sub> = {F['concrete_fc_mpa']} MPa | |
 | Reinforcement | Grade 60, {F['cover_mm']} mm cover | ordinary bar. The floor of the store is under the liner. |
 | Load factor | {F['load_factor']:g} on everything | ACI 318-19 for dead load and liquid |
@@ -464,26 +469,27 @@ The slab is a round plate on springs, loaded round the lines of the walls and th
 
 ### 11.4 Pressure on the ground and settlement
 
-With the slab {d['thickness']:.2f} m thick and the store full:
+Each kind of ground is given the thinnest slab in the list that is strong enough on it. The store is full.
 
-| Ground | Stiffness, MN/m³ | Pressure on the ground, kPa | Settlement of the shaft, mm | Inner wall, mm | Outer wall, mm | Filling lowers the inner wall more than the shaft by, mm | Largest moment, kN·m/m | Factored shear, kN/m |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| Ground | Modulus, MPa | Spring, MN/m³ | Slab as drawn adequate | Slab needed, m | Pressure on the ground, kPa | Settlement of the shaft, mm | Inner wall, mm | Outer wall, mm | Filling lowers the inner wall more than the shaft by, mm | Largest moment, kN·m/m |
+| --- | ---: | ---: | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
 {ground_rows}
 
 ![Settlement of the base slab](figures/foundation.svg)
 
-- **The ground has to carry about {c['total']/c['area']/1e3:.0f} kPa on average and about {max(g["pressure"]["most"] for g in c["grounds"].values())/1e3:.0f} kPa at the rim.** That is more than most soils are allowed to carry on a slab. The silo needs very dense ground or rock near the surface, or piles, or ground improvement. Widening the slab helps a little: most of the load is on the ring. This is the first question for the site, and is open item 18.
+- **On soil the silo settles by tens of millimetres.** About {c['grounds'][sand]['settle']['outer']*1000:.0f} mm at the outer wall on {sand}, and about {d['settle']['outer']*1000:.0f} mm on {F['design_ground']}. Only on rock is it a few millimetres. These are the settlements as the load goes on. Clay goes on settling for years afterwards, which is not in these figures.
+- **The pressure on the ground is about {c['total']/c['area']/1e3:.0f} kPa on average and up to about {max(g['pressure']['most'] for g in c['grounds'].values())/1e3:.0f} kPa at the rim.** A slab this wide is unlikely to fail the ground in sand or gravel. In clay the strength of the ground has to be checked as well. In either, it is the settlement that decides whether the silo can stand on a slab or needs piles. This is the first question for the site, and is open item 18.
 - **The slab dishes the wrong way up.** The walls and the store are heavy and the bore is light, so the rim goes down more than the centre.
 
 ### 11.5 What settlement does to the pod tips
 
-The pods hang from the shaft at the centre of the slab. Their wall couplings are in the inner wall. When the store is filled the inner wall goes down {s['fill_inner']*1000:.1f} mm on medium ground and the shaft {'goes down ' + format(s['fill_shaft']*1000, '.1f') if s['fill_shaft'] >= 0 else 'comes up ' + format(-s['fill_shaft']*1000, '.1f')} mm, so **every wall sleeve drops about {fill:.0f} mm against its pod tip.** On soft ground it is {(c['grounds']['soft']['settle']['fill_inner']-c['grounds']['soft']['settle']['fill_shaft'])*1000:.0f} mm. A thicker slab does not remove it (section 11.6).
+The pods hang from the shaft at the centre of the slab. Their wall couplings are in the inner wall. When the store is filled the inner wall goes down more than the shaft, so **every wall sleeve drops against its pod tip: by about {differ(d):.0f} mm on {F['design_ground']}**, about {differ(c['grounds'][sand]):.0f} mm on {sand} and about {differ(c['grounds'][rock]):.0f} mm on {rock}. A thicker slab reduces it, to {differ(thick):.1f} mm at {thick['thickness']:g} m on {F['design_ground']} (section 11.6).
 
-This is the same size as the {st.TIP['single_mm']:g} mm that any one part is allowed to move a pod tip, and it is not in the {st.TIP['accumulated_mm']:g} mm accumulated limit. The programme loads the pods on days {logistics.BY_KEY['pods']['start']} to {logistics.BY_KEY['pods']['end']} and fills the store from day {logistics.BY_KEY['water']['start']}, so as programmed it happens after the pods are docked. There are three ways to deal with it:
+On soil this is more than the {st.TIP['single_mm']:g} mm that any one part is allowed to move a pod tip, and it is not in the {st.TIP['accumulated_mm']:g} mm accumulated limit. The programme loads the pods on days {logistics.BY_KEY['pods']['start']} to {logistics.BY_KEY['pods']['end']} and fills the store from day {logistics.BY_KEY['water']['start']}, so as programmed it happens after the pods are docked. There are three ways to deal with it:
 
 1. **Make the wall couplings after the store is full.** The pods are docked as programmed, and the service plugs are set and connected once the fill is complete. The fill settlement is then history. This costs nothing and is recommended.
 2. Give the coupling the travel to follow it.
-3. Found the silo on rock or piles, where the settlement is a fraction of this.
+3. Found the silo on rock or piles, or thicken the slab, so that the walls and the shaft go down together.
 
 Settlement that goes on after the fill, as the ground consolidates under a load that never comes off, cannot be dealt with by the first way. It depends on the ground and is open item 18.
 
@@ -493,9 +499,11 @@ Settlement that goes on after the fill, as the ground consolidates under a load 
 | ---: | ---: | ---: | ---: | ---: | ---: | --- | ---: | ---: | --- |
 {option_rows}
 
-Moments are unfactored and for medium ground. The shear is taken at the effective depth from the face of each wall, and the largest is on the {d['worst']['side']} of the {d['worst']['wall']}.
+Moments are unfactored. The table is for {F['design_ground']}. The shear is taken at the effective depth from the face of each wall, and the largest is on the {d['worst']['side']} of the {d['worst']['wall']}.
 
-**The slab as drawn, {d['thickness']:.2f} m thick, is adequate**, with shear ties in a band each side of each wall. No thickness in the list does without ties, because a deep slab with little reinforcement is given a low shear strength (ACI 318-19 Section 22.5.5). A thicker slab attracts more moment and does little for the settlement, so there is no case for one.
+**On {F['design_ground']} and on {rock} the slab as drawn, {c['drawn']:.2f} m thick, is strong enough**, with shear ties in a band each side of each wall. On {sand} it is not, and {c['grounds'][sand]['thickness']:.2f} m is needed. No thickness in the list does without ties, because a deep slab with little reinforcement is given a low shear strength (ACI 318-19 Section 22.5.5).
+
+Thickness does more for settlement than for strength. A {thick['thickness']:g} m slab is stiff enough to take the walls and the shaft down nearly together. Whether that is worth {(thick['thickness']-c['drawn'])*c['area']:,.0f} m³ more concrete depends on the ground and on how the wall couplings are made (section 11.5). The slab in the design file is not changed.
 
 Reinforcement of the {d['thickness']:.2f} m slab, by strength:
 
@@ -504,7 +512,7 @@ Reinforcement of the {d['thickness']:.2f} m slab, by strength:
 {face_rows}
 | Across the floor of the store, both faces together | tension {kn(d['tie'],0)} kN/m | {d['tie_area']*1e6:,.0f} | added to the radial bars between the walls |
 
-Soft ground gives larger moments, up to {max(abs(v['moment']) for v in c['grounds']['soft']['faces'].values())/1e3:,.0f} kN·m/m, so the reinforcement is to be designed again once the ground is known.
+Softer ground gives larger moments, up to {max(abs(v['moment']) for v in c['grounds'][sand]['faces'].values())/1e3:,.0f} kN·m/m on {sand}, so the reinforcement is to be designed again once the ground is known.
 
 ### 11.7 Base of the shaft
 
@@ -538,9 +546,11 @@ These are checked at every build by [foundation.py](../gpu_silo/foundation.py).
 
 ### 11.9 Conclusion
 
-The slab as drawn, {d['thickness']:.2f} m thick, carries the loads with ordinary reinforcement and shear ties near the walls. The base of the shaft takes {b['n']} {b['bolt']} anchors and stands alone under the worst out-of-balance load.
+The slab as drawn, {c['drawn']:.2f} m thick, is strong enough on {F['design_ground']} or on rock, with ordinary reinforcement and shear ties near the walls. On {sand} it has to be {c['grounds'][sand]['thickness']:.2f} m. The base of the shaft takes {b['n']} {b['bolt']} anchors and stands alone under the worst out-of-balance load.
 
-What the check cannot settle is the ground. The silo puts about {c['total']/c['area']/1e3:.0f} kPa on it on average and about {max(g['pressure']['most'] for g in c['grounds'].values())/1e3:.0f} kPa at the rim, which calls for rock, very dense ground or piles. And filling the store lowers the walls about {fill:.0f} mm against the shaft, so the wall couplings should be made after the fill.
+What the check cannot settle is the ground. The silo weighs {c['total']/1e6:,.0f} MN full. On soil it settles by tens of millimetres, and filling the store lowers the walls {differ(c['grounds'][rock]):.0f} to {max(differ(g) for g in c['grounds'].values()):.0f} mm against the shaft, depending on the ground. The wall couplings should be made after the fill, and a site on soil should be looked at for piles.
+
+**Correction in revision H.** Revision G took springs of 15, 40 and 100 MN/m³ and called them soft, medium and stiff ground. Those are values for a small test plate. Under a slab {2*fd.RADIUS:.0f} m across the spring is about a tenth of that, so revision G described rock while calling it soil, and its settlements were too small by about ten times for soil. The method is unchanged. The grounds are now set by their modulus.
 
 ### 11.10 Not covered by this check
 
@@ -1259,6 +1269,7 @@ def markdown():
 | E | 2026-11-22 | Check 5 carried out, first pass: the store has to be layered. Inner wall raised to {th.C['creep']['t']*1000:.0f} mm for creep in warm concrete. Reinforcement of the outer wall compared: stainless steel proposed, which makes the outer wall {rf.C['proposed']['lifts'][0]['t']*1000:.0f} mm throughout. |
 | F | 2026-11-22 | Decisions of the project adopted: outer wall {cfg.SILO['outer_wall_m']*1000:.0f} mm with stainless steel bars, inner wall {cfg.SILO['inner_wall_m']*1000:.0f} mm, the store layered, the CDU with a heat exchanger, and the assumed range of outside air. The store pipes, the cover and the overflow are in the model. |
 | G | 2026-11-22 | Check 4 carried out on assumed ground: the slab as drawn is adequate, the shaft base is designed to stand alone, and the fill settles the walls against the shaft. Check 6 carried out, first pass: root connection, hub, bearings and drive. Allowance for the hub raised to {st.SHAFT['hub_and_floor_t_per_level']:g} t. A thicker shaft wall proposed for the accumulated limit. |
+| H | 2026-11-22 | Check 4 corrected. The springs of revision G were values for a small test plate and were about ten times too stiff for soil under a slab this wide. The grounds are now set by modulus: settlement on soil is tens of millimetres, the fill lowers the walls {(fd.C['chosen']['settle']['fill_inner']-fd.C['chosen']['settle']['fill_shaft'])*1000:.0f} mm against the shaft on {fd.F['design_ground']}, and the slab as drawn is not strong enough on dense sand or stiff clay. |
 
 This report is generated from [project.json](project.json) by `python -m gpu_silo calcs`. Every number in it is calculated from the inputs in that file by [structure.py](../gpu_silo/structure.py), [walls.py](../gpu_silo/walls.py), [thermal.py](../gpu_silo/thermal.py) and [reinforcement.py](../gpu_silo/reinforcement.py). To change a result, change an input and run the command.
 
@@ -1417,7 +1428,7 @@ The truss and the shaft are each the lightest that meets its own {st.TIP['single
 
 Check 6 has since been carried out. It needs {cn.C['budget']['need']*1000:.1f} mm for the root connection and the tilt of the hub, and proposes a shaft wall of {st.inches(cn.C['budget']['proposed']['wall']['section']['wall_in'])} in to make room (section 12.9). No size is changed in this revision. The choice is open item 11.
 
-The settlement of the foundation as the store is filled also moves the wall sleeves against the pod tips, by about {(fd.C['chosen']['settle']['fill_inner']-fd.C['chosen']['settle']['fill_shaft'])*1000:.0f} mm on medium ground. Section 11.5 deals with it by making the wall couplings after the fill.
+The settlement of the foundation as the store is filled also moves the wall sleeves against the pod tips, by about {(fd.C['chosen']['settle']['fill_inner']-fd.C['chosen']['settle']['fill_shaft'])*1000:.0f} mm on {fd.F['design_ground']}. Section 11.5 deals with it by making the wall couplings after the fill.
 
 ## 4. Check 2: pod truss
 
@@ -1975,7 +1986,7 @@ These thicknesses were the proposal of revision D, for the liquid load only. The
 | 15 | Slewing ring and guide rollers with the stiffness of section 12.7, and how power and data cross to a turning level | check 6 | bearing supplier, project |
 | 16 | Comparison of section properties with the AISC Manual, of the ACI 350-06 clauses with ACI 350-20, and of the values taken from ACI CODE-440.11-22, ASTM A955 and ASTM D7957 with the documents | checks 2 and 3 | checker |
 | 17 | The films still show the support rig arriving with the generator sets, walls of {wc['present']['outer']*1000:.0f} mm, and a store with no pipes, cover or overflow | animation | next render |
-| 18 | Ground investigation: the silo puts about {fd.C['total']/fd.C['area']/1e3:.0f} kPa on the ground on average and more at the rim (section 11.4). Rock, very dense ground, piles or ground improvement. Settlement over time. | check 4 | project |
+| 18 | Ground investigation. The silo weighs {fd.C['total']/1e6:,.0f} MN and settles by tens of millimetres on soil (section 11.4). Slab or piles, slab thickness, and settlement over time. | check 4 | project |
 | 19 | Make the wall couplings after the store is filled, so that the settlement of the fill is not a movement of the pod tips (section 11.5) | programme, check 4 | project |
 | 20 | Fill each level in opposite pairs, which cuts the out-of-balance moment on a hub to {cn.C['hub']['opposite']*100:.0f}% (section 12.7) | check 6, animation | project |
 

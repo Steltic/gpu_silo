@@ -3,7 +3,7 @@
 | | |
 | --- | --- |
 | Document | GS-STR-001 |
-| Revision | G, 2026-11-22 |
+| Revision | H, 2026-11-22 |
 | Status | Preliminary, issued for review. Not checked. Not for construction. |
 | Prepared by | Claude (Anthropic), for Steltic |
 | Checked by | Not yet checked |
@@ -18,6 +18,7 @@
 | E | 2026-11-22 | Check 5 carried out, first pass: the store has to be layered. Inner wall raised to 500 mm for creep in warm concrete. Reinforcement of the outer wall compared: stainless steel proposed, which makes the outer wall 400 mm throughout. |
 | F | 2026-11-22 | Decisions of the project adopted: outer wall 400 mm with stainless steel bars, inner wall 500 mm, the store layered, the CDU with a heat exchanger, and the assumed range of outside air. The store pipes, the cover and the overflow are in the model. |
 | G | 2026-11-22 | Check 4 carried out on assumed ground: the slab as drawn is adequate, the shaft base is designed to stand alone, and the fill settles the walls against the shaft. Check 6 carried out, first pass: root connection, hub, bearings and drive. Allowance for the hub raised to 4 t. A thicker shaft wall proposed for the accumulated limit. |
+| H | 2026-11-22 | Check 4 corrected. The springs of revision G were values for a small test plate and were about ten times too stiff for soil under a slab this wide. The grounds are now set by modulus: settlement on soil is tens of millimetres, the fill lowers the walls 8 mm against the shaft on very dense gravel or hard clay, and the slab as drawn is not strong enough on dense sand or stiff clay. |
 
 This report is generated from [project.json](project.json) by `python -m gpu_silo calcs`. Every number in it is calculated from the inputs in that file by [structure.py](../gpu_silo/structure.py), [walls.py](../gpu_silo/walls.py), [thermal.py](../gpu_silo/thermal.py) and [reinforcement.py](../gpu_silo/reinforcement.py). To change a result, change an input and run the command.
 
@@ -65,7 +66,7 @@ Lateral load is not covered by any check yet, because the site is not fixed. It 
 | 1 | Steel shaft | Axial load, out-of-balance bending, shortening and lean of the central shaft, fixed at its base and held at its top | Wall thickness sized for gravity load. For review. | [Section 5](#5-check-1-central-shaft) |
 | 2 | Pod trusses | The two welded side trusses that carry each 4SU pod as a cantilever | Sized for gravity load to a 5 mm tip deflection. For review. | [Section 4](#4-check-2-pod-truss) |
 | 3 | Silo wall thickness | Hoop tension in the outer wall, external pressure on the inner wall, wall thickness and reinforcement, without post-tensioning | Adopted for liquid load and temperature: outer wall 400 mm with stainless steel bars, inner wall 500 mm. For review. | [Section 8](#8-check-3-silo-walls) |
-| 4 | Foundation | Base slab, bearing pressure, and the anchorage of the shaft base | Slab and shaft base checked on assumed ground. For review. The ground is not known. | [Section 11](#11-check-4-foundation) |
+| 4 | Foundation | Base slab, bearing pressure, and the anchorage of the shaft base | Slab and shaft base checked on three assumed grounds. Corrected in revision H. For review. The ground is not known. | [Section 11](#11-check-4-foundation) |
 | 5 | Heat balance of the store | Water-glycol temperatures, mixing and ride-through in the store | First pass complete. The store is layered: pipes, cover and overflow are in the model. For review. | [Section 9](#9-check-5-heat-balance-of-the-store) |
 | 6 | Pod-to-shaft connection and level drive | Root connection of the pod, the hub at each level, and the capacity of the drive that turns a level on the fixed shaft | First pass: root connection, hub, bearings and drive sized. A thicker shaft wall proposed. For review. | [Section 12](#12-check-6-root-connection-hub-and-level-drive) |
 | 7 | Top support rig | The steel rig at the crown that carries the diesel generator sets and holds the top of the shaft. Set on its mounts straight after the cage. | Design loads issued. Design not started. | [Section 7](#7-checks-7-to-10-support-rig-shaft-connector-and-wall-mounts-design-loads) |
@@ -189,7 +190,7 @@ The truss and the shaft are each the lightest that meets its own 5 mm, and toget
 
 Check 6 has since been carried out. It needs 1.6 mm for the root connection and the tilt of the hub, and proposes a shaft wall of 1-3/4 in to make room (section 12.9). No size is changed in this revision. The choice is open item 11.
 
-The settlement of the foundation as the store is filled also moves the wall sleeves against the pod tips, by about 3 mm on medium ground. Section 11.5 deals with it by making the wall couplings after the fill.
+The settlement of the foundation as the store is filled also moves the wall sleeves against the pod tips, by about 8 mm on very dense gravel or hard clay. Section 11.5 deals with it by making the wall couplings after the fill.
 
 ## 4. Check 2: pod truss
 
@@ -1192,7 +1193,8 @@ The site is not fixed and there is no ground investigation. This check therefore
 | Assumption | Value | Note |
 | --- | ---: | --- |
 | Ground | springs under the slab, each acting alone (Winkler) | the usual first model. Real ground spreads load sideways, so the differences in settlement found here are on the high side. |
-| Stiffness of the ground | soft 15, medium 40, stiff 100 MN/m³ | **assumption.** Loose sand or firm clay, dense sand or stiff clay, very dense gravel or weak rock. |
+| Stiffness of the ground | modulus of 80 MPa for dense sand or stiff clay, 250 MPa for very dense gravel or hard clay, 1,000 MPa for weak rock | **assumption.** Typical values for each kind of ground. |
+| Spring under the slab | 4 E ÷ (π D (1 − ν²)), with ν = 0.3 | the spring that gives a stiff round slab of diameter D its settlement on an elastic ground. It falls as the slab gets wider, so values from a plate test cannot be used for a slab 26 m across. |
 | Concrete | f'<sub>c</sub> = 40 MPa | |
 | Reinforcement | Grade 60, 75 mm cover | ordinary bar. The floor of the store is under the liner. |
 | Load factor | 1.4 on everything | ACI 318-19 for dead load and liquid |
@@ -1222,28 +1224,29 @@ The slab is a round plate on springs, loaded round the lines of the walls and th
 
 ### 11.4 Pressure on the ground and settlement
 
-With the slab 1.00 m thick and the store full:
+Each kind of ground is given the thinnest slab in the list that is strong enough on it. The store is full.
 
-| Ground | Stiffness, MN/m³ | Pressure on the ground, kPa | Settlement of the shaft, mm | Inner wall, mm | Outer wall, mm | Filling lowers the inner wall more than the shaft by, mm | Largest moment, kN·m/m | Factored shear, kN/m |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| Soft | 15 | 117 to 384 | 7.8 | 16.6 | 23.8 | **6.9** | 1,010 | 530 |
-| Medium | 40 | 99 to 420 | 2.6 | 6.1 | 9.6 | **3.1** | 587 | 411 |
-| Stiff | 100 | 94 to 447 | 1.4 | 2.4 | 4.0 | **1.3** | 709 | 352 |
+| Ground | Modulus, MPa | Spring, MN/m³ | Slab as drawn adequate | Slab needed, m | Pressure on the ground, kPa | Settlement of the shaft, mm | Inner wall, mm | Outer wall, mm | Filling lowers the inner wall more than the shaft by, mm | Largest moment, kN·m/m |
+| --- | ---: | ---: | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| Dense sand or stiff clay | 80 | 4.3 | No | 1.25 | 209 to 307 | 49 | 61 | 70 | **8.8** | 2,242 |
+| Very dense gravel or hard clay | 250 | 13.3 | Yes | 1.00 | 121 to 379 | 9 | 19 | 27 | **7.5** | 1,078 |
+| Weak rock | 1,000 | 53.2 | Yes | 1.00 | 98 to 429 | 2 | 5 | 7 | **2.4** | 609 |
 
 ![Settlement of the base slab](figures/foundation.svg)
 
-- **The ground has to carry about 257 kPa on average and about 447 kPa at the rim.** That is more than most soils are allowed to carry on a slab. The silo needs very dense ground or rock near the surface, or piles, or ground improvement. Widening the slab helps a little: most of the load is on the ring. This is the first question for the site, and is open item 18.
+- **On soil the silo settles by tens of millimetres.** About 70 mm at the outer wall on dense sand or stiff clay, and about 27 mm on very dense gravel or hard clay. Only on rock is it a few millimetres. These are the settlements as the load goes on. Clay goes on settling for years afterwards, which is not in these figures.
+- **The pressure on the ground is about 257 kPa on average and up to about 429 kPa at the rim.** A slab this wide is unlikely to fail the ground in sand or gravel. In clay the strength of the ground has to be checked as well. In either, it is the settlement that decides whether the silo can stand on a slab or needs piles. This is the first question for the site, and is open item 18.
 - **The slab dishes the wrong way up.** The walls and the store are heavy and the bore is light, so the rim goes down more than the centre.
 
 ### 11.5 What settlement does to the pod tips
 
-The pods hang from the shaft at the centre of the slab. Their wall couplings are in the inner wall. When the store is filled the inner wall goes down 2.8 mm on medium ground and the shaft comes up 0.3 mm, so **every wall sleeve drops about 3 mm against its pod tip.** On soft ground it is 7 mm. A thicker slab does not remove it (section 11.6).
+The pods hang from the shaft at the centre of the slab. Their wall couplings are in the inner wall. When the store is filled the inner wall goes down more than the shaft, so **every wall sleeve drops against its pod tip: by about 8 mm on very dense gravel or hard clay**, about 9 mm on dense sand or stiff clay and about 2 mm on weak rock. A thicker slab reduces it, to 2.3 mm at 2 m on very dense gravel or hard clay (section 11.6).
 
-This is the same size as the 5 mm that any one part is allowed to move a pod tip, and it is not in the 10 mm accumulated limit. The programme loads the pods on days 6 to 15 and fills the store from day 15, so as programmed it happens after the pods are docked. There are three ways to deal with it:
+On soil this is more than the 5 mm that any one part is allowed to move a pod tip, and it is not in the 10 mm accumulated limit. The programme loads the pods on days 6 to 15 and fills the store from day 15, so as programmed it happens after the pods are docked. There are three ways to deal with it:
 
 1. **Make the wall couplings after the store is full.** The pods are docked as programmed, and the service plugs are set and connected once the fill is complete. The fill settlement is then history. This costs nothing and is recommended.
 2. Give the coupling the travel to follow it.
-3. Found the silo on rock or piles, where the settlement is a fraction of this.
+3. Found the silo on rock or piles, or thicken the slab, so that the walls and the shaft go down together.
 
 Settlement that goes on after the fill, as the ground consolidates under a load that never comes off, cannot be dealt with by the first way. It depends on the ground and is open item 18.
 
@@ -1251,27 +1254,31 @@ Settlement that goes on after the fill, as the ground consolidates under a load 
 
 | Thickness, m | Largest radial moment, top in tension, kN·m/m | Bottom in tension, kN·m/m | Factored shear at the walls, kN/m | Shear strength with no ties, kN/m | With ties, kN/m | Ties needed | Factored punching at the shaft against strength, MN | Fill settlement, wall against shaft, mm | |
 | ---: | ---: | ---: | ---: | ---: | ---: | --- | ---: | ---: | --- |
-| **1.00** | -587 | 527 | 411 | 268 | 706 | Yes | 7.9 against 8.4 | 3.1 | As drawn. Adequate. |
-| 1.25 | -849 | 230 | 438 | 298 | 907 | Yes | 7.7 against 10.6 | 2.8 |  |
-| 1.50 | -1,147 | 158 | 474 | 324 | 1,109 | Yes | 7.4 against 12.8 | 2.4 |  |
-| 1.75 | -1,448 | 160 | 510 | 345 | 1,310 | Yes | 6.8 against 15.2 | 2.0 |  |
-| 2.00 | -1,724 | 161 | 537 | 360 | 1,512 | Yes | 6.3 against 17.6 | 1.6 |  |
+| **1.00** | -1,078 | 157 | 549 | 328 | 706 | Yes | 7.8 against 8.4 | 7.5 | As drawn. Adequate. |
+| 1.25 | -1,510 | 160 | 619 | 361 | 907 | Yes | 7.2 against 10.6 | 5.7 |  |
+| 1.50 | -1,884 | 163 | 671 | 382 | 1,109 | Yes | 6.7 against 12.8 | 4.2 |  |
+| 1.75 | -2,170 | 164 | 698 | 394 | 1,310 | Yes | 6.0 against 15.2 | 3.1 |  |
+| 2.00 | -2,377 | 166 | 704 | 400 | 1,512 | Yes | 5.5 against 17.6 | 2.3 |  |
+| 2.50 | -2,630 | 168 | 672 | 403 | 1,915 | Yes | 4.2 against 22.6 | 1.3 |  |
+| 3.00 | -2,761 | 169 | 606 | 400 | 2,318 | Yes | 2.9 against 27.9 | 0.8 |  |
 
-Moments are unfactored and for medium ground. The shear is taken at the effective depth from the face of each wall, and the largest is on the inside of the inner wall.
+Moments are unfactored. The table is for very dense gravel or hard clay. The shear is taken at the effective depth from the face of each wall, and the largest is on the inside of the inner wall.
 
-**The slab as drawn, 1.00 m thick, is adequate**, with shear ties in a band each side of each wall. No thickness in the list does without ties, because a deep slab with little reinforcement is given a low shear strength (ACI 318-19 Section 22.5.5). A thicker slab attracts more moment and does little for the settlement, so there is no case for one.
+**On very dense gravel or hard clay and on weak rock the slab as drawn, 1.00 m thick, is strong enough**, with shear ties in a band each side of each wall. On dense sand or stiff clay it is not, and 1.25 m is needed. No thickness in the list does without ties, because a deep slab with little reinforcement is given a low shear strength (ACI 318-19 Section 22.5.5).
+
+Thickness does more for settlement than for strength. A 2 m slab is stiff enough to take the walls and the shaft down nearly together. Whether that is worth 542 m³ more concrete depends on the ground and on how the wall couplings are made (section 11.5). The slab in the design file is not changed.
 
 Reinforcement of the 1.00 m slab, by strength:
 
 | Direction and face | Moment, kN·m/m | Steel needed, mm²/m | Bars |
 | --- | ---: | ---: | --- |
-| Radial, bottom | +527 | 2,480 | 1 layer of #8 at 200 mm |
-| Radial, top | -587 | 2,761 | 1 layer of #8 at 180 mm |
-| Hoop, bottom | +525 | 2,468 | 1 layer of #8 at 200 mm |
-| Hoop, top | -392 | 1,846 | 1 layer of #8 at 270 mm |
+| Radial, bottom | +157 | 900 | 1 layer of #8 at 300 mm |
+| Radial, top | -1,078 | 5,069 | 1 layer of #10 at 160 mm |
+| Hoop, bottom | -45 | 900 | 1 layer of #8 at 300 mm |
+| Hoop, top | -887 | 4,170 | 1 layer of #9 at 150 mm |
 | Across the floor of the store, both faces together | tension 526 kN/m | 1,949 | added to the radial bars between the walls |
 
-Soft ground gives larger moments, up to 1,010 kN·m/m, so the reinforcement is to be designed again once the ground is known.
+Softer ground gives larger moments, up to 2,242 kN·m/m on dense sand or stiff clay, so the reinforcement is to be designed again once the ground is known.
 
 ### 11.7 Base of the shaft
 
@@ -1308,9 +1315,11 @@ These are checked at every build by [foundation.py](../gpu_silo/foundation.py).
 
 ### 11.9 Conclusion
 
-The slab as drawn, 1.00 m thick, carries the loads with ordinary reinforcement and shear ties near the walls. The base of the shaft takes 24 M56 anchors and stands alone under the worst out-of-balance load.
+The slab as drawn, 1.00 m thick, is strong enough on very dense gravel or hard clay or on rock, with ordinary reinforcement and shear ties near the walls. On dense sand or stiff clay it has to be 1.25 m. The base of the shaft takes 24 M56 anchors and stands alone under the worst out-of-balance load.
 
-What the check cannot settle is the ground. The silo puts about 257 kPa on it on average and about 447 kPa at the rim, which calls for rock, very dense ground or piles. And filling the store lowers the walls about 3 mm against the shaft, so the wall couplings should be made after the fill.
+What the check cannot settle is the ground. The silo weighs 140 MN full. On soil it settles by tens of millimetres, and filling the store lowers the walls 2 to 9 mm against the shaft, depending on the ground. The wall couplings should be made after the fill, and a site on soil should be looked at for piles.
+
+**Correction in revision H.** Revision G took springs of 15, 40 and 100 MN/m³ and called them soft, medium and stiff ground. Those are values for a small test plate. Under a slab 26 m across the spring is about a tenth of that, so revision G described rock while calling it soil, and its settlements were too small by about ten times for soil. The method is unchanged. The grounds are now set by their modulus.
 
 ### 11.10 Not covered by this check
 
@@ -1518,7 +1527,7 @@ Two things are. The bearings of the hub have to be stiff, 3,165 kN/mm each, or a
 | 15 | Slewing ring and guide rollers with the stiffness of section 12.7, and how power and data cross to a turning level | check 6 | bearing supplier, project |
 | 16 | Comparison of section properties with the AISC Manual, of the ACI 350-06 clauses with ACI 350-20, and of the values taken from ACI CODE-440.11-22, ASTM A955 and ASTM D7957 with the documents | checks 2 and 3 | checker |
 | 17 | The films still show the support rig arriving with the generator sets, walls of 250 mm, and a store with no pipes, cover or overflow | animation | next render |
-| 18 | Ground investigation: the silo puts about 257 kPa on the ground on average and more at the rim (section 11.4). Rock, very dense ground, piles or ground improvement. Settlement over time. | check 4 | project |
+| 18 | Ground investigation. The silo weighs 140 MN and settles by tens of millimetres on soil (section 11.4). Slab or piles, slab thickness, and settlement over time. | check 4 | project |
 | 19 | Make the wall couplings after the store is filled, so that the settlement of the fill is not a movement of the pod tips (section 11.5) | programme, check 4 | project |
 | 20 | Fill each level in opposite pairs, which cuts the out-of-balance moment on a hub to 38% (section 12.7) | check 6, animation | project |
 

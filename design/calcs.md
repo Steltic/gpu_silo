@@ -395,7 +395,7 @@ The walls take 10 days at 1 lift a day and are outside the 28 days. The pod cage
 15. **A lift a day.** 1 lift a day is fast for a jumpform. Slower lifts lengthen the work before day 0 and leave the 28 days after it unchanged.
 16. **Fuel line across the ring.** The propane and diesel lines run on the ground from the tanks to the wall and cross both ring lanes. They need to be buried or bridged there.
 17. **Heavy and oversize loads.** The 8 propane tanks are 3 m wide and the turbine sets weigh 94.5 t. Their permits, routes and the way each tank is jacked off its trailer are not designed.
-18. **The ground.** The silo weighs 140 MN full, which is 257 kPa on its slab on average and more at the rim. [Check 4](report.md#11-check-4-foundation) finds that this needs rock, very dense ground or piles, and that filling the store settles the walls about 3 mm against the shaft on medium ground. There is no ground investigation.
+18. **The ground.** The silo weighs 140 MN full, which is 257 kPa on its slab on average and more at the rim. [Check 4](report.md#11-check-4-foundation) finds that on soil the silo settles by tens of millimetres, and that filling the store settles the walls about 8 mm against the shaft on very dense gravel or hard clay. Whether it can stand on a slab or needs piles depends on the ground, and there is no ground investigation.
 
 ## Fluid properties used
 
