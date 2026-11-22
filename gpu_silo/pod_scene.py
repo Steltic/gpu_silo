@@ -292,7 +292,8 @@ def cage_parts():
         return parts[max(0,min(CAGE_TOP-1,bisect.bisect_right(cuts,z)-1))]
     perimeter_posts=24
     for k,m in enumerate(parts):
-        z0,z1=max(-.08,cuts[k]),min(CROWN,cuts[k+1])
+        # The shaft runs on above the crown into the collar of the support rig.
+        z0,z1=max(-.08,cuts[k]),(structure.SHAFT_TOP+.15 if k==CAGE_TOP-1 else min(CROWN,cuts[k+1]))
         annulus(m,0,SHAFT,z0,z1,"617b79",n=28)
         for j in range(perimeter_posts):
             a=ENTRY+(j+.5)*TAU/perimeter_posts

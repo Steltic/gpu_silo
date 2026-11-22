@@ -449,11 +449,14 @@ The side trusses are sized in the [design report](report.md#4-check-2-pod-truss)
 | --- | ---: | --- |
 | Chords | {sd['chord']['name']} | long side vertical, {st.STEEL['hss']} |
 | Verticals and diagonals | {sd['web']['name']} | |
-| Tip deflection under dead load | {sd['tip']*1000:.1f} mm | span/{st.SPAN/sd['tip']:,.0f}; limit span/{st.T['tip_deflection_span_over']:,} = {sc['limit']*1000:.1f} mm |
+| Tip deflection under dead load | {sd['tip']*1000:.1f} mm | span/{st.SPAN/sd['tip']:,.0f}; limit {sc['limit']*1000:g} mm |
 | Frame and housing | {sd['frame']/1000:.2f} t | {sd['steel']/1000:.2f} t of steel, {sd['connections']/1000:.2f} t of connections, {sd['housing']/1000:.2f} t of housing |
 | **One pod, operating** | **{sc['pod_t']:.2f} t** | {cfg.CLUSTER['racks_per_pod']} racks × {cfg.POD['rack_mass_t']:g} t, {cfg.POD['cdu_pump_mass_t']:g} t of CDU and pump, {cfg.POD['coolant_and_piping_t']:g} t of coolant and piping, frame and housing |
 | Moment of one pod about the shaft axis | {sc['moment_axis']/1000:,.0f} kN·m | centre of gravity {sc['arm']:.2f} m from the axis |
 | Weight on the shaft, {cfg.TOTAL} pods | {sc['store_weight']/1000:,.0f} kN | {cfg.TOTAL*sc['pod_t']:,.0f} t |
+| Shaft | {st.SHAFT_D*1000:.0f} mm diameter, {sc['shaft']['chosen']['section']['wall']*1000:.1f} mm wall | fixed at the base and held at the top by the support rig. [Design report](report.md#5-check-1-central-shaft) |
+| Movement of a pod tip from the shaft | {sc['shaft']['chosen']['movement']['total']*1000:.1f} mm | shortening and lean in the worst filling state; limit {sc['shaft']['limit']*1000:g} mm |
+| Sideways force at the top of the shaft | {abs(sc['rig']['cases'][1]['reaction'])/1000:,.0f} kN | worst filling state, into the support rig and its {sc['rig']['mounts']} cast-in wall mounts |
 
 ## 6. Power
 
@@ -537,7 +540,7 @@ The backup covers black start, controls, the cooling plant and about a fifth of 
 9. **Lifts.** Each power level is shown lowered as one assembly. The crane, the lifting sequence and the removal route for a turbine or generator are not designed.
 10. **Fuel.** {n(c['fuel_m3'])} m³ of propane runs the site for about {c['fuel_hours']:.0f} hours. Separation distances, bunding, the vaporiser and the resupply rate have not been checked. Fuel stored inside is limited to the day tanks, and the limit that applies has not been checked.
 11. **Power in the shaft.** {c['heat_mw']:.0f} MW passes down the steel shaft to {c['pods']} pods, {c['pod_kw']:.0f} kW each. The busbar, its cooling and the connection at each level are not designed.
-12. **Pod support.** The pod trusses are sized in the [design report](report.md). The shaft, its base, the hub at each level, the root connection and the drive are checks 1 and 6 of that report and are not designed yet. With {cfg.STORE['shaft_access_m']:g} m of access the pod frames pass within {min(c['root_gap_packed'],c['root_gap_lane'])*1000:.0f} mm of each other at their roots.
+12. **Pod support.** The pod trusses and the shaft wall are sized in the [design report](report.md) for gravity load. The base of the shaft, the hub at each level, the root connection, the drive, the support rig, its shaft connector and the wall mounts are still to be designed. The support rig holds the top of the shaft but arrives after the pods in the programme, and the shaft cannot be loaded without it.
 13. **Pod weight.** A pod weighs {lg['pod_t']:.1f} t with the frame as designed. The rack, CDU and coolant weights in it are allowances: NVIDIA has not published a shipping weight for this rack. The load is {lg['pods_per_truck']} pods a truck, side by side, because a {st.SPAN:.2f} m pod no longer fits twice along the deck.
 14. **Liner and fill.** The liner goes on from day {logistics.BY_KEY['coating']['start']}, when the youngest concrete is {lg['coat_age_min']} days old, and the fill starts on day {logistics.BY_KEY['water']['start']}. Most coatings ask for 28-day-old, dry concrete, so the liner system and its moisture limits need a supplier's check. The pod sleeves, frame conduits and the door blockout all pass through the liner and need detailing.
 15. **A lift a day.** {cfg.PROJECT['jumpform']['lifts_per_day']:g} lift a day is fast for a jumpform. Slower lifts lengthen the work before day 0 and leave the {logistics.DAYS} days after it unchanged.
@@ -696,5 +699,10 @@ def write(path=FILE):
 
 
 def current(path=FILE):
+    return not differences(path)
+
+
+def differences(path=FILE):
     from . import report
-    return Path(path).is_file() and Path(path).read_text(encoding="utf-8") == markdown() and report.current()
+    found = [] if Path(path).is_file() and Path(path).read_text(encoding="utf-8") == markdown() else [f"{Path(path).name} differs"]
+    return found + report.differences()

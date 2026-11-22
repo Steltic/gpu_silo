@@ -40,7 +40,7 @@
     "pitch_m": 2.77,
     "lowest_berth_m": 0.2,
     "shaft_radius_m": 0.58,
-    "shaft_access_m": 0.5,
+    "shaft_access_m": 0.62,
     "crown_m": 23.49,
     "packed_pitch_degrees": 40.0
   },
@@ -423,14 +423,14 @@
       "design_wall_factor": 0.93
     },
     "pod_truss": {
-      "tip_deflection_span_over": 1000,
-      "sensitivity_span_over": [
-        360,
-        600,
-        1000,
-        1500,
-        2000,
-        2500
+      "tip_deflection_limit_mm": 5.0,
+      "sensitivity_limits_mm": [
+        10,
+        7.5,
+        5,
+        4,
+        3.5,
+        3
       ],
       "dead_load_factor": 1.4,
       "hoist_impact_factor": 1.25,
@@ -544,18 +544,48 @@
       "connection_allowance": 0.1,
       "housing_kg_per_m2": 10
     },
-    "shaft_look_ahead": {
-      "trial_wall_mm": 50,
-      "tip_drop_limit_mm": 5
-    },
     "level_drive": {
       "index_seconds": 60
+    },
+    "shaft": {
+      "steel": "ASTM A572 Grade 50 plate, rolled and seam welded",
+      "fy_mpa": 345,
+      "wall_sizes_in": [
+        0.75,
+        0.875,
+        1,
+        1.125,
+        1.25,
+        1.375,
+        1.5,
+        1.75,
+        2
+      ],
+      "tip_drop_limit_mm": 5.0,
+      "effective_length_factor": 0.8,
+      "hub_and_floor_t_per_level": 3.0,
+      "services_kg_per_m": 300,
+      "rig_stiffness_kn_per_mm": [
+        25,
+        50,
+        100,
+        250,
+        1000
+      ]
+    },
+    "top_rig": {
+      "wall_mounts": 16,
+      "mount_plate_m": [
+        0.6,
+        0.95
+      ],
+      "arms": 4
     }
   },
   "design_checks": {
     "document": "GS-STR-001",
-    "revision": "A",
-    "date": "2026-11-21",
+    "revision": "B",
+    "date": "2026-11-22",
     "status": "Preliminary, issued for review. Not checked. Not for construction.",
     "prepared_by": "Claude (Anthropic), for Steltic",
     "checked_by": "Not yet checked",
@@ -564,15 +594,15 @@
       {
         "id": 1,
         "title": "Steel shaft",
-        "scope": "Axial load, out-of-balance bending and lean of the central shaft, and its fixed base on the foundation",
-        "status": "Design loads issued. Design not started.",
+        "scope": "Axial load, out-of-balance bending, shortening and lean of the central shaft, fixed at its base and held at its top",
+        "status": "Wall thickness sized for gravity load. For review.",
         "section": "5"
       },
       {
         "id": 2,
         "title": "Pod trusses",
         "scope": "The two welded side trusses that carry each 4SU pod as a cantilever",
-        "status": "Sized for gravity load. For review.",
+        "status": "Sized for gravity load to a 5 mm tip deflection. For review.",
         "section": "4"
       },
       {
@@ -599,9 +629,30 @@
       {
         "id": 6,
         "title": "Pod-to-shaft connection and level drive",
-        "scope": "Root connection of the pod, the hub at each level, and the capacity of the drive that turns a level",
+        "scope": "Root connection of the pod, the hub at each level, and the capacity of the drive that turns a level on the fixed shaft",
         "status": "Design loads issued. Design not started.",
         "section": "6"
+      },
+      {
+        "id": 7,
+        "title": "Top support rig",
+        "scope": "The steel rig at the crown that carries the diesel generator level and holds the top of the shaft",
+        "status": "Design loads issued. Design not started.",
+        "section": "7"
+      },
+      {
+        "id": 8,
+        "title": "Shaft-top connector",
+        "scope": "The connector that puts the horizontal force from the top of the shaft into the support rig",
+        "status": "Design loads issued. Design not started.",
+        "section": "7"
+      },
+      {
+        "id": 9,
+        "title": "Cast-in wall mounts",
+        "scope": "The mounts cast into the inner wall that carry the support rig, and the wall locally",
+        "status": "Design loads issued. Design not started.",
+        "section": "7"
       }
     ]
   }
