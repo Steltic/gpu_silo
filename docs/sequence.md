@@ -2,6 +2,17 @@
 
 There are two films. [silo_short](#the-build-silo_short) is the build in programme order. [GPU_Silo](#the-full-presentation-gpu_silo) is the longer presentation. They share one model and one design file and are not kept in step.
 
+## Waiting for the next render
+
+The films are rendered on request, so the published films can be behind the design. These changes are in the design file, the calculations and the report but not yet in the published films.
+
+| Change | In the model | In the published films |
+| --- | --- | --- |
+| Access round the shaft 0.62 m, pods 7.16 m long with a 2.16 m CDU and pump section | Yes | No, they show 0.5 m |
+| Pod trusses with HSS6×3×3/16 chords | Yes | No, they show HSS4×3×3/16 |
+| Shaft connector, support rig shoes and the plates cast into the wall for both power levels | Yes | No |
+| Support rig steel set on days 4 and 5, before the pods, and the generator sets landed on it later | No. The model still lifts the rig in with the generator sets. To be re-cut. | No |
+
 ## The build: silo_short
 
 [Play the chaptered movie](../../../releases/latest/download/silo_short.mp4). 3:26, silent. Day 0 is the day the last wall lift is poured. A tag at the top of each scene gives its days in the 28-day programme and a running count of trucks. The film shows a sample of the trucks and the counters scale to the full number of loads. Activities that overlap pod loading are shown as cuts away from it.

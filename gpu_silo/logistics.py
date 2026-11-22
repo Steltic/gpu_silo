@@ -170,6 +170,8 @@ def check():
             raise ValueError(f"'{a['name']}' must start before it ends and finish by day {DAYS}.")
     if BY_KEY["pods"]["start"] <= BY_KEY["cage"]["end"] or BY_KEY["power"]["start"] <= BY_KEY["pods"]["end"]:
         raise ValueError("The pods follow the cage, and the power levels follow the pods.")
+    if not BY_KEY["rigfab"]["end"] < BY_KEY["rig"]["start"] or not BY_KEY["cage"]["end"] < BY_KEY["rig"]["start"] or not BY_KEY["rig"]["end"] < BY_KEY["pods"]["start"]:
+        raise ValueError("The support rig is fabricated, then set after the cage and before the first pod, because it holds the top of the shaft.")
     if BY_KEY["coating"]["end"] >= BY_KEY["water"]["start"] or C["coat_days_needed"] > span("coating")[2] + 1e-9:
         raise ValueError("The store is coated before it is filled, and the sprayers need enough days to cover it.")
     if BY_KEY["water"]["end"] != DAYS or BY_KEY["fabricate"]["end"] >= BY_KEY["power"]["start"]:

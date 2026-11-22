@@ -356,17 +356,19 @@ Day 0 is the last wall pour. The concrete reaches its 28-day strength on day 28,
 | Jumpform the walls | -9 | 0 | 10 |
 | Pod cage built, a level a day | -8 | 0 | 9 |
 | Strip forms, rig the cranes | 1 | 2 | 2 |
+| Support rig steel fabricated | -3 | 3 | 7 |
 | Lift in the pod cage | 3 | 3 | 1 |
+| Support rig set, shaft held | 4 | 5 | 2 |
 | Build the receiving dock | 3 | 5 | 3 |
 | Coolers into their frames | 3 | 12 | 10 |
 | 4SU pods delivered and loaded | 6 | 15 | 10 |
 | Cooler frames hung and piped | 8 | 17 | 10 |
 | Fuel tanks set | 8 | 11 | 4 |
-| Power levels fabricated on site | 9 | 18 | 10 |
+| Power sets made ready on site | 9 | 18 | 10 |
 | Spray-coat the inside of the store | 11 | 14 | 4 |
 | Water-glycol fill | 15 | 28 | 14 |
 | Propane and diesel fill | 16 | 22 | 7 |
-| Power levels and lid lifted in | 19 | 21 | 3 |
+| Power sets and lid lifted in | 19 | 21 | 3 |
 | Fuel lines and cabling | 22 | 26 | 5 |
 | Dock enclosed as the control office | 24 | 27 | 4 |
 | Full strength, handed over | 28 | 28 | 1 |
@@ -386,7 +388,7 @@ The walls take 10 days at 1 lift a day and are outside the 28 days. The pod cage
 9. **Lifts.** Each power level is shown lowered as one assembly. The crane, the lifting sequence and the removal route for a turbine or generator are not designed.
 10. **Fuel.** 913 m³ of propane runs the site for about 43 hours. Separation distances, bunding, the vaporiser and the resupply rate have not been checked. Fuel stored inside is limited to the day tanks, and the limit that applies has not been checked.
 11. **Power in the shaft.** 50 MW passes down the steel shaft to 64 pods, 781 kW each. The busbar, its cooling and the connection at each level are not designed.
-12. **Pod support.** The pod trusses and the shaft wall are sized in the [design report](report.md) for gravity load. The base of the shaft, the hub at each level, the root connection, the drive, the support rig, its shaft connector and the wall mounts are still to be designed. The support rig holds the top of the shaft but arrives after the pods in the programme, and the shaft cannot be loaded without it.
+12. **Pod support.** The pod trusses and the shaft wall are sized in the [design report](report.md) for gravity load. The base of the shaft, the hub at each level, the root connection, the drive, the support rig, its shaft connector and the wall mounts are still to be designed. The support rig holds the top of the shaft, so its steel is set on its wall mounts straight after the cage and before the first pod. The truss and the shaft use 9.6 mm of the 10 mm allowed for the movement of a pod tip, which leaves little for the root connection.
 13. **Pod weight.** A pod weighs 8.9 t with the frame as designed. The rack, CDU and coolant weights in it are allowances: NVIDIA has not published a shipping weight for this rack. The load is 2 pods a truck, side by side, because a 7.16 m pod no longer fits twice along the deck.
 14. **Liner and fill.** The liner goes on from day 11, when the youngest concrete is 11 days old, and the fill starts on day 15. Most coatings ask for 28-day-old, dry concrete, so the liner system and its moisture limits need a supplier's check. The pod sleeves, frame conduits and the door blockout all pass through the liner and need detailing.
 15. **A lift a day.** 1 lift a day is fast for a jumpform. Slower lifts lengthen the work before day 0 and leave the 28 days after it unchanged.
