@@ -166,11 +166,23 @@ def trusses(m,extra):
 
 
 def root_dock():
-    """The root connection on the hub: the upper clevis takes the pull and the weight, the lower bearing takes the thrust."""
-    m=s.Mesh("Cantilever root | upper clevis and lower bearing");m.material=3
-    x0=cfg.STORE["shaft_radius_m"]+.045;x1=INNER-.02
-    for z in (-.075,FRAME_HEIGHT-.11):
-        s.box(m,x0,-.155,x1,.155,z,z+.078,"738184")
-        for y in (-.202,.161):
-            s.box(m,x0+.065,y,INNER+.03,y+.041,z+.04,z+.115,"647278")
+    """The root connection on the hub, from check 6: for each truss a top arm with the pin that takes the pull and the weight,
+    and a bottom arm with the block that takes the thrust. The arms are beams, to keep the pod from dropping."""
+    from . import connection, structure
+    m=s.Mesh("Cantilever root | top arm with pin and bottom arm with bearing block, one pair to a truss");m.material=3
+    arm=connection.C["arm"];depth=arm["depth"];width=.8*depth
+    chord=structure.C["design"]["chord"]["h"]/2
+    x0=connection.R["hub_ring_radius_m"]-.03;x1=INNER-.02
+    for side_ in (-1,1):
+        y=side_*structure.TRUSS_SPACING/2
+        # An arm is wider than a chord. It is kept inside the width of the pod so that bunched pods still pass.
+        ya=side_*(FRAME_WIDTH/2-width/2)
+        for z in (chord,chord+connection.DEPTH):
+            s.box(m,x0,ya-width/2,x1,ya+width/2,z-depth/2,z+depth/2,"738184")
+        # Lug plates each side of the top chord, with the pin through them, and the bearing block under the bottom chord.
+        pin=connection.C["pin"];z=chord+connection.DEPTH
+        for side in (-1,1):
+            s.box(m,x1-.02,y+side*.055-pin["t"]/2,INNER+.07,y+side*.055+pin["t"]/2,z-pin["width"]/2,z+pin["width"]/2,"647278")
+        s.bar(m,(INNER+.02,y-.085,z),(INNER+.02,y+.085,z),pin["d"],"c7986b")
+        s.box(m,x1,y-.07,INNER+.012,y+.07,chord-.09,chord+.09,"c7986b")
     return m

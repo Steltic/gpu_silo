@@ -27,6 +27,7 @@ from . import programme
 from . import film
 from . import cagebuild
 from . import coating
+from . import connection
 from . import layering
 from . import shortfilm
 from . import structure
@@ -329,6 +330,9 @@ def cage_parts():
             s.bar(m,s.polar(.78,a+UNIFORM/2,z-.17),s.polar(INNER-.08,a+UNIFORM/2,z-.17),.12,STEEL,.10)
         annulus(m,.48,.792,z+cargo.FRAME_HEIGHT-.125,z+cargo.FRAME_HEIGHT-.03,STEEL,n=28)
         annulus(m,.46,.77,z-.18,z-.045,STEEL,n=28)
+        # The hub drum joins the two rings round the shaft (check 6).
+        hub=connection.HUB["drum_diameter_m"]/2
+        annulus(m,hub-connection.HUB["drum_wall_mm"]/1000,hub,z-.045,z+cargo.FRAME_HEIGHT-.125,"6f8886",n=28)
         annulus(m,.685,.79,z-.11,z-.025,MINT,n=28)
         gap=math.radians(5.0) if level==1 else 0
         annulus(m,(s.RI-0.085),(s.RI-0.030),z-.17,z-.035,STEEL,ENTRY+gap,ENTRY+TAU-gap)

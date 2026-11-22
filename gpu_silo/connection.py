@@ -10,7 +10,9 @@ Steel to AISC 360-22, load and resistance factor design. SI units: metres, newto
 import math
 
 from . import design as cfg
+from . import foundation
 from . import structure as st
+from . import thermal
 
 R = cfg.PROJECT["structure"]["root"]
 DRIVE = cfg.PROJECT["structure"]["level_drive"]
@@ -151,14 +153,43 @@ def compute():
     budget = st.C["budget"]
     need = R["allowance_mm"]["root"] / 1000 + allow
     rows = []
+    lightest = st.C["shaft"]["lightest"]
     for w in st.C["shaft"]["walls"]:
         if not w["passes"]: continue
         total = budget["truss"] + w["movement"]["total"] + need
         rows.append(dict(wall=w, shaft=w["movement"]["total"], total=total, ok=total <= st.ACCUMULATED + 1e-12,
-                         extra=(w["mass"] - st.C["shaft"]["chosen"]["mass"]) / 1e3))
+                         extra=(w["mass"] - lightest["mass"]) / 1e3))
     c["budget"] = dict(truss=budget["truss"], shaft=budget["shaft"], root=R["allowance_mm"]["root"] / 1000, hub=allow, need=need,
-                       now=budget["total"] + need, rows=rows, proposed=next((r for r in rows if r["ok"]), None))
+                       now=budget["total"] + need, rows=rows, least=next((r for r in rows if r["ok"]), None),
+                       adopted=next(r for r in rows if r["wall"] is st.C["shaft"]["chosen"]))
+    c["flexible"] = flexible(c)
     return c
+
+
+def flexible(c):
+    """Movement between a pod tip and its wall sleeve that the flexible section of the wall connection has to take.
+
+    The pod hangs from the shaft and the sleeve is in the inner wall. Some causes lower the tip against
+    the sleeve and some raise it, so the two directions are added separately.
+    """
+    w = cfg.PROJECT["structure"]["wall_connection"]
+    slab = foundation.C["chosen"]["settle"]
+    move = thermal.C["movement"]
+    squeeze = thermal.C["squeeze"][1]["creep"]
+    down = [("Structure: truss, shaft, root connection and hub", c["budget"]["adopted"]["total"], "section 12.9, limit " + format(st.ACCUMULATED * 1000, "g") + " mm"),
+            ("Inner wall warms and rises before the shaft does", move["wall_pod"], "section 9.13, top level")]
+    up = [("Filling the store settles the wall more than the shaft", slab["fill_inner"] - slab["fill_shaft"], "section 11.5"),
+          ("Settlement over time", w["settlement_over_time_mm"] / 1000, "allowance until the ground is known")]
+    closes = [("Inner wall squeezed by the liquid, with creep", squeeze, "section 9.13, lowest level"), ("Pod lengthens as it warms", move["pod"], "section 9.13")]
+    opens = [("Bore widens as the wall warms", move["bore"], "section 9.13")]
+    step = w["round_to_mm"] / 1000
+    def rate(*groups):
+        return math.ceil(w["margin"] * max(sum(v for _, v, _ in g) for g in groups) / step - 1e-9) * step
+    across, along = rate(down, up), rate(closes, opens)
+    bend = w["hose_bend_radius_mm"] / 1000
+    length = math.sqrt(6 * across * bend + across**2)             # live length of a hose for a sideways offset, makers' formula
+    return dict(down=down, up=up, closes=closes, opens=opens, across=across, along=along, length=length, gap=st.TIP_R + cfg.POD["tip_clearance_m"] - st.TIP_R,
+                pressure=thermal.walls.pressure(st.level_height(1)), temperature=thermal.HOT)
 
 
 C = compute()
@@ -174,12 +205,13 @@ def check():
     assert abs(sum(math.cos(i * math.tau / n) for i in range(n))) < 1e-9
     # The ring force is the pull over twice the sine of half the angle between pods: check by resolving at one pod.
     assert abs(2 * c["hub"]["ring_force"] * math.sin(math.pi / n) - 2 * c["pull"]) < 1e-6
-    assert c["budget"]["proposed"] is not None, "no shaft wall in the list keeps the pod tips within the accumulated limit"
+    assert c["budget"]["adopted"]["ok"], "the shaft wall in the design file does not keep the pod tips within the accumulated limit"
 
 
 def summary():
     c = C
-    p = c["budget"]["proposed"]
+    p = c["budget"]["adopted"]
     return (f"Root: {c['pin']['d']*1000:.0f} mm pin in two {c['pin']['t']*1000:.0f} mm lugs on {c['arm']['name']} arms, tip moves {c['tip']['total']*1000:.2f} mm. "
             f"Drive: {c['drive']['design']/1e3:.0f} kN·m and {c['drive']['power']/1e3:.1f} kW a level. "
-            f"Tip budget needs a {st.inches(p['wall']['section']['wall_in'])} shaft wall: {p['total']*1000:.2f} mm of {st.ACCUMULATED*1000:g} mm.")
+            f"With the {st.inches(p['wall']['section']['wall_in'])} in shaft wall the pod tips move {p['total']*1000:.2f} mm of {st.ACCUMULATED*1000:g} mm. "
+            f"Flexible section: {c['flexible']['across']*1000:.0f} mm across, {c['flexible']['along']*1000:.0f} mm along.")

@@ -14,6 +14,8 @@ The films are rendered on request, so the published films can be behind the desi
 | Support rig steel set on days 4 and 5, before the pods, and the generator sets landed on it later | No. The model still lifts the rig in with the generator sets. To be re-cut. | No |
 | Outer wall 400 mm, inner wall 500 mm, store 6,524 m³ (1.72 M US gal) | Yes | No, they show 250 mm walls and 1.94 M US gal |
 | Pipes inside the store for layering, the cover on the store, the overflow and its catch tank | Yes. They appear when the fill begins. Fitting them is not yet a scene. | No |
+| Hub drum at each level, beam arms at the pod roots and a flexible section on each wall plug | Yes | No |
+| The flow drawings of the long film, which show the store warm inside and cool outside | No. The store is now layered, warm above cool. To be redrawn. | No |
 
 ## The build: silo_short
 
