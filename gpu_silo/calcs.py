@@ -7,7 +7,9 @@ calculations cannot drift apart.
 import math
 from pathlib import Path
 
+from . import connection as cn
 from . import design as cfg
+from . import foundation as fd
 from . import logistics
 from . import reinforcement as rf
 from . import structure as st
@@ -545,12 +547,13 @@ The backup covers black start, controls, the cooling plant and about a fifth of 
 9. **Lifts.** Each power level is shown lowered as one assembly. The crane, the lifting sequence and the removal route for a turbine or generator are not designed.
 10. **Fuel.** {n(c['fuel_m3'])} m³ of propane runs the site for about {c['fuel_hours']:.0f} hours. Separation distances, bunding, the vaporiser and the resupply rate have not been checked. Fuel stored inside is limited to the day tanks, and the limit that applies has not been checked.
 11. **Power in the shaft.** {c['heat_mw']:.0f} MW passes down the steel shaft to {c['pods']} pods, {c['pod_kw']:.0f} kW each. The busbar, its cooling and the connection at each level are not designed.
-12. **Pod support.** The pod trusses and the shaft wall are sized in the [design report](report.md) for gravity load. The base of the shaft, the hub at each level, the root connection, the drive, the support rig, its shaft connector and the wall mounts are still to be designed. The support rig holds the top of the shaft, so its steel is set on its wall mounts straight after the cage and before the first pod. The truss and the shaft use {st.C['budget']['total']*1000:.1f} mm of the {st.TIP['accumulated_mm']:g} mm allowed for the movement of a pod tip, which leaves little for the root connection.
+12. **Pod support.** The pod trusses, the shaft wall, the base of the shaft, the root connection, the hub and the drive of each level are sized in the [design report](report.md) for gravity load. Each level turns on a slewing ring with a motor of about {math.ceil(cn.C['drive']['power']/1e3*2)/2:g} kW. The support rig, its shaft connector and the wall mounts are still to be designed. The support rig holds the top of the shaft, so its steel is set on its wall mounts straight after the cage and before the first pod. With the root connection and the tilt of the hub the movement of a pod tip adds up to {cn.C['budget']['now']*1000:.1f} mm against the {st.TIP['accumulated_mm']:g} mm allowed, so check 6 proposes a shaft wall of {st.inches(cn.C['budget']['proposed']['wall']['section']['wall_in'])} in. It is not adopted yet.
 13. **Pod weight.** A pod weighs {lg['pod_t']:.1f} t with the frame as designed. The rack, CDU and coolant weights in it are allowances: NVIDIA has not published a shipping weight for this rack. The load is {lg['pods_per_truck']} pods a truck, side by side, because a {st.SPAN:.2f} m pod no longer fits twice along the deck.
 14. **Liner and fill.** The liner goes on from day {logistics.BY_KEY['coating']['start']}, when the youngest concrete is {lg['coat_age_min']} days old, and the fill starts on day {logistics.BY_KEY['water']['start']}. Most coatings ask for 28-day-old, dry concrete, so the liner system and its moisture limits need a supplier's check. The pod sleeves, frame conduits and the door blockout all pass through the liner and need detailing.
 15. **A lift a day.** {cfg.PROJECT['jumpform']['lifts_per_day']:g} lift a day is fast for a jumpform. Slower lifts lengthen the work before day 0 and leave the {logistics.DAYS} days after it unchanged.
 16. **Fuel line across the ring.** The propane and diesel lines run on the ground from the tanks to the wall and cross both ring lanes. They need to be buried or bridged there.
 17. **Heavy and oversize loads.** The {cfg.PROJECT['fuel']['tanks']} propane tanks are {cfg.PROJECT['fuel']['tank_diameter_m']:g} m wide and the turbine sets weigh {pw['set_weight_t']:g} t. Their permits, routes and the way each tank is jacked off its trailer are not designed.
+18. **The ground.** The silo weighs {fd.C['total']/1e6:,.0f} MN full, which is {fd.C['total']/fd.C['area']/1e3:.0f} kPa on its slab on average and more at the rim. [Check 4](report.md#11-check-4-foundation) finds that this needs rock, very dense ground or piles, and that filling the store settles the walls about {(fd.C['chosen']['settle']['fill_inner']-fd.C['chosen']['settle']['fill_shaft'])*1000:.0f} mm against the shaft on medium ground. There is no ground investigation.
 
 ## Fluid properties used
 
@@ -659,7 +662,7 @@ The faces of the store are sprayed with a liner before the fill, to keep the wat
 | **Mixers for one lift** | **{lg['lift_trucks']}** | {L['concrete']['mixer_load_m3']:g} m³ each, one every {lg['mixer_headway_min']:.0f} minutes |
 | Pour time for one lift | {lg['lift_pour_h']:.1f} h | {L['concrete']['pump_m3_per_hour']:g} m³ an hour through one pump |
 | Mixers for the walls | {lg['wall_trucks']} | |
-| Base slab, before the walls | {n(lg['slab_m3'])} m³, {lg['slab_trucks']} mixers | {L['concrete']['slab_thickness_m']:g} m thick, an allowance |
+| Base slab, before the walls | {n(lg['slab_m3'])} m³, {lg['slab_trucks']} mixers | {L['concrete']['slab_thickness_m']:g} m thick, checked on assumed ground in [check 4](report.md#11-check-4-foundation) |
 | Reinforcement | {lg['rebar_t']:.0f} t, {lg['rebar_trucks']} trucks | {lg['wall_bar_t']:.0f} t in the walls from the design report, with {L['concrete']['wall_bar_allowance']*100:g}% for laps, feet, ties and openings. The slab at {L['concrete']['reinforcement_kg_per_m3']:g} kg per m³ is an allowance. |
 
 ### Crew on a typical lift

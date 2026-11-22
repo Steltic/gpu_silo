@@ -32,8 +32,8 @@ def main():
         print(f"{path} ({seconds:.1f} s)")
         return
     if args.command == "calcs":
-        from . import calcs, layering, reinforcement, report, structure, thermal, walls
-        checks = (structure, walls, thermal, reinforcement)
+        from . import calcs, connection, foundation, layering, reinforcement, report, structure, thermal, walls
+        checks = (structure, walls, thermal, reinforcement, foundation, connection)
         if args.check:
             if not calcs.current():
                 parser.exit(1, "A generated design document is out of date. Run: python -m gpu_silo calcs\n" + "\n".join(calcs.differences()) + "\n")
@@ -65,8 +65,8 @@ def main():
         parser.exit(1, "design/calcs.md or design/report.md is out of date. Run: python -m gpu_silo calcs\n")
     structure.check()
     print(structure.summary())
-    from . import reinforcement, thermal, walls
-    for module in (walls, thermal, reinforcement):
+    from . import connection, foundation, reinforcement, thermal, walls
+    for module in (walls, thermal, reinforcement, foundation, connection):
         module.check()
         print(module.summary())
     verify_motion.main(args.model)

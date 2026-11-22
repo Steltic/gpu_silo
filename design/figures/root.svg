@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 720.0" width="760" height="720.0" font-family="Helvetica, Arial, sans-serif" font-size="12">
+<rect width="760" height="720.0" fill="#ffffff"/>
+<text x="20" y="26" font-size="15" fill="#22303a" font-weight="bold">Figure 8. The hub of one level and the root of one truss</text>
+<text x="20" y="45" fill="#6b7780">Section on one side of the shaft, as designed in check 6. Forces are for one truss, unfactored.</text>
+<rect x="219.6" y="60.5" width="6.3" height="629.5" fill="#8fa3a1" stroke="#22303a" stroke-width="1"/>
+<line x1="110.0" y1="60.5" x2="110.0" y2="690.0" stroke="#6b7780" stroke-width="1" stroke-dasharray="10 4 2 4"/>
+<text x="116.0" y="74.5" fill="#6b7780">axis</text>
+<text x="213.6" y="321.3" fill="#22303a" text-anchor="end">shaft</text>
+<rect x="226.0" y="640.0" width="42.0" height="12.0" fill="#8fa3a1" stroke="#22303a" stroke-width="1"/>
+<rect x="232.0" y="608.0" width="32.0" height="20.0" fill="#d7b46a" stroke="#22303a" stroke-width="1"/>
+<text x="213.6" y="638.0" fill="#22303a" text-anchor="end">collar on the shaft</text>
+<text x="213.6" y="602.0" fill="#8a6a1c" text-anchor="end">slewing ring with gear</text>
+<rect x="220.0" y="596.0" width="48.0" height="8.0" fill="#5f7a78" stroke="#22303a" stroke-width="1"/>
+<rect x="220.0" y="146.5" width="48.0" height="8.0" fill="#5f7a78" stroke="#22303a" stroke-width="1"/>
+<rect x="248.0" y="150.5" width="4" height="449.5" fill="#5f7a78"/>
+<text x="260.0" y="321.3" fill="#22303a">hub drum</text>
+<circle cx="235.0" cy="150.5" r="8" fill="#d7b46a" stroke="#22303a" stroke-width="1"/>
+<text x="213.6" y="154.5" fill="#8a6a1c" text-anchor="end">guide rollers on the shaft</text>
+<rect x="268.0" y="124.8" width="82.0" height="51.4" fill="#c7cdca" stroke="#22303a" stroke-width="1"/>
+<text x="309.0" y="191.2" fill="#22303a" text-anchor="middle">top arm, W10×45</text>
+<rect x="268.0" y="574.3" width="82.0" height="51.4" fill="#c7cdca" stroke="#22303a" stroke-width="1"/>
+<text x="309.0" y="640.7" fill="#22303a" text-anchor="middle">bottom arm, W10×45</text>
+<circle cx="350.0" cy="150.5" r="5.0" fill="#b4532a" stroke="#22303a" stroke-width="1"/>
+<rect x="347.0" y="582.0" width="10" height="36.0" fill="#b4532a"/>
+<rect x="358.0" y="135.5" width="124.0" height="30.0" fill="#e2e6e3" stroke="#22303a" stroke-width="1"/>
+<rect x="358.0" y="585.0" width="124.0" height="30.0" fill="#e2e6e3" stroke="#22303a" stroke-width="1"/>
+<line x1="362.0" y1="165.5" x2="362.0" y2="585.0" stroke="#22303a" stroke-width="5"/>
+<line x1="362.0" y1="165.5" x2="470.0" y2="475.0" stroke="#22303a" stroke-width="3" stroke-dasharray="1 0"/>
+<text x="382.0" y="501.1" fill="#22303a">pod truss</text>
+<text x="366.0" y="100.5" fill="#b4532a">40 mm pin: pull 58.0 kN, weight 43.8 kN</text>
+<text x="366.0" y="662.0" fill="#b4532a">bearing block: thrust 58.0 kN</text>
+<line x1="494.0" y1="150.5" x2="494.0" y2="600.0" stroke="#6b7780" stroke-width="1"/>
+<text x="500.0" y="409.2" fill="#6b7780">2.248 m</text>
+<line x1="226.0" y1="465.1" x2="350.0" y2="465.1" stroke="#6b7780" stroke-width="1"/>
+<text x="314.0" y="459.1" fill="#6b7780" text-anchor="middle">0.62 m access</text>
+</svg>

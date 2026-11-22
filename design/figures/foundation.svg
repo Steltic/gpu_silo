@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 448.0" width="760" height="448.0" font-family="Helvetica, Arial, sans-serif" font-size="12">
+<rect width="760" height="448.0" fill="#ffffff"/>
+<text x="20" y="26" font-size="15" fill="#22303a" font-weight="bold">Figure 7. Settlement of the base slab along a radius, on medium ground</text>
+<text x="20" y="45" fill="#6b7780">Slab 1.00 m thick. The centre of the silo is at the left. Settlement is drawn downwards, to a much larger scale than the slab.</text>
+<rect x="501.5" y="116.0" width="148.6" height="34" fill="#cfe6ee"/>
+<text x="575.8" y="136.0" fill="#1f6fa8" text-anchor="middle">liquid, 318 kPa</text>
+<rect x="477.5" y="92.0" width="24.0" height="58" fill="#b9bdbd" stroke="#22303a" stroke-width="1"/>
+<text x="489.5" y="86.0" fill="#22303a" text-anchor="middle">inner wall</text>
+<rect x="650.1" y="92.0" width="19.2" height="58" fill="#b9bdbd" stroke="#22303a" stroke-width="1"/>
+<text x="659.7" y="86.0" fill="#22303a" text-anchor="middle">outer wall</text>
+<rect x="96.4" y="92.0" width="3.0" height="58" fill="#b9bdbd" stroke="#22303a" stroke-width="1"/>
+<text x="97.8" y="86.0" fill="#22303a" text-anchor="middle">shaft</text>
+<line x1="70.0" y1="150.0" x2="700.0" y2="150.0" stroke="#22303a" stroke-width="1.5"/>
+<line x1="70.0" y1="150.0" x2="700.0" y2="150.0" stroke="#e3e6e8" stroke-width="1"/>
+<text x="62.0" y="154.0" fill="#6b7780" text-anchor="end">0</text>
+<line x1="70.0" y1="186.7" x2="700.0" y2="186.7" stroke="#e3e6e8" stroke-width="1"/>
+<text x="62.0" y="190.7" fill="#6b7780" text-anchor="end">2</text>
+<line x1="70.0" y1="223.3" x2="700.0" y2="223.3" stroke="#e3e6e8" stroke-width="1"/>
+<text x="62.0" y="227.3" fill="#6b7780" text-anchor="end">4</text>
+<line x1="70.0" y1="260.0" x2="700.0" y2="260.0" stroke="#e3e6e8" stroke-width="1"/>
+<text x="62.0" y="264.0" fill="#6b7780" text-anchor="end">6</text>
+<line x1="70.0" y1="296.7" x2="700.0" y2="296.7" stroke="#e3e6e8" stroke-width="1"/>
+<text x="62.0" y="300.7" fill="#6b7780" text-anchor="end">8</text>
+<line x1="70.0" y1="333.3" x2="700.0" y2="333.3" stroke="#e3e6e8" stroke-width="1"/>
+<text x="62.0" y="337.3" fill="#6b7780" text-anchor="end">10</text>
+<line x1="70.0" y1="370.0" x2="700.0" y2="370.0" stroke="#e3e6e8" stroke-width="1"/>
+<text x="62.0" y="374.0" fill="#6b7780" text-anchor="end">12</text>
+<text x="24" y="260.0" fill="#22303a" text-anchor="middle" transform="rotate(-90 24 260.0)">settlement, mm</text>
+<text x="70.0" y="388.0" fill="#6b7780" text-anchor="middle">0</text>
+<text x="165.9" y="388.0" fill="#6b7780" text-anchor="middle">2</text>
+<text x="261.8" y="388.0" fill="#6b7780" text-anchor="middle">4</text>
+<text x="357.7" y="388.0" fill="#6b7780" text-anchor="middle">6</text>
+<text x="453.6" y="388.0" fill="#6b7780" text-anchor="middle">8</text>
+<text x="549.5" y="388.0" fill="#6b7780" text-anchor="middle">10</text>
+<text x="645.3" y="388.0" fill="#6b7780" text-anchor="middle">12</text>
+<text x="385.0" y="406.0" fill="#22303a" text-anchor="middle">radius, m</text>
+<polyline points="70.0,204.5 79.3,204.4 88.5,204.1 97.8,203.7 107.3,203.1 116.8,202.3 126.3,201.5 135.9,200.7 145.5,199.8 155.1,198.9 164.7,198.1 174.3,197.3 183.9,196.5 193.5,195.8 203.1,195.2 212.7,194.6 222.3,194.0 231.9,193.6 241.5,193.3 251.1,193.0 260.7,192.8 270.3,192.7 279.9,192.7 289.5,192.8 299.1,192.9 308.7,193.2 318.3,193.5 327.8,193.9 337.4,194.5 347.0,195.0 356.6,195.7 366.2,196.5 375.8,197.3 385.4,198.1 395.0,199.1 404.6,200.0 414.2,201.1 423.8,202.2 433.4,203.3 443.0,204.4 452.6,205.5 462.2,206.7 471.8,207.8 482.3,209.1 491.9,210.2 501.5,211.3 511.1,212.4 520.7,213.5 530.3,214.5 539.9,215.6 549.5,216.8 559.0,217.9 568.6,219.1 578.2,220.3 587.8,221.5 597.4,222.8 607.0,224.1 616.6,225.4 626.2,226.7 635.8,228.1 645.3,229.4 654.9,230.8 664.5,232.1 673.9,233.4 683.4,234.7 692.9,235.9" fill="none" stroke="#6b7780" stroke-width="1.6" stroke-dasharray="6 4"/>
+<polyline points="70.0,199.0 79.3,199.0 88.5,198.8 97.8,198.5 107.3,198.1 116.8,197.7 126.3,197.2 135.9,196.7 145.5,196.3 155.1,196.0 164.7,195.7 174.3,195.6 183.9,195.5 193.5,195.6 203.1,195.8 212.7,196.1 222.3,196.6 231.9,197.2 241.5,197.9 251.1,198.8 260.7,199.9 270.3,201.1 279.9,202.5 289.5,204.0 299.1,205.6 308.7,207.5 318.3,209.4 327.8,211.5 337.4,213.8 347.0,216.2 356.6,218.7 366.2,221.4 375.8,224.1 385.4,227.0 395.0,230.0 404.6,233.1 414.2,236.2 423.8,239.4 433.4,242.7 443.0,246.0 452.6,249.3 462.2,252.7 471.8,256.0 482.3,259.6 491.9,262.8 501.5,266.1 511.1,269.4 520.7,272.7 530.3,276.0 539.9,279.4 549.5,282.9 559.0,286.4 568.6,289.9 578.2,293.4 587.8,297.0 597.4,300.7 607.0,304.4 616.6,308.2 626.2,312.0 635.8,315.9 645.3,319.8 654.9,323.8 664.5,327.8 673.9,331.8 683.4,335.8 692.9,339.7" fill="none" stroke="#1f6fa8" stroke-width="2.6"/>
+<text x="223.4" y="186.0" fill="#6b7780">store empty</text>
+<text x="530.3" y="302.0" fill="#1f6fa8" text-anchor="end">store full</text>
+<text x="70.0" y="432.0" fill="#22303a">Filling the store lowers the inner wall by 2.8 mm and raises the shaft by 0.3 mm. Ground pressure 99 to 420 kPa.</text>
+</svg>

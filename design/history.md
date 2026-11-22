@@ -201,6 +201,18 @@ These were needed to draw the decisions. Each one is an input in [project.json](
 | 2026-11-22 | The open branches on each pod sleeve are removed. | The store pipes now take each line to the bottom or the top of the store. | [services.py](../gpu_silo/services.py) |
 | 2026-11-22 | Reinforcement for trucking is the designed wall bars plus 15%, and the slab at 150 kg/m³. Before: 150 kg/m³ throughout. | The walls are designed. The 15% is for laps, feet, ties and openings. | `logistics.concrete` |
 | 2026-11-22 | The inner wall has ordinary bars at the least ratio. | It is in compression, lined on one face and dry on the other. | [reinforcement.py](../gpu_silo/reinforcement.py) |
+| 2026-11-22 | The ground is taken as springs of 15, 40 and 100 MN/m³, with 40 for design. | The site is not fixed. Three values show how much the result depends on it. | `structure.foundation` |
+| 2026-11-22 | The slab is analysed as a round plate on springs with the same load all the way round. | The loads are close to that. Wind, earthquake and the ground entry are left out. | [foundation.py](../gpu_silo/foundation.py) |
+| 2026-11-22 | The slab stays 1.0 m thick with a 0.64 m overhang. | It is adequate with shear ties. A thicker slab attracts more moment and does little for settlement. | [Report 11.6](report.md#116-thickness-bending-and-shear) |
+| 2026-11-22 | Lid 150 kg/m², cooler frame steel 8 t a frame, cage posts and decks 60 t, 5 kPa on the floor of the bore. | Allowances for loads that are not yet designed. | `structure.foundation.loads` |
+| 2026-11-22 | The base of the shaft is designed to stand alone under the worst out-of-balance load, with a load factor of 1.2 and the anchors used to 75% at most. | "An extremely heavy fixed connection." The rig holds the top, but the pods should not depend on it alone. | [Report 11.7](report.md#117-base-of-the-shaft) |
+| 2026-11-22 | The hub is two rings and a drum on a slewing ring, with guide rollers at the top. Arms cross above and below the walkway. | It follows the bearing rings and the walkway the model shows, and keeps the walkway clear. Set in the report, not a project decision. | [Report 12.1](report.md#121-arrangement) |
+| 2026-11-22 | A top arm may drop 0.25 mm under the weight of a truss. | So the root connection stays a small part of the movement of the tip. | `structure.root` |
+| 2026-11-22 | Pin clearance is not counted as a movement of the pod tip. | The load always acts one way, so the pin seats once, and the pod is levelled with shims. | [Report 12.3](report.md#123-pin-and-lugs) |
+| 2026-11-22 | Allowances of 0.6 mm for the root connection and 1.0 mm for the tilt of the hub. | The first covers the hub parts that are not modelled. The second sets the stiffness asked of the bearings. | `structure.root.allowance_mm` |
+| 2026-11-22 | Slewing ring friction 0.006, 1.5 for starting, shaft out of plumb by 2 mm in a metre, service factor 2. | Typical values for a first estimate of the drive. | `structure.level_drive` |
+| 2026-11-22 | The hub and floor allowance on the shaft is 4 t a level. Before: 3 t. | The estimate from check 6 is 3.9 t. | `structure.shaft` |
+| 2026-11-22 | The shaft wall stays 1-1/4 in in the design file. | The 1-3/4 in wall is a proposal for the project. | [Report 12.9](report.md#129-the-limit-on-accumulated-movement) |
 
 ## Open questions
 

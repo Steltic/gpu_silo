@@ -88,7 +88,7 @@ These figures are written by `python -m gpu_silo calcs` and also appear on scree
 | --- | --- |
 | [design/project.json](design/project.json) | Every design input: cluster, silo, pod, store, coolers, power, diesel, fuel, installation, trucking, site roads, jumpform crew, programme and film |
 | [design/calcs.md](design/calcs.md) | Heat load, store, flows, coolers and spares, the fit of the power levels, roof vents, propane line size, fuel run times, truck loads, the store liner, the roads and staging areas, and the 28-day programme. Generated from the inputs. |
-| [design/report.md](design/report.md) | Design report: the register of design checks, the basis of design and each check as it is completed. So far the pod trusses, the shaft, the walls, the heat balance of the store and the choice of reinforcement. Generated from the inputs. |
+| [design/report.md](design/report.md) | Design report: the register of design checks, the basis of design and each check as it is completed. So far the pod trusses, the shaft, the walls, the heat balance of the store, the choice of reinforcement, the foundation, and the root connection, hub and drive of each level. Generated from the inputs. |
 | [design/narration.json](design/narration.json) · [audio/](audio) | The narration script and its recording |
 | [design/README.md](design/README.md) | The current decision for each part of the design and where to change it |
 | [design/history.md](design/history.md) | Dated decision log, including what each decision replaced |

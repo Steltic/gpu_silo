@@ -3,7 +3,7 @@
 | | |
 | --- | --- |
 | Document | GS-STR-001 |
-| Revision | F, 2026-11-22 |
+| Revision | G, 2026-11-22 |
 | Status | Preliminary, issued for review. Not checked. Not for construction. |
 | Prepared by | Claude (Anthropic), for Steltic |
 | Checked by | Not yet checked |
@@ -17,6 +17,7 @@
 | D | 2026-11-22 | Check 3 carried out for the liquid load: walls without post-tensioning, in 50 MPa concrete, with the liner as the liquid barrier. Thicknesses proposed, not yet adopted in the model. |
 | E | 2026-11-22 | Check 5 carried out, first pass: the store has to be layered. Inner wall raised to 500 mm for creep in warm concrete. Reinforcement of the outer wall compared: stainless steel proposed, which makes the outer wall 400 mm throughout. |
 | F | 2026-11-22 | Decisions of the project adopted: outer wall 400 mm with stainless steel bars, inner wall 500 mm, the store layered, the CDU with a heat exchanger, and the assumed range of outside air. The store pipes, the cover and the overflow are in the model. |
+| G | 2026-11-22 | Check 4 carried out on assumed ground: the slab as drawn is adequate, the shaft base is designed to stand alone, and the fill settles the walls against the shaft. Check 6 carried out, first pass: root connection, hub, bearings and drive. Allowance for the hub raised to 4 t. A thicker shaft wall proposed for the accumulated limit. |
 
 This report is generated from [project.json](project.json) by `python -m gpu_silo calcs`. Every number in it is calculated from the inputs in that file by [structure.py](../gpu_silo/structure.py), [walls.py](../gpu_silo/walls.py), [thermal.py](../gpu_silo/thermal.py) and [reinforcement.py](../gpu_silo/reinforcement.py). To change a result, change an input and run the command.
 
@@ -32,9 +33,11 @@ This report is generated from [project.json](project.json) by `python -m gpu_sil
 8. [Check 3: silo walls](#8-check-3-silo-walls)
 9. [Check 5: heat balance of the store](#9-check-5-heat-balance-of-the-store)
 10. [Reinforcement of the outer wall: options](#10-reinforcement-of-the-outer-wall-options)
-11. [Open items](#11-open-items)
-12. [Appendix A: member forces in the pod truss](#appendix-a-member-forces-in-the-pod-truss)
-13. [Appendix B: section properties](#appendix-b-section-properties)
+11. [Check 4: foundation](#11-check-4-foundation)
+12. [Check 6: root connection, hub and level drive](#12-check-6-root-connection-hub-and-level-drive)
+13. [Open items](#13-open-items)
+14. [Appendix A: member forces in the pod truss](#appendix-a-member-forces-in-the-pod-truss)
+15. [Appendix B: section properties](#appendix-b-section-properties)
 
 ## 1. Purpose and scope
 
@@ -49,7 +52,9 @@ This revision covers:
 - the loads on the support rig, the shaft connector and the wall mounts of both power levels, for checks 7 to 10;
 - check 3, the silo walls, for the liquid load;
 - check 5, the heat balance of the store, as a first pass;
-- a comparison of reinforcement for the outer wall, using the temperatures from check 5.
+- a comparison of reinforcement for the outer wall, using the temperatures from check 5;
+- check 4, the base slab and the anchorage of the shaft, on assumed ground;
+- check 6, the root connection of a pod, the hub of a level and its drive, as a first pass.
 
 Lateral load is not covered by any check yet, because the site is not fixed. It is the main limitation of this revision.
 
@@ -60,9 +65,9 @@ Lateral load is not covered by any check yet, because the site is not fixed. It 
 | 1 | Steel shaft | Axial load, out-of-balance bending, shortening and lean of the central shaft, fixed at its base and held at its top | Wall thickness sized for gravity load. For review. | [Section 5](#5-check-1-central-shaft) |
 | 2 | Pod trusses | The two welded side trusses that carry each 4SU pod as a cantilever | Sized for gravity load to a 5 mm tip deflection. For review. | [Section 4](#4-check-2-pod-truss) |
 | 3 | Silo wall thickness | Hoop tension in the outer wall, external pressure on the inner wall, wall thickness and reinforcement, without post-tensioning | Adopted for liquid load and temperature: outer wall 400 mm with stainless steel bars, inner wall 500 mm. For review. | [Section 8](#8-check-3-silo-walls) |
-| 4 | Foundation | Base slab, bearing pressure, and the anchorage of the shaft base | Not started |  |
+| 4 | Foundation | Base slab, bearing pressure, and the anchorage of the shaft base | Slab and shaft base checked on assumed ground. For review. The ground is not known. | [Section 11](#11-check-4-foundation) |
 | 5 | Heat balance of the store | Water-glycol temperatures, mixing and ride-through in the store | First pass complete. The store is layered: pipes, cover and overflow are in the model. For review. | [Section 9](#9-check-5-heat-balance-of-the-store) |
-| 6 | Pod-to-shaft connection and level drive | Root connection of the pod, the hub at each level, and the capacity of the drive that turns a level on the fixed shaft | Design loads issued. Design not started. | [Section 6](#6-check-6-root-connection-and-level-drive-design-loads) |
+| 6 | Pod-to-shaft connection and level drive | Root connection of the pod, the hub at each level, and the capacity of the drive that turns a level on the fixed shaft | First pass: root connection, hub, bearings and drive sized. A thicker shaft wall proposed. For review. | [Section 12](#12-check-6-root-connection-hub-and-level-drive) |
 | 7 | Top support rig | The steel rig at the crown that carries the diesel generator sets and holds the top of the shaft. Set on its mounts straight after the cage. | Design loads issued. Design not started. | [Section 7](#7-checks-7-to-10-support-rig-shaft-connector-and-wall-mounts-design-loads) |
 | 8 | Shaft-top connector | The connector that puts the horizontal force from the top of the shaft into the support rig | Design loads issued. Design not started. | [Section 7](#7-checks-7-to-10-support-rig-shaft-connector-and-wall-mounts-design-loads) |
 | 9 | Cast-in wall mounts | The mounts cast into the inner wall that carry the support rig, and the wall locally | Design loads issued. Design not started. | [Section 7](#7-checks-7-to-10-support-rig-shaft-connector-and-wall-mounts-design-loads) |
@@ -140,7 +145,7 @@ Dead load, D, is the only load in this revision. Fixed equipment and its liquid 
 | Cross members and plan bracing | calculated | uniform over the pod | HSS2×2×3/16, one top and one bottom at each panel point, and a plan diagonal in each panel, top and bottom |
 | Connections | 10% of the steel | with the steel | allowance |
 | Housing | 10 kg/m² of rack housing and CDU enclosure | uniform over the pod | allowance |
-| Hub, bearing and access floor | 3 t a level | at each hub | allowance, to be replaced under check 6 |
+| Hub, bearing and access floor | 4 t a level | at each hub | allowance, to be replaced under check 6 |
 | Shaft | calculated | uniform | from the design |
 | Power and data services inside the shaft | 300 kg/m | uniform | allowance |
 
@@ -167,7 +172,8 @@ Where the accumulated limit stands with the parts designed so far:
 | --- | ---: | ---: | --- |
 | Pod truss, deflection under dead load | 4.90 | 5 | section 4.5 |
 | Shaft, shortening as the store is filled plus lean in the worst filling state | 4.73 | 5 | section 5.7 |
-| Root connection and hub | not yet designed | 5 | check 6 |
+| Root connection, as designed | 0.33, with an allowance of 0.6 | 5 | section 12.5 |
+| Tilt of the hub on its bearings | allowance of 1 | 5 | section 12.7 |
 | **Accumulated so far** | **9.62** | | limit 10 mm |
 | **Left for the root connection and hub** | **0.38** | | |
 
@@ -181,7 +187,9 @@ The truss and the shaft are each the lightest that meets its own 5 mm, and toget
 | HSS5×3×3/16 and HSS2-1/2×2-1/2×1/4 | 1-1/4 | 3.93 | 4.73 | 8.66 | 1.34 | 13 |
 | HSS5×3×3/16 and HSS2-1/2×2-1/2×1/4 | 2 | 3.93 | 3.05 | 6.98 | 3.02 | 25 |
 
-No change is made to the sizes in this revision. The choice is open item 11.
+Check 6 has since been carried out. It needs 1.6 mm for the root connection and the tilt of the hub, and proposes a shaft wall of 1-3/4 in to make room (section 12.9). No size is changed in this revision. The choice is open item 11.
+
+The settlement of the foundation as the store is filled also moves the wall sleeves against the pod tips, by about 3 mm on medium ground. Section 11.5 deals with it by making the wall couplings after the fill.
 
 ## 4. Check 2: pod truss
 
@@ -336,7 +344,7 @@ The shaft is a round tube of 1160 mm outside diameter, rolled from plate, 23.79 
 | Moment of one pod about the shaft axis, M<sub>pod</sub> | **366 kN·m** | |
 | Weight of one level, 8 pods | 701 kN (71.4 t) | |
 | Weight of 64 pods | **5,605 kN (572 t)** | |
-| Hub, bearing and access floor | 29 kN a level | allowance |
+| Hub, bearing and access floor | 39 kN a level | allowance |
 | Shaft and the services inside it | 276 kN | 883 kg/m of steel and 300 kg/m of services |
 
 All values are unfactored.
@@ -390,11 +398,11 @@ The shaft is analysed as a beam, fixed at the foundation and held in position at
 | Wall, in (mm) | D/t | Mass, kg/m | Shortening, mm | Tip movement from lean, mm | Total, mm | Strength ratio | Result |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | --- |
 | 3/4 (19.0) | 60.9 | 536 | 4.55 | 3.16 | 7.72 | 0.58 | Tip movement too large |
-| 7/8 (22.2) | 52.2 | 624 | 3.91 | 2.74 | 6.65 | 0.49 | Tip movement too large |
+| 7/8 (22.2) | 52.2 | 624 | 3.91 | 2.74 | 6.65 | 0.50 | Tip movement too large |
 | 1 (25.4) | 45.7 | 711 | 3.43 | 2.41 | 5.85 | 0.43 | Tip movement too large |
 | 1-1/8 (28.6) | 40.6 | 797 | 3.06 | 2.16 | 5.22 | 0.38 | Tip movement too large |
-| **1-1/4 (31.8)** | 36.5 | 883 | 2.76 | 1.96 | **4.73** | 0.34 | Selected |
-| 1-3/8 (34.9) | 33.2 | 969 | 2.52 | 1.80 | 4.32 | 0.31 | Passes |
+| **1-1/4 (31.8)** | 36.5 | 883 | 2.76 | 1.96 | **4.73** | 0.35 | Selected |
+| 1-3/8 (34.9) | 33.2 | 969 | 2.52 | 1.80 | 4.32 | 0.32 | Passes |
 | 1-1/2 (38.1) | 30.4 | 1,054 | 2.32 | 1.66 | 3.98 | 0.29 | Passes |
 | 1-3/4 (44.4) | 26.1 | 1,223 | 2.00 | 1.45 | 3.45 | 0.25 | Passes |
 | 2 (50.8) | 22.8 | 1,390 | 1.76 | 1.29 | 3.05 | 0.14 | Passes |
@@ -438,9 +446,9 @@ The two parts are added although they do not peak in exactly the same state, whi
 
 | Loading state | Pods | Axial at the base, kN | P<sub>u</sub>, kN | Largest moment, kN·m | B<sub>1</sub> | M<sub>u</sub>, kN·m | P<sub>u</sub>/φP<sub>n</sub> | M<sub>u</sub>/φM<sub>n</sub> | Interaction |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| Store complete, every level at the storage pitch | 64 | 6,117 | 8,564 | 0 | 1.16 | 0 | 0.29 | 0.00 | **0.29** |
-| Worst state of the filling sequence: 7 levels full and bunched, 5 pods on the next | 61 | 5,854 | 8,196 | 574 | 1.15 | 925 | 0.28 | 0.07 | **0.34** |
-| Uncontrolled fill: 4 pods on the same side of every level | 32 | 3,314 | 4,640 | 931 | 1.08 | 1,407 | 0.16 | 0.11 | **0.19** |
+| Store complete, every level at the storage pitch | 64 | 6,195 | 8,673 | 0 | 1.16 | 0 | 0.29 | 0.00 | **0.29** |
+| Worst state of the filling sequence: 7 levels full and bunched, 5 pods on the next | 61 | 5,933 | 8,306 | 574 | 1.15 | 927 | 0.28 | 0.07 | **0.35** |
+| Uncontrolled fill: 4 pods on the same side of every level | 32 | 3,393 | 4,750 | 931 | 1.08 | 1,410 | 0.16 | 0.11 | **0.19** |
 
 | Design strength of the selected tube | Value | Basis |
 | --- | ---: | --- |
@@ -454,9 +462,9 @@ Reactions for the checks that follow:
 
 | Loading state | Vertical at the base, kN | Moment at the base, kN·m | Sideways force at the top and at the base, kN | Factored vertical, kN | Factored base moment, kN·m | Factored sideways force, kN |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| Store complete, every level at the storage pitch | 6,117 | 0 | 0 | 8,564 | 0 | 0 |
-| Worst state of the filling sequence: 7 levels full and bunched, 5 pods on the next | 5,854 | 408 | 119 | 8,196 | 657 | 167 |
-| Uncontrolled fill: 4 pods on the same side of every level | 3,314 | 260 | 311 | 4,640 | 392 | 435 |
+| Store complete, every level at the storage pitch | 6,195 | 0 | 0 | 8,673 | 0 | 0 |
+| Worst state of the filling sequence: 7 levels full and bunched, 5 pods on the next | 5,933 | 408 | 119 | 8,306 | 658 | 167 |
+| Uncontrolled fill: 4 pods on the same side of every level | 3,393 | 260 | 311 | 4,750 | 393 | 435 |
 
 The sideways force at the base is equal and opposite to the force at the top. The base moment with the top held is 13% of what it would be with the top free in the worst state of the sequence, 3,247 kN·m. The base is still to be a heavy fixed connection: section 5.10 gives the case in which it has to work alone.
 
@@ -503,14 +511,14 @@ The films still show the rig arriving with the generator sets. They will be re-c
 
 ### 5.12 Conclusion
 
-A 1160 mm tube with a 1-1/4 in (31.8 mm) wall of A572 Grade 50 plate, fixed at its base and held at its top, carries the 64 pods with a highest strength interaction of 0.34. The pod tips move 4.7 mm against the limit of 5 mm, and this governs the wall. The shaft weighs 21.0 t.
+A 1160 mm tube with a 1-1/4 in (31.8 mm) wall of A572 Grade 50 plate, fixed at its base and held at its top, carries the 64 pods with a highest strength interaction of 0.35. The pod tips move 4.7 mm against the limit of 5 mm, and this governs the wall. The shaft weighs 21.0 t.
 
 The result depends on the top restraint. It needs a stiffness of at least 42 kN/mm, and it is in place before the first pod is hung.
 
 ### 5.13 Not covered by this check
 
 1. **Lateral load.** Earthquake load on 572 t of pods is likely to govern the shaft, its base, the connector, the rig and the mounts. It waits for the site.
-2. **Local loads at the hubs.** Each hub puts 730 kN of weight and the pull and thrust of eight pod roots into the wall of the tube. Ring stiffeners or thicker cans at the hubs are to be designed with the hub under check 6.
+2. **Local loads at the hubs.** Each hub puts 740 kN of weight and the pull and thrust of eight pod roots into the wall of the tube. Ring stiffeners or thicker cans at the hubs are to be designed with the hub under check 6.
 3. **Openings.** Power and data pass down the inside of the shaft and have to come out at every level. The openings reduce the section and are not yet sized.
 4. **Base connection.** Anchor rods, base plate and the foundation under them are part of check 4.
 5. **Plumb.** A shaft that is out of plumb tilts every pod. One part in a thousand moves a pod tip 8.4 mm. The hubs will have to be set level independently of the shaft, or the erection tolerance set to suit.
@@ -520,7 +528,7 @@ The result depends on the top restraint. It needs a stiffness of at least 42 kN/
 
 ## 6. Check 6: root connection and level drive, design loads
 
-The connection and the drive are not designed in this revision. These are the loads from the pods as now designed, unfactored. The shaft is fixed and each level turns on it.
+These are the loads from the pods as now designed, unfactored. The shaft is fixed and each level turns on it. Section 12 designs the connection, the hub and the drive for them.
 
 ### 6.1 At the root of one pod
 
@@ -544,7 +552,7 @@ The tip drops 3.2 mm for each millimetre of horizontal slack or stretch between 
 | Out-of-balance moment on the hub bearing, level bunched | 366 kN·m | section 5.3 |
 | Torque to accelerate a full level, turning one bay in 60 s | 1.3 kN·m | accelerating for half the turn and braking for half |
 
-The inertia torque is small. The drive will be sized by the friction of the hub bearing under the weight and the out-of-balance moment, and by holding a level against the lean of the shaft. Both depend on the bearing chosen under check 6.
+The inertia torque is small. The drive is sized by the friction of the hub bearing under the weight and the out-of-balance moment, and by holding a level against the lean of the shaft. Section 12.8 does this.
 
 ## 7. Checks 7 to 10: support rig, shaft connector and wall mounts, design loads
 
@@ -1173,7 +1181,323 @@ Cages are worth having with stainless bars: eight to a lift, about 4 t each at t
 
 **These walls were adopted by the project in revision F.** The design file, the model and the calculations use an outer wall of 400 mm and an inner wall of 500 mm.
 
-## 11. Open items
+## 11. Check 4: foundation
+
+### 11.1 Arrangement and basis
+
+The silo stands on a round base slab, 26.28 m across, which is the outside of the wall and 0.64 m more all round. It is drawn 1.00 m thick. The two walls are built into it and the shaft is anchored to its centre.
+
+The site is not fixed and there is no ground investigation. This check therefore does three things: it gives the loads that the ground has to carry, it sizes the slab on an assumed ground, and it designs the anchorage of the shaft, which does not depend on the ground. Every number is calculated by [foundation.py](../gpu_silo/foundation.py).
+
+| Assumption | Value | Note |
+| --- | ---: | --- |
+| Ground | springs under the slab, each acting alone (Winkler) | the usual first model. Real ground spreads load sideways, so the differences in settlement found here are on the high side. |
+| Stiffness of the ground | soft 15, medium 40, stiff 100 MN/m³ | **assumption.** Loose sand or firm clay, dense sand or stiff clay, very dense gravel or weak rock. |
+| Concrete | f'<sub>c</sub> = 40 MPa | |
+| Reinforcement | Grade 60, 75 mm cover | ordinary bar. The floor of the store is under the liner. |
+| Load factor | 1.4 on everything | ACI 318-19 for dead load and liquid |
+
+### 11.2 Loads
+
+| Load | MN |
+| --- | ---: |
+| Liquid in the store | 65.3 |
+| The two walls | 44.9 |
+| Base slab, 1.00 m | 13.0 |
+| Shaft, hubs and 64 pods | 6.2 |
+| Coolers and their frames | 4.2 |
+| The two power levels | 3.6 |
+| Lid | 0.7 |
+| Cage posts and decks | 0.6 |
+| Load on the floor of the bore | 1.1 |
+| **Total** | **139.6** |
+
+Spread evenly over the 542 m² of the slab this is **257 kPa**. Nearly half of it is the liquid, and four fifths of it comes down on the ring between the bore and the outside, so the pressure on the ground is not even.
+
+The feet of the two walls also bend the slab, by 436 kN·m/m at the outer wall and 389 kN·m/m at the inner wall, and pull it apart across the floor of the store with 526 kN/m.
+
+### 11.3 Analysis
+
+The slab is a round plate on springs, loaded round the lines of the walls and the shaft and over the floor of the store. It is solved by finite elements along a radius, 50 mm long, each with the settlement and the slope at its two ends. The loads are the same all the way round, so one radius describes the slab. Two states are solved: the store empty, and the store full.
+
+### 11.4 Pressure on the ground and settlement
+
+With the slab 1.00 m thick and the store full:
+
+| Ground | Stiffness, MN/m³ | Pressure on the ground, kPa | Settlement of the shaft, mm | Inner wall, mm | Outer wall, mm | Filling lowers the inner wall more than the shaft by, mm | Largest moment, kN·m/m | Factored shear, kN/m |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| Soft | 15 | 117 to 384 | 7.8 | 16.6 | 23.8 | **6.9** | 1,010 | 530 |
+| Medium | 40 | 99 to 420 | 2.6 | 6.1 | 9.6 | **3.1** | 587 | 411 |
+| Stiff | 100 | 94 to 447 | 1.4 | 2.4 | 4.0 | **1.3** | 709 | 352 |
+
+![Settlement of the base slab](figures/foundation.svg)
+
+- **The ground has to carry about 257 kPa on average and about 447 kPa at the rim.** That is more than most soils are allowed to carry on a slab. The silo needs very dense ground or rock near the surface, or piles, or ground improvement. Widening the slab helps a little: most of the load is on the ring. This is the first question for the site, and is open item 18.
+- **The slab dishes the wrong way up.** The walls and the store are heavy and the bore is light, so the rim goes down more than the centre.
+
+### 11.5 What settlement does to the pod tips
+
+The pods hang from the shaft at the centre of the slab. Their wall couplings are in the inner wall. When the store is filled the inner wall goes down 2.8 mm on medium ground and the shaft comes up 0.3 mm, so **every wall sleeve drops about 3 mm against its pod tip.** On soft ground it is 7 mm. A thicker slab does not remove it (section 11.6).
+
+This is the same size as the 5 mm that any one part is allowed to move a pod tip, and it is not in the 10 mm accumulated limit. The programme loads the pods on days 6 to 15 and fills the store from day 15, so as programmed it happens after the pods are docked. There are three ways to deal with it:
+
+1. **Make the wall couplings after the store is full.** The pods are docked as programmed, and the service plugs are set and connected once the fill is complete. The fill settlement is then history. This costs nothing and is recommended.
+2. Give the coupling the travel to follow it.
+3. Found the silo on rock or piles, where the settlement is a fraction of this.
+
+Settlement that goes on after the fill, as the ground consolidates under a load that never comes off, cannot be dealt with by the first way. It depends on the ground and is open item 18.
+
+### 11.6 Thickness, bending and shear
+
+| Thickness, m | Largest radial moment, top in tension, kN·m/m | Bottom in tension, kN·m/m | Factored shear at the walls, kN/m | Shear strength with no ties, kN/m | With ties, kN/m | Ties needed | Factored punching at the shaft against strength, MN | Fill settlement, wall against shaft, mm | |
+| ---: | ---: | ---: | ---: | ---: | ---: | --- | ---: | ---: | --- |
+| **1.00** | -587 | 527 | 411 | 268 | 706 | Yes | 7.9 against 8.4 | 3.1 | As drawn. Adequate. |
+| 1.25 | -849 | 230 | 438 | 298 | 907 | Yes | 7.7 against 10.6 | 2.8 |  |
+| 1.50 | -1,147 | 158 | 474 | 324 | 1,109 | Yes | 7.4 against 12.8 | 2.4 |  |
+| 1.75 | -1,448 | 160 | 510 | 345 | 1,310 | Yes | 6.8 against 15.2 | 2.0 |  |
+| 2.00 | -1,724 | 161 | 537 | 360 | 1,512 | Yes | 6.3 against 17.6 | 1.6 |  |
+
+Moments are unfactored and for medium ground. The shear is taken at the effective depth from the face of each wall, and the largest is on the inside of the inner wall.
+
+**The slab as drawn, 1.00 m thick, is adequate**, with shear ties in a band each side of each wall. No thickness in the list does without ties, because a deep slab with little reinforcement is given a low shear strength (ACI 318-19 Section 22.5.5). A thicker slab attracts more moment and does little for the settlement, so there is no case for one.
+
+Reinforcement of the 1.00 m slab, by strength:
+
+| Direction and face | Moment, kN·m/m | Steel needed, mm²/m | Bars |
+| --- | ---: | ---: | --- |
+| Radial, bottom | +527 | 2,480 | 1 layer of #8 at 200 mm |
+| Radial, top | -587 | 2,761 | 1 layer of #8 at 180 mm |
+| Hoop, bottom | +525 | 2,468 | 1 layer of #8 at 200 mm |
+| Hoop, top | -392 | 1,846 | 1 layer of #8 at 270 mm |
+| Across the floor of the store, both faces together | tension 526 kN/m | 1,949 | added to the radial bars between the walls |
+
+Soft ground gives larger moments, up to 1,010 kN·m/m, so the reinforcement is to be designed again once the ground is known.
+
+### 11.7 Base of the shaft
+
+The shaft carries 6,195 kN and stands on a ring plate bolted to anchors cast in the slab. Check 1 holds the top of the shaft with the support rig, which is set before the first pod. With the top held the base sees little moment and no bolt goes into tension.
+
+The project asked for a heavy fixed base, because the out-of-balance loads are severe. The base is therefore also designed to stand alone, with the top free, under the worst out-of-balance load: as an accident, so that the pods never depend on the rig alone.
+
+| Top of the shaft | State | Axial load, kN | Moment at the base, kN·m | Load factor | Tension in the worst bolt, kN | Bearing under the ring, kN/m |
+| --- | --- | ---: | ---: | ---: | ---: | ---: |
+| Top held | Worst state of the filling sequence | 5,933 | 408 | 1.4 | 0 | 1,936 |
+| Top held | Uncontrolled fill | 3,393 | 260 | 1.4 | 0 | 1,126 |
+| Top free, as an accident | Worst state of the filling sequence | 5,933 | 3,247 | 1.2 | 109 | 3,354 |
+| Top free, as an accident | Uncontrolled fill | 3,393 | 7,651 | 1.2 | 787 | 5,376 |
+
+| Part | Design | Basis |
+| --- | --- | --- |
+| Anchors | **24 M56**, ASTM F1554 Grade 105, on a 1.60 m circle | design strength 1,309 kN each (ACI 318-19 Section 17.6.1). The worst bolt uses 60% of it in the accident, against a limit of 75% set here. |
+| Ring plate | 0.90 m to 2.05 m across, about 40 mm thick, with a gusset between every pair of bolts | bending between gussets, to be detailed |
+| Bearing on the concrete | 5,376 kN/m against 12,707 kN/m | ACI 318-19 Section 22.8, over the 575 mm width of the ring |
+| Anchor reinforcement | about 19,080 mm² of vertical bar round each half of the bolt circle | carries the bolt tension into the slab in place of a concrete cone. The slab is to be thickened locally for the embedment. |
+| Turning of the shaft | friction under the ring holds 1,086 kN·m | against 312 kN·m with every level driven at once (section 12.8) |
+
+### 11.8 Verification
+
+| Check | Value | Independent value | Agreement |
+| --- | ---: | ---: | --- |
+| Upward push of the ground, summed over the slab | 139.57 MN | loads applied, 139.57 MN | equal |
+| Sum of the loads in section 11.2 | 139.57 MN | loads applied to the plate, 139.57 MN | equal |
+| A plate under even pressure alone | settles evenly, with no bending | exact result | equal |
+| A very stiff plate on very soft ground | pressure even to within 0.2% | mean pressure | equal |
+| Pressure on the ground | above zero everywhere | | the slab does not lift |
+
+These are checked at every build by [foundation.py](../gpu_silo/foundation.py).
+
+### 11.9 Conclusion
+
+The slab as drawn, 1.00 m thick, carries the loads with ordinary reinforcement and shear ties near the walls. The base of the shaft takes 24 M56 anchors and stands alone under the worst out-of-balance load.
+
+What the check cannot settle is the ground. The silo puts about 257 kPa on it on average and about 447 kPa at the rim, which calls for rock, very dense ground or piles. And filling the store lowers the walls about 3 mm against the shaft, so the wall couplings should be made after the fill.
+
+### 11.10 Not covered by this check
+
+1. **The ground.** Its strength, its stiffness, how it varies across the site, groundwater, and settlement over time. A slab on ground that is softer on one side tilts, and the shaft tilts with it.
+2. **Piles or ground improvement**, if the site needs them.
+3. **Wind and earthquake**: overturning, sliding and the extra pressure at the rim. They wait for the site.
+4. **The ground entry**, which crosses the slab at the door, and any pits or trenches in the floor of the bore.
+5. **Heat.** The floor of the store is at 42 to 52 °C for life, on ground that it will warm and dry.
+6. **The slab as a tie.** Hoop tension in the slab where it restrains the feet of the walls, and the detail of the wall feet.
+7. **The anchor embedment** and the local thickening of the slab under the shaft.
+
+## 12. Check 6: root connection, hub and level drive
+
+### 12.1 Arrangement
+
+The shaft is fixed. At each level a hub turns on it and carries the 8 pods of that level. Section 6 gives the loads. This section designs the parts, as a first pass, and every number is calculated by [connection.py](../gpu_silo/connection.py).
+
+The arrangement is set in this report. It follows what the model shows: a bearing ring at the top and at the bottom of each level, an access walkway 0.62 m wide between the shaft and the pod roots, and an arm from the hub to each truss at the top and at the bottom.
+
+- **Hub.** A top ring and a bottom ring, 2.248 m apart, joined by a drum round the shaft, 1.4 m across.
+- **Arms.** Each truss has a top arm and a bottom arm, 410 mm long, standing out from the rings to the pod root at 1.20 m radius. They cross above and below the walkway, so nothing blocks it.
+- **Root of a truss.** The top chord hangs from a pin through two lug plates on the top arm. The pin takes the pull and the weight. The bottom chord bears on a block on the bottom arm, which takes the thrust and is shimmed to level the pod.
+- **Bearings.** A slewing ring under the bottom ring sits on a collar on the shaft. It carries the weight of the level and has the gear teeth for the drive. A ring of guide rollers on the top ring runs on the shaft. The two together hold the hub upright.
+- **Drive.** A geared motor on the collar turns a pinion in the gear. Each level has its own, so the levels index separately.
+
+![The hub of one level and the root of one truss](figures/root.svg)
+
+### 12.2 Loads at the root of one truss
+
+| Load | Unfactored, kN | Factored, kN | Basis |
+| --- | ---: | ---: | --- |
+| Pull on the pin | 58.0 | 101.6 | 1.4 D with 1.25 for the pod being landed by the hoist |
+| Weight on the pin | 43.8 | 76.6 | |
+| **Resultant on the pin** | 72.7 | **127.2** | |
+| Thrust on the bearing block | 58.0 | 101.6 | |
+
+### 12.3 Pin and lugs
+
+The pin is ASTM A193 Grade B7 and the lugs are ASTM A572 Grade 50. The pin is in double shear between two lugs.
+
+| Check on the pin | Demand | Design strength | Ratio |
+| --- | ---: | ---: | ---: |
+| Shear on two planes | 127.2 kN | 1,091.8 kN | 0.12 |
+| Bending between the lugs | 2.2 kN·m | 7.0 kN·m | 0.32 |
+
+| Check on one lug, AISC 360-22 Sections D5 and J7 | Demand, kN | Design strength, kN | Ratio |
+| --- | ---: | ---: | ---: |
+| Tension on the net section | 63.6 | 518.4 | 0.12 |
+| Shear behind the pin | 63.6 | 575.7 | 0.11 |
+| Bearing on the pin | 63.6 | 298.1 | 0.21 |
+| Yielding of the plate | 63.6 | 680.6 | 0.09 |
+
+**A 40 mm pin in two 16 mm lugs**, each 137 mm wide with 69 mm of plate beyond the hole. These are the smallest in the lists and they are lightly used. Strength does not govern the root: stiffness does.
+
+The hole is 1 mm larger than the pin. The pull and the weight always act the same way, so the pin always seats on the same side of the hole, and the clearance is taken up once, when the pod is landed. It is set out with the shims under the bearing block and is not a movement of the tip in service.
+
+### 12.4 Arms
+
+The top arm carries the pull along its length and the weight across its end, as a cantilever. A flat plate, as now drawn, would let the pod drop about 2 mm. The arm has to be a beam.
+
+| Quantity | Value | Basis |
+| --- | ---: | --- |
+| **Section** | **W10×45** | lightest in the list within the limit below |
+| Drop at the pin under the weight | 0.15 mm | limit 0.25 mm, set here. 0.05 mm in bending and 0.10 mm in shear. |
+| Stretch of the top arm with shortening of the bottom arm | 0.028 mm | |
+| Tension with bending, factored | ratio 0.13 | AISC 360-22 Section H1 |
+| Shear, factored | ratio 0.16 | |
+
+### 12.5 Movement of the pod tip from the root connection
+
+| Cause | At the root, mm | At the tip, mm | Note |
+| --- | ---: | ---: | --- |
+| Top arm bends under the weight | 0.15 | 0.15 | the whole pod drops |
+| Arms, pin and lugs stretch | 0.051 | 0.16 | the tip drops 3.2 mm for each millimetre |
+| Pin and lugs give under the weight | 0.018 | 0.02 | |
+| **Total** | | **0.33** | allowance 0.6 mm |
+
+The root connection moves the tip 0.33 mm, well inside the 5 mm allowed to one part. An allowance of 0.6 mm is carried, to cover the rings and welds of the hub, which are not modelled.
+
+### 12.6 Hub
+
+With a level full, the eight pulls on the top ring balance round it and put it in tension. The eight thrusts put the bottom ring in compression.
+
+| Quantity | Value | Basis |
+| --- | ---: | --- |
+| Force round each ring, level full | 152 kN | pull of one pod ÷ 2 sin(180°/8) |
+| Ring section needed | 684 mm² | factored, in tension. A 40 mm plate ring has many times this. |
+
+| Part of one hub | kg |
+| --- | ---: |
+| Drum, 1.4 m across and 12 mm thick | 931 |
+| Two ring plates, 40 mm | 679 |
+| 32 arms with their lugs and stiffeners | 1,326 |
+| Access floor | 126 |
+| Slewing ring | 600 |
+| Drive, brake and lock | 250 |
+| **Total** | **3,911** |
+
+Check 1 allowed 3 t a level for the hub and floor. This estimate is 3.9 t, so the allowance is raised to 4 t in this revision. It adds 8 t to the load on the shaft. The strength ratio of check 1 rises by 0.01 and the movement of the pod tips does not change.
+
+### 12.7 Hub bearings
+
+A level that is part filled or bunched is out of balance. The moment goes into the shaft as a pair of sideways forces, one at the slewing ring and one at the guide rollers, 2.248 m apart.
+
+| State of the level | Out-of-balance moment, kN·m | Sideways force at each bearing, kN | On one guide roller, kN |
+| --- | ---: | ---: | ---: |
+| Level half filled, four pods side by side | 956 | 426 | 142 |
+| Level full and bunched | 366 | 163 | 54 |
+
+| Requirement on the bearings | Value | Basis |
+| --- | ---: | --- |
+| Weight on the slewing ring | 739 kN | pods and hub of one level |
+| Sideways force on the slewing ring and on the guide rollers | 426 kN | unfactored |
+| Tilt of the hub allowed | 0.120 mm in a metre | 1 mm at the pod tips, 8.36 m from the axis |
+| **Sideways stiffness needed at each bearing, with its seating** | **3,165 kN/mm** | rotational stiffness 8.0 GN·m per radian |
+| Clearance in the bearings | none | preloaded slewing ring, and guide rollers on adjustable mounts set to touch |
+
+**The stiffness of the hub bearings matters more than their strength.** A sideways give of 0.1 mm at each bearing moves the pod tips 0.7 mm. The value above is a requirement for the bearing supplier, like the stiffness of the top restraint in check 1.
+
+If a level is filled in opposite pairs, no more than one pod is ever out of balance, and the moment is 38% of the worst here. The film fills each level round in order. Changing that is open item 20.
+
+### 12.8 Drive of one level
+
+| Torque at the hub | kN·m | Basis |
+| --- | ---: | --- |
+| Friction of the slewing ring | 15.9 | µ/2 × (weight + 3.81 × sideways force) × raceway diameter of 1.5 m, with µ = 0.006 and 1.5 for starting. The bearing maker's formula for a roller slewing ring. |
+| Weight of an out-of-balance level on a leaning shaft | 2.3 | 956 kN·m × a lean of 2.4 mm in a metre: the shaft out of plumb by 2 mm in a metre, its lean from check 1, and the tilt of the hub |
+| Starting and stopping a full level | 1.3 | one bay in 60 s (section 6.2) |
+| **Running torque** | **19.5** | |
+| **Design torque** | **39** | service factor 2 |
+
+| Quantity | Value | Basis |
+| --- | ---: | --- |
+| Fastest speed of the hub | 0.25 rev/min | |
+| **Motor power** | **1.2 kW** | design torque at the fastest speed, drive efficiency 0.85 |
+| Force on the gear teeth | 46 kN | gear 1.7 m across |
+| Torque at the pinion | 3.9 kN·m | 10:1 at the gear |
+| Brake, to hold a level | at least 4.5 kN·m at the hub | twice the torque from the lean |
+| Lock at each bay position | 58 kN·m, 49 kN on a pin at the pod roots | 1.5 times the design torque. A 40 mm pin is ample. |
+| Torsion in the shaft, all 8 levels driven at once | 312 kN·m, 5.0 MPa | not significant |
+
+**A motor of about 1.5 kW on each level is enough.** The torque is small because the speed is very low and a roller slewing ring has little friction. Friction is 82% of it. A plain bearing in its place would need several times the torque.
+
+The drive does not hold the level in position for docking. The lock does, with the brake as its backup.
+
+### 12.9 The limit on accumulated movement
+
+Section 3.7 left the choice of where to find room for the root connection to this check. Two allowances are now needed, 0.6 mm for the root connection and 1 mm for the tilt of the hub. With the sizes as designed the total is 11.22 mm against 10 mm. The simplest place to find the room is the wall of the shaft:
+
+| Shaft wall | Truss, mm | Shaft, mm | Root connection, mm | Hub tilt, mm | Total, mm | Within 10 mm | Extra steel, t |
+| --- | ---: | ---: | ---: | ---: | ---: | --- | ---: |
+| 1-1/4 in (31.8 mm) | 4.90 | 4.73 | 0.6 | 1.0 | 11.22 | No | as designed |
+| 1-3/8 in (34.9 mm) | 4.90 | 4.32 | 0.6 | 1.0 | 10.81 | No | 2 |
+| 1-1/2 in (38.1 mm) | 4.90 | 3.98 | 0.6 | 1.0 | 10.47 | No | 4 |
+| **1-3/4 in (44.4 mm)** | 4.90 | 3.45 | 0.6 | 1.0 | **9.94** | Yes | 8 |
+| 2 in (50.8 mm) | 4.90 | 3.05 | 0.6 | 1.0 | 9.54 | Yes | 12 |
+
+**A shaft wall of 1-3/4 in is proposed**, in place of 1-1/4 in. It adds 8 t of plate and brings the total to 9.94 mm. It is not adopted in this revision: the shaft in the design file is unchanged. This is open item 11.
+
+The settlement of section 11.5 is not in this total. It is dealt with by making the wall couplings after the store is filled.
+
+### 12.10 Verification
+
+| Check | Value | Independent value | Agreement |
+| --- | ---: | ---: | --- |
+| Force round the top ring, resolved at one pod | 2 × 151.7 kN × sin(180°/8) = 116.1 kN | pull of one pod, 116.1 kN | equal |
+| Drop of the top arm in bending, by hand | 43.8 kN × (410 mm)³ ÷ (3 E I) = 0.049 mm | 0.049 mm | equal |
+| Sideways force at each bearing | 956 kN·m ÷ 2.248 m = 426 kN | 426 kN | equal |
+
+### 12.11 Conclusion
+
+The root of each truss is a 40 mm pin in two 16 mm lugs on a W10×45 arm, with a bearing block on a second arm below. It moves the pod tip 0.33 mm. Each level turns on a slewing ring, steadied by guide rollers at the top of its hub, and is driven by a motor of about 1.5 kW through a gear on the ring. The capacity of the drive is not a concern.
+
+Two things are. The bearings of the hub have to be stiff, 3,165 kN/mm each, or a part-filled level tilts its pods out of reach of their couplings. And the limit of 10 mm on accumulated movement needs a thicker shaft wall, 1-3/4 in, to make room for the root connection and the hub.
+
+### 12.12 Not covered by this check
+
+1. **Selection of the slewing ring and the guide rollers** from a supplier: static capacity, stiffness, life and sealing.
+2. **The hub in detail**: the drum, the rings, their welds, and the arms where they join the rings.
+3. **The shaft at each level**: the collar under the slewing ring, the track for the guide rollers, and the local stress in the shaft wall.
+4. **Gear, gearbox, brake and lock** in detail, and their controls.
+5. **Power and data to a turning level.** The pods take 781 kW each through the shaft. How that crosses to a hub that turns is not designed.
+6. **The carriages that bunch the pods** on a level, and their actuators.
+7. **Earthquake**, which may govern the lock and the guide rollers. It waits for the site.
+8. **Fatigue.** The levels turn seldom, so it is not expected to govern.
+
+## 13. Open items
 
 | No. | Item | Affects | Needed from |
 | ---: | --- | --- | --- |
@@ -1187,13 +1511,16 @@ Cages are worth having with stainless bars: eight to a lift, about 4 t each at t
 | 8 | Fixings to the outer wall, to allow for its stretch at first fill and for cracked concrete (section 10.12) | cooler frames, checks 9 and 10 | project |
 | 9 | Jumpform programme and crew, with the reinforcement as cages: about 34 t in the lowest lift of the outer wall with stainless bars, 62 t with carbon steel (sections 8.8 and 10.10) | programme, check 3 | project |
 | 10 | Tie the two walls together, or keep them separate as adopted (section 8.9) | check 3 | project |
-| 11 | Allowance for the root connection within the 10 mm accumulated limit: 0.4 mm is left with the present sizes (section 3.7) | checks 1, 2 and 6 | project, with check 6 |
+| 11 | Thicken the shaft wall to 1-3/4 in, to bring the root connection and the tilt of the hub within the 10 mm accumulated limit (section 12.9) | checks 1, 4 and 6, the shaft | project |
 | 12 | Site and seismic design category, for the lateral case | all structural checks | project |
 | 13 | Weight of a rack in operation, and of the CDU, pump and coolant | checks 1, 2, 4 and 6 | equipment supplier |
 | 14 | Tolerance of the wall coupling, to confirm the limits on tip movement, with the movements of the walls in section 9.13 | checks 1, 2 and 6 | coupling supplier |
-| 15 | Weight of the hub, bearing and access floor at each level | checks 1 and 6 | check 6 |
+| 15 | Slewing ring and guide rollers with the stiffness of section 12.7, and how power and data cross to a turning level | check 6 | bearing supplier, project |
 | 16 | Comparison of section properties with the AISC Manual, of the ACI 350-06 clauses with ACI 350-20, and of the values taken from ACI CODE-440.11-22, ASTM A955 and ASTM D7957 with the documents | checks 2 and 3 | checker |
 | 17 | The films still show the support rig arriving with the generator sets, walls of 250 mm, and a store with no pipes, cover or overflow | animation | next render |
+| 18 | Ground investigation: the silo puts about 257 kPa on the ground on average and more at the rim (section 11.4). Rock, very dense ground, piles or ground improvement. Settlement over time. | check 4 | project |
+| 19 | Make the wall couplings after the store is filled, so that the settlement of the fill is not a movement of the pod tips (section 11.5) | programme, check 4 | project |
+| 20 | Fill each level in opposite pairs, which cuts the out-of-balance moment on a hub to 38% (section 12.7) | check 6, animation | project |
 
 ## Appendix A: member forces in the pod truss
 

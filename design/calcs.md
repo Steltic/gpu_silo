@@ -316,7 +316,7 @@ The faces of the store are sprayed with a liner before the fill, to keep the wat
 | **Mixers for one lift** | **25** | 7.6 m³ each, one every 10 minutes |
 | Pour time for one lift | 4.2 h | 45 m³ an hour through one pump |
 | Mixers for the walls | 250 | |
-| Base slab, before the walls | 542 m³, 72 mixers | 1 m thick, an allowance |
+| Base slab, before the walls | 542 m³, 72 mixers | 1 m thick, checked on assumed ground in [check 4](report.md#11-check-4-foundation) |
 | Reinforcement | 395 t, 19 trucks | 314 t in the walls from the design report, with 15% for laps, feet, ties and openings. The slab at 150 kg per m³ is an allowance. |
 
 ### Crew on a typical lift
@@ -389,12 +389,13 @@ The walls take 10 days at 1 lift a day and are outside the 28 days. The pod cage
 9. **Lifts.** Each power level is shown lowered as one assembly. The crane, the lifting sequence and the removal route for a turbine or generator are not designed.
 10. **Fuel.** 913 m³ of propane runs the site for about 43 hours. Separation distances, bunding, the vaporiser and the resupply rate have not been checked. Fuel stored inside is limited to the day tanks, and the limit that applies has not been checked.
 11. **Power in the shaft.** 50 MW passes down the steel shaft to 64 pods, 781 kW each. The busbar, its cooling and the connection at each level are not designed.
-12. **Pod support.** The pod trusses and the shaft wall are sized in the [design report](report.md) for gravity load. The base of the shaft, the hub at each level, the root connection, the drive, the support rig, its shaft connector and the wall mounts are still to be designed. The support rig holds the top of the shaft, so its steel is set on its wall mounts straight after the cage and before the first pod. The truss and the shaft use 9.6 mm of the 10 mm allowed for the movement of a pod tip, which leaves little for the root connection.
+12. **Pod support.** The pod trusses, the shaft wall, the base of the shaft, the root connection, the hub and the drive of each level are sized in the [design report](report.md) for gravity load. Each level turns on a slewing ring with a motor of about 1.5 kW. The support rig, its shaft connector and the wall mounts are still to be designed. The support rig holds the top of the shaft, so its steel is set on its wall mounts straight after the cage and before the first pod. With the root connection and the tilt of the hub the movement of a pod tip adds up to 11.2 mm against the 10 mm allowed, so check 6 proposes a shaft wall of 1-3/4 in. It is not adopted yet.
 13. **Pod weight.** A pod weighs 8.9 t with the frame as designed. The rack, CDU and coolant weights in it are allowances: NVIDIA has not published a shipping weight for this rack. The load is 2 pods a truck, side by side, because a 7.16 m pod no longer fits twice along the deck.
 14. **Liner and fill.** The liner goes on from day 11, when the youngest concrete is 11 days old, and the fill starts on day 15. Most coatings ask for 28-day-old, dry concrete, so the liner system and its moisture limits need a supplier's check. The pod sleeves, frame conduits and the door blockout all pass through the liner and need detailing.
 15. **A lift a day.** 1 lift a day is fast for a jumpform. Slower lifts lengthen the work before day 0 and leave the 28 days after it unchanged.
 16. **Fuel line across the ring.** The propane and diesel lines run on the ground from the tanks to the wall and cross both ring lanes. They need to be buried or bridged there.
 17. **Heavy and oversize loads.** The 8 propane tanks are 3 m wide and the turbine sets weigh 94.5 t. Their permits, routes and the way each tank is jacked off its trailer are not designed.
+18. **The ground.** The silo weighs 140 MN full, which is 257 kPa on its slab on average and more at the rim. [Check 4](report.md#11-check-4-foundation) finds that this needs rock, very dense ground or piles, and that filling the store settles the walls about 3 mm against the shaft on medium ground. There is no ground investigation.
 
 ## Fluid properties used
 

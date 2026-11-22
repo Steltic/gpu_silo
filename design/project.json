@@ -575,7 +575,7 @@
         2
       ],
       "effective_length_factor": 0.8,
-      "hub_and_floor_t_per_level": 3.0,
+      "hub_and_floor_t_per_level": 4.0,
       "services_kg_per_m": 300,
       "rig_stiffness_kn_per_mm": [
         25,
@@ -597,7 +597,18 @@
       "wall_mounts": 16
     },
     "level_drive": {
-      "index_seconds": 60
+      "index_seconds": 60,
+      "bearing": "Slewing ring with gear teeth under each hub, and a ring of guide rollers at the top of the hub",
+      "raceway_diameter_m": 1.5,
+      "friction_coefficient": 0.006,
+      "start_factor": 1.5,
+      "plumb_tolerance": 0.002,
+      "service_factor": 2.0,
+      "drive_efficiency": 0.85,
+      "gear_pitch_diameter_m": 1.7,
+      "pinion_teeth_ratio": 10,
+      "lock_factor": 1.5,
+      "guide_rollers_sharing": 3
     },
     "walls": {
       "standards": "ACI 350-06 with ACI 318-19",
@@ -817,11 +828,151 @@
         "adopted": "stainless"
       },
       "first_drawn_mm": 250
+    },
+    "foundation": {
+      "basis": "Check 4. The site is not fixed: the stiffness of the ground is an assumption and three values are carried through.",
+      "subgrade_modulus_mn_m3": {
+        "soft": 15,
+        "medium": 40,
+        "stiff": 100
+      },
+      "design_ground": "medium",
+      "concrete_fc_mpa": 40,
+      "fy_mpa": 420,
+      "cover_mm": 75,
+      "unit_weight_kn_m3": 24,
+      "thickness_options_m": [
+        1.0,
+        1.25,
+        1.5,
+        1.75,
+        2.0
+      ],
+      "load_factor": 1.4,
+      "loads": {
+        "lid_kg_per_m2": 150,
+        "cooler_frame_steel_t": 8,
+        "cage_posts_and_decks_t": 60,
+        "bore_floor_kpa": 5
+      },
+      "mesh_m": 0.05,
+      "shaft_base": {
+        "bolts": 24,
+        "bolt_circle_m": 1.6,
+        "ring_outside_m": 2.05,
+        "ring_inside_m": 0.9,
+        "anchor": "ASTM F1554 Grade 105",
+        "anchor_fu_mpa": 862,
+        "anchor_fy_mpa": 724,
+        "sizes": [
+          [
+            "M48",
+            48,
+            1470
+          ],
+          [
+            "M56",
+            56,
+            2030
+          ],
+          [
+            "M64",
+            64,
+            2680
+          ],
+          [
+            "M72",
+            72,
+            3460
+          ]
+        ],
+        "accident_load_factor": 1.2,
+        "most_use_in_accident": 0.75,
+        "plate_fy_mpa": 345,
+        "friction": 0.4
+      }
+    },
+    "root": {
+      "basis": "Check 6. A hub of two rings joined by a drum turns on the shaft at each level. Each truss hangs from an arm at the top ring and bears on an arm at the bottom ring.",
+      "pin": {
+        "steel": "ASTM A193 Grade B7",
+        "fy_mpa": 724,
+        "fu_mpa": 862,
+        "diameters_mm": [
+          40,
+          50,
+          60,
+          70,
+          80
+        ],
+        "span_mm": 70
+      },
+      "lug": {
+        "steel": "ASTM A572 Grade 50",
+        "fy_mpa": 345,
+        "fu_mpa": 450,
+        "thickness_mm": [
+          16,
+          20,
+          25,
+          32,
+          40
+        ],
+        "hole_clearance_mm": 1.0
+      },
+      "arm_sections": [
+        [
+          "W8\u00d731",
+          5890,
+          45800000.0,
+          498000.0,
+          203,
+          7.2
+        ],
+        [
+          "W10\u00d745",
+          8580,
+          103000000.0,
+          900000.0,
+          257,
+          8.9
+        ],
+        [
+          "W10\u00d760",
+          11400,
+          142000000.0,
+          1222000.0,
+          260,
+          10.7
+        ],
+        [
+          "W12\u00d765",
+          12300,
+          222000000.0,
+          1586000.0,
+          308,
+          9.9
+        ]
+      ],
+      "hub_ring_radius_m": 0.79,
+      "arm_deflection_limit_mm": 0.25,
+      "allowance_mm": {
+        "root": 0.6,
+        "hub_tilt": 1.0
+      },
+      "hub": {
+        "drum_diameter_m": 1.4,
+        "drum_wall_mm": 12,
+        "ring_plate_mm": 40,
+        "floor_kg_per_m2": 50,
+        "slewing_ring_t": 0.6,
+        "drive_t": 0.25
+      }
     }
   },
   "design_checks": {
     "document": "GS-STR-001",
-    "revision": "F",
+    "revision": "G",
     "date": "2026-11-22",
     "status": "Preliminary, issued for review. Not checked. Not for construction.",
     "prepared_by": "Claude (Anthropic), for Steltic",
@@ -853,8 +1004,8 @@
         "id": 4,
         "title": "Foundation",
         "scope": "Base slab, bearing pressure, and the anchorage of the shaft base",
-        "status": "Not started",
-        "section": ""
+        "status": "Slab and shaft base checked on assumed ground. For review. The ground is not known.",
+        "section": "11"
       },
       {
         "id": 5,
@@ -867,8 +1018,8 @@
         "id": 6,
         "title": "Pod-to-shaft connection and level drive",
         "scope": "Root connection of the pod, the hub at each level, and the capacity of the drive that turns a level on the fixed shaft",
-        "status": "Design loads issued. Design not started.",
-        "section": "6"
+        "status": "First pass: root connection, hub, bearings and drive sized. A thicker shaft wall proposed. For review.",
+        "section": "12"
       },
       {
         "id": 7,
