@@ -177,14 +177,14 @@ def shaft_figure():
 
 
 def wall_figure():
-    """Half section through the two walls as proposed, with the present walls dashed and the pressure of the store."""
+    """Half section through the two walls of check 3 with carbon steel bars, with the walls as first drawn dashed."""
     c = walls.C
     inner = c["inner"]
     sx, sy, x0, base = 62., 12.2, 150., 482.
     X = lambda r: x0 + (r - walls.R_BORE) * sx
     Y = lambda z: base - z * sy
-    out = [f'<text x="20" y="26" font-size="15" fill="{INK}" font-weight="bold">Figure 4. Half section through the walls as proposed</text>',
-           f'<text x="20" y="45" fill="{MUTED}">Horizontal scale five times the vertical. The walls as now drawn, {c["present"]["outer"]*1000:.0f} mm, are dashed.</text>',
+    out = [f'<text x="20" y="26" font-size="15" fill="{INK}" font-weight="bold">Figure 4. Half section through the walls of check 3, with carbon steel bars</text>',
+           f'<text x="20" y="45" fill="{MUTED}">Horizontal scale five times the vertical. The walls as first drawn, {c["present"]["outer"]*1000:.0f} mm, are dashed.</text>',
            f'<text x="20" y="61" fill="{MUTED}">Hoop tension in kN/m at the lower edge of each lift, unfactored.</text>']
     top = Y(walls.HEIGHT)
     liquid = Y(walls.LIQUID)
@@ -311,7 +311,7 @@ def options_figure():
                  (f"radius grows {l['growth']*1000:.0f} mm", MUTED, "normal")]
         for n, (text, fill, weight) in enumerate(lines):
             out.append(f'<text x="{x:.1f}" y="{y+n*17:.1f}" fill="{fill}" font-weight="{weight}">{text}</text>')
-    out.append(f'<text x="20" y="{top+deepest+24+6*17+8:.1f}" fill="{MUTED}">The liner is taken to bridge a crack of {rf.CRACK*1000:.2f} mm. Wider cracks are in orange. The proposed option has the heavy outline.</text>')
+    out.append(f'<text x="20" y="{top+deepest+24+6*17+8:.1f}" fill="{MUTED}">The liner is taken to bridge a crack of {rf.CRACK*1000:.2f} mm. Wider cracks are in orange. The option adopted has the heavy outline.</text>')
     return svg(760, top + deepest + 24 + 6 * 17 + 22, out)
 
 
@@ -327,7 +327,7 @@ def hours(seconds):
 
 def thermal_section():
     c, a, t = th.C, th.AMBIENT, th.T
-    rides = [("As drawn", c["rides"]["drawn"]), ("Check 3, carbon steel bars", c["rides"]["proposed"]), ("Section 10, stainless steel bars", rf.C["proposed"]["ride"])]
+    rides = [("As first drawn, 250 mm", c["rides"]["drawn"]), ("Check 3, carbon steel bars", c["rides"]["proposed"]), ("Adopted: section 10, stainless steel bars", rf.C["proposed"]["ride"])]
     ride_rows = "\n".join(
         f"| {name} | {r['volume']:,.0f} | {r['energy']/1e9:.1f} | {r['per_k']/60:.1f} | **{r['layered']/60:.0f} min** | {r['mixed']['annual_mean_c']/60:.0f} min | {'none' if r['mixed']['summer_design_c'] <= 0 else format(r['mixed']['summer_design_c']/60, '.0f') + ' min'} |"
         for name, r in rides)
@@ -419,7 +419,7 @@ With the pump heat included, {th.DUTY} coolers are needed at their rating, not {
 
 ### 9.6 What layering needs
 
-As drawn, each pod reaches the store through sleeves at its own level, and each cooler through conduits at its own level. Warm liquid rises and cool liquid sinks, so the store would layer partly by itself. But the pods on the upper levels would draw warmer liquid than those below, and the result could not be predicted. Layering has to be designed:
+Each pod reaches the store through sleeves at its own level, and each cooler through conduits at its own level. Left like that, warm liquid would rise and cool liquid sink, so the store would layer partly by itself. But the pods on the upper levels would draw warmer liquid than those below, and the result could not be predicted. Layering has to be designed:
 
 1. **Pods draw from the bottom of the store and return to the top.** One pair of vertical pipes in the store for each of the {cfg.BAYS} bays would serve the {cfg.LEVELS} pods above one another.
 2. **Coolers draw from the top and return to the bottom.** One pair of vertical pipes for each of the {cfg.FRAMES} frames.
@@ -427,7 +427,23 @@ As drawn, each pod reaches the store through sleeves at its own level, and each 
 4. **The two flows are kept equal.** The boundary between the layers then stays where it is. The coolers need variable flow, and the store needs temperature sensors up its height to show where the boundary is.
 5. **The boundary is re-made often.** Conduction thickens it by about {round(lay['conduction']*100)*10} mm in a day. Running it to the top of the store each night, as section 9.8 describes, keeps it thin.
 
-This check takes {th.FOM*100:.0f}% of the store as usable, which is in the usual range for a layered tank. The pipes and their openings are new equipment inside the store, fixed through the liner. They are open item 1.
+This check takes {th.FOM*100:.0f}% of the store as usable, which is in the usual range for a layered tank.
+
+**The pipes are in the model from revision F.** They are drawn in [layering.py](../gpu_silo/layering.py) as follows.
+
+| Quantity | Value | Note |
+| --- | ---: | --- |
+| Pairs of pipes | {c['pipes']['pairs']} | {cfg.BAYS} for the bays of pods, on the inner wall, and {cfg.FRAMES} for the cooler frames, on the outer wall |
+| Pipe | {t['layering']['riser_diameter_m']*1000:.0f} mm | |
+| Speed in a pod pipe | {c['pipes']['pod_speed']:.1f} m/s | {cfg.LEVELS} pods |
+| Speed in a cooler pipe | {c['pipes']['cooler_speed']:.1f} m/s | {cfg.COOL['coolers_per_frame']} coolers, with all frames sharing the flow |
+| Opening at each open end | a {t['layering']['diffuser_diameter_m']:g} m plate, {t['layering']['diffuser_gap_m']*1000:.0f} mm from the pipe | the liquid leaves sideways all round the plate |
+| Froude number where warm liquid enters, at the top | {c['pipes']['warm_froude']:.2f} | {cfg.BAYS} pod returns. 1 or less does not stir the layers. |
+| Froude number where cool liquid enters, at the bottom | {c['pipes']['cool_froude']:.2f} | {cfg.FRAMES} cooler returns |
+| Top openings | {walls.LIQUID-sw['to_hot']-t['layering']['top_mouth_below_cold_fill_m']:.2f} m | {t['layering']['top_mouth_below_cold_fill_m']*1000:.0f} mm under the cold fill level of section 9.9, so they are covered before the store warms |
+| Bottom openings | {t['layering']['mouth_above_floor_m']:.2f} m | above the floor |
+
+The pipes hang from brackets on the walls and are fitted after the liner. Their sizes are a first estimate. The detail design is open item 1.
 
 ### 9.7 Ride-through
 
@@ -440,13 +456,13 @@ Ride-through is how long the pods keep their supply temperature after the cooler
 - **Layered**, the ride-through is one pass of the store through the pods, less the part lost at the boundary. The supply stays at {th.COLD:.0f} °C the whole time, then rises by {th.RISE:g} K at once when the cool layer is used up. It does not depend on the weather, provided the store was full of cool liquid when the coolers stopped. In cool weather the coolers can hold the cool layer below {th.COLD:.0f} °C, which lengthens the ride-through. This check does not count on it.
 - **Mixed**, the supply warms from the first minute, and the ride-through is the time to reach {th.COLD:.0f} °C from wherever the store sat. In mild weather that is long. On the design day there is none.
 
-The {calcs.C['ride_min']:.0f} minutes in the [design calculations](calcs.md) is a {calcs.C['swing']:g} K swing of the store as drawn. It is the mixed case with the store held {calcs.C['swing']:g} K below its limit, which the coolers can do only below about {lim[th.INSTALLED, True]-calcs.C['swing']:.0f} °C outside.
+The {calcs.C['ride_min']:.0f} minutes in the [design calculations](calcs.md) is a {calcs.C['swing']:g} K swing of the store. It is the mixed case with the store held {calcs.C['swing']:g} K below its limit, which the coolers can do only below about {lim[th.INSTALLED, True]-calcs.C['swing']:.0f} °C outside.
 
 The concrete is not counted. In an hour only the first 70 mm or so of each wet face follows the liquid, which adds 2 to 3%.
 
 ### 9.8 Hot afternoons and cool nights
 
-The layered store also carries the plant through air that is too warm for the coolers. Figures are for the store of section 10.
+The layered store also carries the plant through air that is too warm for the coolers. Figures are for the store as adopted.
 
 | Outside air | {th.INSTALLED} coolers reject | Store makes up | For |
 | --- | ---: | ---: | ---: |
@@ -467,8 +483,10 @@ Above {lim[th.INSTALLED, False]:.0f} °C the coolers fall behind and the cool la
 
 The freeboard is {sw['freeboard']*1000:.0f} mm. A store filled cold to {walls.LIQUID:.2f} m would overflow by about {(sw['to_hot']-sw['freeboard'])*1000:.0f} mm of depth when it warmed. So:
 
-- the {walls.LIQUID:.2f} m level is to be the level of a store that is warm throughout, and the cold fill stops at **{walls.LIQUID-sw['to_hot']:.2f} m**;
+- the {walls.LIQUID:.2f} m level is the level of a store that is warm throughout, and the cold fill stops at **{walls.LIQUID-sw['to_hot']:.2f} m**;
 - an overflow to a catch tank is needed in any case, because the level cannot be relied on.
+
+From revision F the model has an overflow standpipe inside the store, with its rim at {walls.LIQUID+t['overflow']['above_liquid_m']:.2f} m. It leaves through the outer wall beside the fill line and runs to a {t['overflow']['catch_tank_m3']:g} m³ catch tank by the pump skid. That tank holds {t['overflow']['catch_tank_m3']/ev['surface']*1000:.0f} mm of the depth of the store.
 
 The liquid is {(1-sw['density']/cfg.FLUID['density_kg_m3'])*100:.0f}% lighter at {th.MEAN:.0f} °C than the {cfg.FLUID['density_kg_m3']:,.0f} kg/m³ used for the pressure on the walls in check 3, which is on the safe side. The rise is worked out for walls that do not move and a store of even width.
 
@@ -492,11 +510,11 @@ The store itself is in no danger. With the pods off in the design winter it cool
 Two requirements follow.
 
 - **The bore needs ventilation** that removes about {inner['heat']/1e3:.0f} kW from the walls, as well as what the pods give to the air, to hold {t['bore_air_c']:g} °C.
-- **The top of the store has to be closed**, with a breather. An open surface would lose water every day, which thickens the glycol, and would put that water into the power levels above.
+- **The top of the store has to be closed**, with a breather. An open surface would lose water every day, which thickens the glycol, and would put that water into the power levels above. From revision F the model has a sealed deck over the store, {t['cover']['below_rim_m']*1000:.0f} mm below the rim, with a breather through the outer wall.
 
 ### 9.12 Temperatures for the design of the walls
 
-The outer wall has the store on one face and the weather on the other. The severe case is the winter design day with wind, with warm liquid against the wall. The warm layer can stand anywhere up the wall, so {th.HOT:.0f} °C is used at every lift. The walls are those of check 3.
+The outer wall has the store on one face and the weather on the other. The severe case is the winter design day with wind, with warm liquid against the wall. The warm layer can stand anywhere up the wall, so {th.HOT:.0f} °C is used at every lift. The table uses the walls of check 3, to show the effect of thickness. The outer wall as adopted is {cfg.SILO['outer_wall_m']*1000:.0f} mm throughout, as lifts 6 to 10 here.
 
 | Lift | Thickness, mm | Heat flow, W/m² | Wet face, °C | Outside face, °C | Difference across the wall, K | Outside face if insulated, °C | Difference if insulated, K |
 | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
@@ -532,7 +550,7 @@ These are the same size as the {st.TIP['single_mm']:g} mm and {st.TIP['accumulat
 | Cooler model at its rating condition | {th.cooler(t['cooler_rating']['liquid_in_c'], t['cooler_rating']['air_in_c'])[0]/1e6:.3f} MW, liquid out at {th.cooler(t['cooler_rating']['liquid_in_c'], t['cooler_rating']['air_in_c'])[1]:.1f} °C | {cfg.COOL['cooler_capacity_mw']:.3f} MW, {t['cooler_rating']['liquid_in_c']-th.RISE:.1f} °C | equal |
 | Heat rejected by {th.INSTALLED} coolers at the layered limit of {lim[th.INSTALLED, False]:.1f} °C | {th.stratified_capacity(lim[th.INSTALLED, False])/1e6:.2f} MW | heat to reject, {th.LOAD/1e6:.2f} MW | equal |
 | Layered limit less mixed limit, {th.DUTY} coolers at rated flow | {lim[th.DUTY, False]-lim[th.DUTY, True]:.1f} K | rise across the pods, {th.RISE:g} K | close. The liquid flow of a cooler differs between the two cases. |
-| Ride-through of the store of section 10, by hand | {th.FOM:g} × {rf.C['proposed']['volume']:,.0f} m³ × {th.CAPACITY/1e6:.3f} MJ/m³·K × {th.RISE:g} K ÷ {th.LOAD/1e6:.2f} MW = {th.FOM*rf.C['proposed']['volume']*th.CAPACITY*th.RISE/th.LOAD/60:.1f} min | {p['layered']/60:.1f} min | equal |
+| Ride-through of the adopted store, by hand | {th.FOM:g} × {rf.C['proposed']['volume']:,.0f} m³ × {th.CAPACITY/1e6:.3f} MJ/m³·K × {th.RISE:g} K ÷ {th.LOAD/1e6:.2f} MW = {th.FOM*rf.C['proposed']['volume']*th.CAPACITY*th.RISE/th.LOAD/60:.1f} min | {p['layered']/60:.1f} min | equal |
 | Heat flow through the lowest lift | {c['lifts'][0]['bare']['flux']:.1f} W/m² overall | {c['lifts'][0]['bare']['gradient']*th.CONCRETE['conductivity_w_mk']/c['lifts'][0]['t']:.1f} W/m² through the concrete alone | equal |
 
 The first, second and fifth are checked at every build by [thermal.py](../gpu_silo/thermal.py).
@@ -591,7 +609,7 @@ def reinforcement_section():
 
 ### 10.1 Purpose
 
-Check 3 reinforced the outer wall with ordinary carbon steel bars and found a wall of {carbon['lifts'][0]['t']*1000:.0f} mm at the base with {carbon['lifts'][0]['bars']['layers']} layers of bars. The project asked whether a different bar would let the wall be thinner: stainless steel or a high-strength fibre-reinforced polymer (FRP), with cost not a consideration, and with cages made up off the wall and dropped in. This section compares the options, using the temperatures of check 5, and proposes one. Every number is calculated by [reinforcement.py](../gpu_silo/reinforcement.py).
+Check 3 reinforced the outer wall with ordinary carbon steel bars and found a wall of {carbon['lifts'][0]['t']*1000:.0f} mm at the base with {carbon['lifts'][0]['bars']['layers']} layers of bars. The project asked whether a different bar would let the wall be thinner: stainless steel or a high-strength fibre-reinforced polymer (FRP), with cost not a consideration, and with cages made up off the wall and dropped in. This section compares the options, using the temperatures of check 5. Stainless steel was proposed in revision E and adopted by the project in revision F. Every number is calculated by [reinforcement.py](../gpu_silo/reinforcement.py).
 
 ### 10.2 What sets the thickness
 
@@ -626,9 +644,9 @@ All four use the inner wall of {r['inner']*1000:.0f} mm from section 9.12. The m
 
 This is check 3. It is the only option that follows ACI 350 as written. It gives the thickest wall and the most layers.
 
-Carbon steel could be designed to the crack limit of section 10.3 in place of rule 2, and the wall would come out the same as the stainless one. It is not proposed. The cracks pass through the wall, so they are open to rain on the outside face whatever the liner does on the inside, and ordinary bars crossing cracks of 0.4 mm in the weather will corrode. Rule 2 exists to prevent that.
+Carbon steel could be designed to the crack limit of section 10.3 in place of rule 2, and the wall would come out the same as the stainless one. It is not adopted. The cracks pass through the wall, so they are open to rain on the outside face whatever the liner does on the inside, and ordinary bars crossing cracks of 0.4 mm in the weather will corrode. Rule 2 exists to prevent that.
 
-### 10.6 Stainless steel: proposed
+### 10.6 Stainless steel: adopted
 
 **Bar.** ASTM A955 Grade 75 (520 MPa yield) in a duplex alloy such as UNS S32304. It has the stiffness and ductility of ordinary bar, it is cut, bent and coupled in the same way, with tooling kept for stainless, and it is rolled in the same sizes up to #11.
 
@@ -706,7 +724,7 @@ An FRP cage is lighter, but lightness is not what limits a cage here. A stainles
 
 ### 10.11 The walls with stainless reinforcement
 
-| Quantity | As drawn | Check 3, carbon steel | Proposed, stainless steel |
+| Quantity | As first drawn | Check 3, carbon steel | Adopted, stainless steel |
 | --- | ---: | ---: | ---: |
 | Outer wall | {wc['present']['outer']*1000:.0f} mm | {wc['lifts'][0]['t']*1000:.0f} mm to {wc['lifts'][-1]['t']*1000:.0f} mm, in {len(set(l['t'] for l in wc['lifts']))} steps | **{first['t']*1000:.0f} mm throughout** |
 | Layers of hoop bars | | up to {max(l['bars']['layers'] for l in wc['lifts'])} | **{p['layers']}** |
@@ -721,7 +739,7 @@ An FRP cage is lighter, but lightness is not what limits a cage here. A stainles
 
 The carbon steel column uses the {r['inner']*1000:.0f} mm inner wall, so that the three can be compared. Its store is smaller than the {wc['volume']:,.0f} m³ in section 8.8 for that reason.
 
-### 10.12 What the proposal depends on
+### 10.12 What the design depends on
 
 1. **Agreement to the departure from ACI 350** (section 10.6).
 2. **The liner.** It has to bridge new cracks of {p['crack']*1000:.1f} mm, and wider ones with a margin, at {th.HOT:.0f} °C in glycol, for life. If the supplier cannot show this, the crack limit comes down and the bars go up: at {W['min_bar_spacing_mm']} mm spacing two layers of #11 give a crack of about {r['tightest']*1000:.2f} mm in the same {first['t']*1000:.0f} mm wall. Below that the wall thickens again.
@@ -738,7 +756,7 @@ FRP does not do the same. Glass is too flexible and cannot use its strength unde
 
 Cages are worth having with stainless bars: eight to a lift, about {p['heaviest']/1e3/rf.SEGMENTS:.0f} t each at the base.
 
-The walls are not yet changed in the design file, the model or the calculations.
+**These walls were adopted by the project in revision F.** The design file, the model and the calculations use an outer wall of {first['t']*1000:.0f} mm and an inner wall of {r['inner']*1000:.0f} mm.
 """
 
 
@@ -822,6 +840,7 @@ def markdown():
 | C | 2026-11-22 | Limits on tip movement set by the project: {st.TIP['single_mm']:g} mm from any one part and {st.TIP['accumulated_mm']:g} mm accumulated. Support rig steel set straight after the cage, generator sets landed on it later. Turbine level given its own mounts and cast-in anchors, as check 10. |
 | D | 2026-11-22 | Check 3 carried out for the liquid load: walls without post-tensioning, in {walls.W['concrete_fc_mpa']} MPa concrete, with the liner as the liquid barrier. Thicknesses proposed, not yet adopted in the model. |
 | E | 2026-11-22 | Check 5 carried out, first pass: the store has to be layered. Inner wall raised to {th.C['creep']['t']*1000:.0f} mm for creep in warm concrete. Reinforcement of the outer wall compared: stainless steel proposed, which makes the outer wall {rf.C['proposed']['lifts'][0]['t']*1000:.0f} mm throughout. |
+| F | 2026-11-22 | Decisions of the project adopted: outer wall {cfg.SILO['outer_wall_m']*1000:.0f} mm with stainless steel bars, inner wall {cfg.SILO['inner_wall_m']*1000:.0f} mm, the store layered, the CDU with a heat exchanger, and the assumed range of outside air. The store pipes, the cover and the overflow are in the model. |
 
 This report is generated from [project.json](project.json) by `python -m gpu_silo calcs`. Every number in it is calculated from the inputs in that file by [structure.py](../gpu_silo/structure.py), [walls.py](../gpu_silo/walls.py), [thermal.py](../gpu_silo/thermal.py) and [reinforcement.py](../gpu_silo/reinforcement.py). To change a result, change an input and run the command.
 
@@ -1375,9 +1394,9 @@ Clause numbers in this section are those of ACI 350-06. ACI 350-20 has replaced 
 
 Only the liquid load is in this section. Section 8.12 lists what is left out. Temperature is taken up in sections 9.12 and 10.9.
 
-### 8.3 The walls as now drawn
+### 8.3 The walls as first drawn
 
-Both walls are {wc['present']['outer']*1000:.0f} mm thick in the model. They do not work.
+Both walls were {wc['present']['outer']*1000:.0f} mm thick in the model until revision F. They did not work.
 
 | Wall | Finding |
 | --- | --- |
@@ -1416,7 +1435,7 @@ Each lift is designed for the pressure at its lower edge.
 | ---: | ---: | ---: | ---: | ---: | ---: | --- | ---: | ---: | ---: | ---: |
 {outer_rows}
 
-![Half section through the walls as proposed](figures/walls.svg)
+![Half section through the walls of check 3](figures/walls.svg)
 
 The outer wall goes from **{first['t']*1000:.0f} mm at the base to {last['t']*1000:.0f} mm at the top**, in {len(set(l['t'] for l in wc['lifts']))} thicknesses. The lowest lift needs {first['bars']['layers']} layers of {first['bars']['bar']['name']} bars at {first['bars']['spacing']*1000:.0f} mm, two layers at each face.
 
@@ -1458,7 +1477,7 @@ Buckling governs. The check relies on the wall being held round at the base by t
 
 ### 8.8 What the new walls change
 
-| Quantity | As drawn | As proposed | Note |
+| Quantity | As first drawn | Check 3 | Note |
 | --- | ---: | ---: | --- |
 | Outer wall | {wc['present']['outer']*1000:.0f} mm | {first['t']*1000:.0f} mm to {last['t']*1000:.0f} mm | |
 | Inner wall | {wc['present']['inner']*1000:.0f} mm | {inner['t']*1000:.0f} mm | |
@@ -1474,7 +1493,7 @@ The heat that the store can absorb falls with its volume, by {(1-wc['volume']/wc
 
 ### 8.9 Alternative: tie the two walls together
 
-The liquid stretches the outer wall and squeezes the inner wall. On a cut through the whole silo the liquid acts only on the width of the store, so the net hoop force is the pressure times that width: {kn(wc['tie_total'],0)} kN/m at the base as drawn. That is {wc['tie_total']/wc['present_tension']*100:.0f}% of the tension that the outer wall takes when it works alone. If the walls were tied across the store, by radial concrete fins or by steel ties, the compression in the inner wall would cancel most of the tension in the outer wall, and the hoop steel would fall by about {(1-wc['tie_total']/wc['present_tension'])*100:.0f}%.
+The liquid stretches the outer wall and squeezes the inner wall. On a cut through the whole silo the liquid acts only on the width of the store, so the net hoop force is the pressure times that width: {kn(wc['tie_total'],0)} kN/m at the base with the walls as first drawn. That is {wc['tie_total']/wc['present_tension']*100:.0f}% of the tension that the outer wall takes when it works alone. If the walls were tied across the store, by radial concrete fins or by steel ties, the compression in the inner wall would cancel most of the tension in the outer wall, and the hoop steel would fall by about {(1-wc['tie_total']/wc['present_tension'])*100:.0f}%.
 
 It is not adopted here. Ties or fins complicate the jumpform, divide the store into cells, pass through the liner and obstruct the spray stages, which goes against buildability. It is recorded because the saving is large. This is open item 10.
 
@@ -1492,9 +1511,9 @@ These are checked at every build by [walls.py](../gpu_silo/walls.py).
 
 Without post-tensioning, the outer wall needs to be {first['t']*1000:.0f} mm thick at the base, stepping to {last['t']*1000:.0f} mm, with up to {first['bars']['layers']} layers of {first['bars']['bar']['name']} hoop bars, and the inner wall {inner['t']*1000:.0f} mm throughout, in {W['concrete_fc_mpa']} MPa concrete. The store keeps {wc['volume']:,.0f} m³, which is above its target. The walls take {wc['concrete']/wc['now_concrete']:.1f} times the concrete now allowed for and about {wc['steel_t']:,.0f} t of reinforcement.
 
-These thicknesses are a proposal. They are not yet in the design file, the model or the calculations, because they change the store, the programme and the look of the silo. They hold for the liquid load only.
+These thicknesses were the proposal of revision D, for the liquid load only. They were not adopted.
 
-**Sections 9 and 10 take this further.** Check 5 raises the inner wall to {th.C['creep']['t']*1000:.0f} mm, because warm concrete creeps more. Section 10 then proposes stainless steel bars for the outer wall, which bring it down to {rf.C['proposed']['lifts'][0]['t']*1000:.0f} mm for its whole height.
+**Sections 9 and 10 take this further.** Check 5 raises the inner wall to {th.C['creep']['t']*1000:.0f} mm, because warm concrete creeps more. Section 10 then compares reinforcement and finds that stainless steel bars bring the outer wall down to {rf.C['proposed']['lifts'][0]['t']*1000:.0f} mm for its whole height.
 
 ### 8.12 Not covered by this check
 
@@ -1512,23 +1531,23 @@ These thicknesses are a proposal. They are not yet in the design file, the model
 
 | No. | Item | Affects | Needed from |
 | ---: | --- | --- | --- |
-| 1 | Layer the store: vertical pipes and openings inside the store for the pods and the coolers, and control of the two flows (section 9.6) | check 5, the liner, the model | project |
+| 1 | Detail design of the store pipes and their openings, their fixing through the liner, and control of the two flows (section 9.6) | check 5, the liner | project |
 | 2 | Weather record of the site, and the CDU approach and cooler rating from suppliers (section 9.2) | check 5 | project, suppliers |
-| 3 | Adopt the walls of section 10.11 in the design file, the model and the calculations: outer wall {rf.C['proposed']['lifts'][0]['t']*1000:.0f} mm with stainless steel bars, inner wall {rf.C['inner']*1000:.0f} mm | everything that uses the store or the walls | project |
+| 3 | Programme for fitting the store pipes and the cover, between the liner on days {logistics.BY_KEY['coating']['start']} to {logistics.BY_KEY['coating']['end']} and the fill from day {logistics.BY_KEY['water']['start']} | programme | project |
 | 4 | Agreement to design the lined outer wall without the durability factor of ACI 350 (section 10.6) | check 3 | checker, authority |
 | 5 | Liner: bridging of new cracks at {th.HOT:.0f} °C in glycol (section 10.12) | check 3 | liner supplier |
-| 6 | Close the top of the store, add an overflow and catch tank, and set the cold fill level (sections 9.9 and 9.11) | check 5, the model | project |
+| 6 | Detail of the cover, its breather, the overflow and the size of the catch tank (sections 9.9 and 9.11) | check 5 | project |
 | 7 | Frost protection for stopped coolers, and ventilation of the bore (sections 9.10 and 9.11) | check 5 | project |
 | 8 | Fixings to the outer wall, to allow for its stretch at first fill and for cracked concrete (section 10.12) | cooler frames, checks 9 and 10 | project |
 | 9 | Jumpform programme and crew, with the reinforcement as cages: about {rf.C['proposed']['heaviest']/1e3:,.0f} t in the lowest lift of the outer wall with stainless bars, {rf.C['schemes']['carbon']['heaviest']/1e3:,.0f} t with carbon steel (sections 8.8 and 10.10) | programme, check 3 | project |
-| 10 | Tie the two walls together, or keep them separate as proposed (section 8.9) | check 3 | project |
+| 10 | Tie the two walls together, or keep them separate as adopted (section 8.9) | check 3 | project |
 | 11 | Allowance for the root connection within the {st.TIP['accumulated_mm']:g} mm accumulated limit: {c['budget']['reserve']*1000:.1f} mm is left with the present sizes (section 3.7) | checks 1, 2 and 6 | project, with check 6 |
 | 12 | Site and seismic design category, for the lateral case | all structural checks | project |
 | 13 | Weight of a rack in operation, and of the CDU, pump and coolant | checks 1, 2, 4 and 6 | equipment supplier |
 | 14 | Tolerance of the wall coupling, to confirm the limits on tip movement, with the movements of the walls in section 9.13 | checks 1, 2 and 6 | coupling supplier |
 | 15 | Weight of the hub, bearing and access floor at each level | checks 1 and 6 | check 6 |
 | 16 | Comparison of section properties with the AISC Manual, of the ACI 350-06 clauses with ACI 350-20, and of the values taken from ACI CODE-440.11-22, ASTM A955 and ASTM D7957 with the documents | checks 2 and 3 | checker |
-| 17 | The films still show the support rig arriving with the generator sets, and walls of {wc['present']['outer']*1000:.0f} mm | animation | next render |
+| 17 | The films still show the support rig arriving with the generator sets, walls of {wc['present']['outer']*1000:.0f} mm, and a store with no pipes, cover or overflow | animation | next render |
 
 ## Appendix A: member forces in the pod truss
 

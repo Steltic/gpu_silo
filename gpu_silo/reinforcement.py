@@ -8,6 +8,7 @@ SI units: metres, newtons, pascals.
 """
 import math
 
+from . import design as cfg
 from . import thermal
 from . import walls
 
@@ -123,7 +124,7 @@ def design(scheme):
 def carbon_fibre():
     """Carbon FRP is not designed lift by lift. Its bar area at the base is set by strain, to hold the same crack width as the proposal."""
     c = R["cfrp"]
-    base = C["schemes"][R["proposed"]]["lifts"][0]
+    base = C["schemes"][R["adopted"]]["lifts"][0]
     modulus = c["modulus_gpa"] * 1e9
     stress = base["strain"] * modulus / 1.2                 # same strain, less the bond factor of an FRP bar
     area = base["tension"] / stress
@@ -134,12 +135,14 @@ def carbon_fibre():
 
 def compute():
     schemes = {key: design(s) for key, s in SCHEMES.items()}
-    return dict(schemes=schemes, proposed=schemes[R["proposed"]], inner=INNER)
+    # Inner wall: the least reinforcement each way, in ordinary bar. It is in compression, lined on one face and dry on the other.
+    inner_mass = 2 * walls.W["min_steel_ratio"] * INNER * 2 * math.pi * (walls.R_BORE + INNER / 2) * walls.HEIGHT * 7850
+    return dict(schemes=schemes, proposed=schemes[R["adopted"]], inner=INNER, inner_mass=inner_mass)
 
 
 def tightest():
     """Crack width at the base of the proposed wall with two layers of its largest bar at the closest spacing allowed."""
-    scheme, first = SCHEMES[R["proposed"]], C["proposed"]["lifts"][0]
+    scheme, first = SCHEMES[R["adopted"]], C["proposed"]["lifts"][0]
     name, d, area = scheme["bars"][-1]
     bars = dict(bar=dict(name=name, d=d / 1000, area=area / 1e6), layers=2, per_face=1, spacing=walls.S_MIN, provided=2 * area / 1e6 / walls.S_MIN)
     return walls.crack_width(bars, first["tension"] / bars["provided"], scheme["modulus_gpa"] * 1e9, scheme["bond"])
@@ -164,6 +167,8 @@ def check():
             if s["limits"]["sustained"]: assert l["stress"] <= s["limits"]["sustained"] * (1 + 1e-9), key
         assert all(a["t"] >= b["t"] for a, b in zip(s["lifts"], s["lifts"][1:])), key
     p = c["proposed"]
+    # The walls in the design file are the ones designed here.
+    assert p["thicknesses"] == [cfg.SILO["outer_wall_m"]] and abs(INNER - cfg.SILO["inner_wall_m"]) < 1e-9, "the walls in the design file are not those of the design report"
     assert p["foot"]["vu"] <= p["foot"]["most"], "the foot of the proposed wall is too thin for its shear"
     assert p["volume"] >= walls.TARGET, "the store no longer holds its target volume with the proposed walls"
     assert p["meets_crack"]
@@ -172,6 +177,6 @@ def check():
 def summary():
     p = C["proposed"]
     first = p["lifts"][0]
-    return (f"Reinforcement proposed: {p['scheme']['name']}, outer wall {first['t']*1000:.0f} mm at the base with "
+    return (f"Reinforcement adopted: {p['scheme']['name']}, outer wall {first['t']*1000:.0f} mm at the base with "
             f"{first['bars']['layers']} layers of {first['bars']['bar']['name']} at {first['bars']['spacing']*1000:.0f} mm, "
             f"crack {first['crack']*1000:.2f} mm. Store {p['volume']:,.0f} m³.")

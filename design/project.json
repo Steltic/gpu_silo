@@ -14,8 +14,8 @@
     "outside_diameter_m": 25.0,
     "inside_diameter_m": 17.0,
     "height_m": 32.0,
-    "outer_wall_m": 0.25,
-    "inner_wall_m": 0.25,
+    "outer_wall_m": 0.4,
+    "inner_wall_m": 0.5,
     "concrete_lift_m": 3.2
   },
   "pod": {
@@ -243,7 +243,8 @@
       "slab_thickness_m": 1.0,
       "slab_overhang_m": 0.64,
       "reinforcement_kg_per_m3": 150,
-      "bays": 2
+      "bays": 2,
+      "wall_bar_allowance": 0.15
     },
     "site": {
       "haul_ring_radius_m": 42.7,
@@ -650,7 +651,6 @@
         "basis": "Scope of reinforcement for the outer wall. The liner is the liquid barrier, so the crack width it has to bridge is the common limit.",
         "crack_limit_mm": 0.41,
         "crack_limit_basis": "ACI 224R-01 Table 4.1, member with a protective membrane",
-        "proposed": "stainless",
         "segments_per_lift": 8,
         "schemes": [
           {
@@ -813,13 +813,15 @@
             15.9,
             199
           ]
-        }
-      }
+        },
+        "adopted": "stainless"
+      },
+      "first_drawn_mm": 250
     }
   },
   "design_checks": {
     "document": "GS-STR-001",
-    "revision": "E",
+    "revision": "F",
     "date": "2026-11-22",
     "status": "Preliminary, issued for review. Not checked. Not for construction.",
     "prepared_by": "Claude (Anthropic), for Steltic",
@@ -844,7 +846,7 @@
         "id": 3,
         "title": "Silo wall thickness",
         "scope": "Hoop tension in the outer wall, external pressure on the inner wall, wall thickness and reinforcement, without post-tensioning",
-        "status": "Proposed for liquid load and temperature: outer wall 400 mm with stainless steel bars, inner wall 500 mm. For review. Not yet in the model.",
+        "status": "Adopted for liquid load and temperature: outer wall 400 mm with stainless steel bars, inner wall 500 mm. For review.",
         "section": "8"
       },
       {
@@ -858,7 +860,7 @@
         "id": 5,
         "title": "Heat balance of the store",
         "scope": "Water-glycol temperatures, mixing and ride-through in the store",
-        "status": "First pass complete. The store has to be layered. For review.",
+        "status": "First pass complete. The store is layered: pipes, cover and overflow are in the model. For review.",
         "section": "9"
       },
       {
@@ -982,6 +984,29 @@
     },
     "bore_air_c": 30.0,
     "erection_temperature_c": 15.0,
-    "steel_expansion_per_k": 1.2e-05
+    "steel_expansion_per_k": 1.2e-05,
+    "layering": {
+      "riser_diameter_m": 0.4,
+      "riser_wall_mm": 10,
+      "diffuser_diameter_m": 1.2,
+      "diffuser_gap_m": 0.35,
+      "mouth_above_floor_m": 0.5,
+      "top_mouth_below_cold_fill_m": 0.5,
+      "pod_riser_offset_m": 0.3,
+      "pod_riser_beyond_sleeve_m": 0.25,
+      "cooler_riser_off_wall_m": 0.7
+    },
+    "cover": {
+      "thickness_m": 0.08,
+      "below_rim_m": 0.02
+    },
+    "overflow": {
+      "above_liquid_m": 0.1,
+      "pipe_diameter_m": 0.2,
+      "offset_from_fill_line_m": 0.6,
+      "catch_tank_m3": 20,
+      "catch_tank_diameter_m": 2.5,
+      "catch_tank_from_pump_skid_m": 4.2
+    }
   }
 }

@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 520" width="760" height="520" font-family="Helvetica, Arial, sans-serif" font-size="12">
 <rect width="760" height="520" fill="#ffffff"/>
-<text x="20" y="26" font-size="15" fill="#22303a" font-weight="bold">Figure 4. Half section through the walls as proposed</text>
-<text x="20" y="45" fill="#6b7780">Horizontal scale five times the vertical. The walls as now drawn, 250 mm, are dashed.</text>
+<text x="20" y="26" font-size="15" fill="#22303a" font-weight="bold">Figure 4. Half section through the walls of check 3, with carbon steel bars</text>
+<text x="20" y="45" fill="#6b7780">Horizontal scale five times the vertical. The walls as first drawn, 250 mm, are dashed.</text>
 <text x="20" y="61" fill="#6b7780">Hoop tension in kN/m at the lower edge of each lift, unfactored.</text>
 <polygon points="177.9,482.0 351.5,482.0 351.5,443.0 357.7,443.0 357.7,403.9 360.8,403.9 360.8,364.9 367.0,364.9 367.0,325.8 367.0,325.8 367.0,286.8 373.2,286.8 373.2,247.8 373.2,247.8 373.2,208.7 373.2,208.7 373.2,169.7 373.2,169.7 373.2,130.6 373.2,130.6 373.2,94.7 177.9,94.7" fill="#cfe6ee"/>
 <rect x="150.0" y="91.6" width="27.9" height="390.4" fill="#b9bdbd" stroke="#22303a" stroke-width="1"/>

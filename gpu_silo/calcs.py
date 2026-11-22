@@ -534,11 +534,11 @@ The backup covers black start, controls, the cooling plant and about a fifth of 
 
 ## 10. Open questions raised by these numbers
 
-1. **Store size.** {c['tank_gal']/1e6:.2f} M US gal gives {c['ride_min']:.0f} minutes of ride-through at {c['heat_mw']:.0f} MW. Decide the ride-through the site needs. See section 2. Check 5 of the [design report](report.md#9-check-5-heat-balance-of-the-store) finds that the store has to be layered, cool below warm, for the {th.INSTALLED} coolers to carry the load above {th.C['limit'][th.INSTALLED, True]:.0f} °C outside. Layered, they carry it to {th.C['limit'][th.INSTALLED, False]:.0f} °C and the store rides through {th.C['rides']['drawn']['layered']/60:.0f} minutes in any weather. The pipes inside the store that layering needs are not drawn.
+1. **Store size.** {c['tank_gal']/1e6:.2f} M US gal gives {c['ride_min']:.0f} minutes of ride-through at {c['heat_mw']:.0f} MW. Decide the ride-through the site needs. See section 2. Check 5 of the [design report](report.md#9-check-5-heat-balance-of-the-store) finds that the store has to be layered, cool below warm, for the {th.INSTALLED} coolers to carry the load above {th.C['limit'][th.INSTALLED, True]:.0f} °C outside. Layered, they carry it to {th.C['limit'][th.INSTALLED, False]:.0f} °C and the store rides through {th.C['rides']['drawn']['layered']/60:.0f} minutes in any weather. The pipes inside the store that layering needs, a cover and an overflow are in the model.
 2. **Rack heat.** {c['rack_kw']:.0f} kW per rack is {c['heat_mw']:.0f} MW over {c['racks']} racks. Published figures for the Vera Rubin NVL72 run from about 190 to 230 kW, so the upper end would be {c['racks']*.23:.0f} MW.
 3. **Generation.** Two {pw['module_output_mw']:g} MW sets match the {c['heat_mw']:.0f} MW load with no spare, and pumps, fans and conversion losses add to that load. The diesels cover {c['diesel_share']*100:.0f}%.
 4. **Fit of the power levels.** The two levels need {c['levels_need']:.2f} m and have {c['levels_have']:.2f} m, so the turbine sets stand {(c['levels_have']-c['levels_need'])*1000:.0f} mm under the lid. The floor structure for {c['top_weight_t']:.0f} t is an allowance, not a design.
-5. **Wall design.** {c['head_kpa']:.0f} kPa at the base puts about {c['outer_hoop_mpa']:.0f} MPa of hoop tension in a {s['outer_wall_m']*1000:.0f} mm outer skin, which cannot be reinforced for it. Check 3 of the [design report](report.md#8-check-3-silo-walls) proposes walls without post-tensioning: an outer wall of {wl['lifts'][0]['t']*1000:.0f} mm at the base stepping to {wl['lifts'][-1]['t']*1000:.0f} mm, and an inner wall of {wl['inner']['t']*1000:.0f} mm. They would cut the store from {wl['now_volume']:,.0f} m³ to {wl['volume']:,.0f} m³ and nearly double the concrete. [Section 10](report.md#10-reinforcement-of-the-outer-wall-options) of the report then proposes stainless steel bars, which make the outer wall {rf.C['proposed']['lifts'][0]['t']*1000:.0f} mm for its whole height, with an inner wall of {rf.C['inner']*1000:.0f} mm and a store of {rf.C['proposed']['volume']:,.0f} m³. Neither is adopted yet: this file and the model still use the walls as drawn.
+5. **Wall design.** {c['head_kpa']:.0f} kPa at the base puts {c['outer_hoop_kn_m']:,.0f} kN/m of hoop tension in the outer wall. The walls have no post-tensioning. The outer wall is {s['outer_wall_m']*1000:.0f} mm for its whole height with two layers of duplex stainless steel hoop bars, designed for strength and for the crack the liner can bridge. The inner wall is {s['inner_wall_m']*1000:.0f} mm, set by buckling with the creep of warm concrete. This departs from the durability factor of ACI 350 and needs the agreement of the checker and the authority. See [check 3](report.md#8-check-3-silo-walls) and the [reinforcement options](report.md#10-reinforcement-of-the-outer-wall-options) in the design report. The walls as first drawn were {wl['present']['outer']*1000:.0f} mm.
 6. **Air in the bore.** There is no general ventilation. The bore is surrounded by a store at {th.COLD:.0f} to {th.HOT:.0f} °C, so it will sit near that temperature. Check 5 finds about {th.C['inner']['heat']/1e3:.0f} kW coming through the inner wall with the bore held at {th.T['bore_air_c']:g} °C. Work inside needs cooled air or short shifts, and this is not designed.
 7. **Heat next to the pods.** Each turbine rejects about {c['turbine_heat_mw']:.0f} MW, mostly up the stack at {pw['exhaust_temperature_c']:.0f} °C. Insulation of the stacks and the turbine level above the pods and the store is not designed.
 8. **Cooler air path.** Three coolers stacked vertically discharge outward at {c['cooler_face_ms']:.1f} m/s. Recirculation between rows and between the two tiers has not been checked.
@@ -572,7 +572,7 @@ def trucking_markdown():
     crew = "\n".join(f"| {name} | {count} |" for name, count in P["jumpform"]["crew"])
     chart = "\n".join(f"| {a['name'].replace('Pods', cfg.NAME + ' pods')} | {a['start']} | {a['end']} | {a['end']-a['start']+1} |" for a in logistics.ACTIVITIES)
     per_day = lg["per_day"]
-    busiest = ", ".join(f"day {d}: {per_day[d]:.0f}" for d in sorted(per_day, key=lambda d: -per_day[d])[:3] if d > 0)
+    busiest = ", ".join(f"day {d}: {per_day[d]:.0f}" for d in sorted((d for d in per_day if d > 0), key=lambda d: -per_day[d])[:3])
     return f"""## 8. Trucking
 
 Road trucks are taken at the usual US limit of {L['gross_vehicle_limit_t']:g} t gross (80,000 lb), working {hours} hours a day. Day numbers are days after the last wall pour. The film shows a sample of each kind of load, and its counters scale to the totals below.
@@ -622,7 +622,7 @@ In real time one lane would be enough. The second lane lets one truck back in wh
 | Loads a day | {lg['water_per_day']:.0f} | {lg['water_days']} days, one every {lg['water_headway_min']:.0f} minutes |
 | Time in a bay | {lg['water_turn_min']:.0f} min | {w['connect_minutes']} minutes to connect, then {w['pump_m3_per_minute']:g} m³ a minute |
 | One bay unloads | {lg['water_bay_per_day']:.0f} loads a day | |
-| Bays needed / provided | {lg['water_bays_needed']} / {w['bays']} | one spare |
+| Bays needed / provided | {lg['water_bays_needed']} / {w['bays']} | {w['bays']-lg['water_bays_needed']} spare |
 | Level rises | {lg['water_rise_m_per_day']:.1f} m a day | |
 | Youngest concrete the water reaches | {lg['wet_age_min']:.0f} days old | lifts poured one a day, fill from day {logistics.BY_KEY['water']['start']} |
 | Bottom lift at full head | {lg['full_head_age']:.0f} days old | day {logistics.BY_KEY['water']['end']} |
@@ -660,7 +660,7 @@ The faces of the store are sprayed with a liner before the fill, to keep the wat
 | Pour time for one lift | {lg['lift_pour_h']:.1f} h | {L['concrete']['pump_m3_per_hour']:g} m³ an hour through one pump |
 | Mixers for the walls | {lg['wall_trucks']} | |
 | Base slab, before the walls | {n(lg['slab_m3'])} m³, {lg['slab_trucks']} mixers | {L['concrete']['slab_thickness_m']:g} m thick, an allowance |
-| Reinforcement | {lg['rebar_t']:.0f} t, {lg['rebar_trucks']} trucks | {L['concrete']['reinforcement_kg_per_m3']:g} kg per m³, an allowance |
+| Reinforcement | {lg['rebar_t']:.0f} t, {lg['rebar_trucks']} trucks | {lg['wall_bar_t']:.0f} t in the walls from the design report, with {L['concrete']['wall_bar_allowance']*100:g}% for laps, feet, ties and openings. The slab at {L['concrete']['reinforcement_kg_per_m3']:g} kg per m³ is an allowance. |
 
 ### Crew on a typical lift
 

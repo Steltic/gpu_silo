@@ -173,7 +173,7 @@ def compute():
     lifts.reverse()
     inner = inner_wall()
     foot = base(lifts[0]["t"], lifts[0]["radius"] + lifts[0]["t"] / 2, pressure(0))
-    present = dict(outer=cfg.SILO["outer_wall_m"], inner=cfg.SILO["inner_wall_m"])
+    present = dict(outer=W["first_drawn_mm"] / 1000, inner=W["first_drawn_mm"] / 1000)      # the walls before check 3
     volume = concrete = hoop = 0.
     for lift in lifts:
         wet = max(0., min(lift["z1"], LIQUID) - lift["z0"])

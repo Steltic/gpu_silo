@@ -65,6 +65,11 @@ def pipe(m,a,b,r,col,ri=0.,n=12):
     if not ri: m.face(hi,col);m.face(lo[::-1],col)
 
 
+def beside(bearing,offset,radius,z):
+    """A point at this radius on a line that runs parallel to a bearing, `offset` to its left."""
+    return (radius*math.cos(bearing)-offset*math.sin(bearing),radius*math.sin(bearing)+offset*math.cos(bearing),z)
+
+
 def barrel(m,a,b,r,col,ri=0,n=16):
     pipe(m,(a,0,0),(b,0,0),r,col,ri,n)
 
@@ -79,9 +84,7 @@ def station_mesh():
     barrel(m,WALL_FACE+.005,WALL_FACE+.040,.090,SEAL)
     for lateral,col in [(-.043,INLET),(.043,RETURN)]:
         pipe(m,(WALL_FACE+.001,lateral,.015),(TANK_END+.001,lateral,.015),.028,col,ri=.017)
-    # Open branches in the liquid: supply drawn from below, return released above.
-    for x,sign,col in [(s.RO_INNER+.22,-1,INLET),(s.RO_INNER+.42,1,RETURN)]:
-        pipe(m,(x,sign*.039,sign*.01),(x,sign*.20,sign*.19),.044,col,ri=.024)
+    # The two lines end here. The store pipes of layering.py take them to the bottom and the top of the store.
     return m
 
 

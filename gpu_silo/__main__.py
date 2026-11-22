@@ -32,12 +32,12 @@ def main():
         print(f"{path} ({seconds:.1f} s)")
         return
     if args.command == "calcs":
-        from . import calcs, reinforcement, report, structure, thermal, walls
+        from . import calcs, layering, reinforcement, report, structure, thermal, walls
         checks = (structure, walls, thermal, reinforcement)
         if args.check:
             if not calcs.current():
                 parser.exit(1, "A generated design document is out of date. Run: python -m gpu_silo calcs\n" + "\n".join(calcs.differences()) + "\n")
-            for module in checks: module.check()
+            for module in checks + (layering,): module.check()
             print("design/calcs.md and design/report.md match design/project.json")
             return
         for module in checks:

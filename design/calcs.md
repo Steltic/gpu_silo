@@ -23,23 +23,23 @@ The water-glycol fills the gap between the two concrete skins to 31.75 m, 0.25 m
 | Quantity | Value | Basis |
 | --- | ---: | --- |
 | Outside / inside diameter | 25 / 17 m | input |
-| Outer / inner skin | 250 / 250 mm | input |
-| Liquid gap | 3.50 m | radius 8.75 to 12.25 m |
-| Plan area of liquid | 230.9 m² | π (r₂² − r₁²) |
-| **Volume** | **7,331 m³ = 1,936,724 US gal** | area × 31.75 m |
+| Outer / inner skin | 400 / 500 mm | input |
+| Liquid gap | 3.10 m | radius 9.00 to 12.10 m |
+| Plan area of liquid | 205.5 m² | π (r₂² − r₁²) |
+| **Volume** | **6,524 m³ = 1,723,553 US gal** | area × 31.75 m |
 | Target | 5,678 m³ = 1,500,000 US gal | input |
-| Volume against target | 129% | 1,653 m³ over |
+| Volume against target | 115% | 846 m³ over |
 | Envelope with no wall thickness, full height | 8,445 m³ = 2,230,828 US gal | upper bound for 25 / 17 / 32 m |
-| Liquid mass | 7,478 t | 1020 kg/m³ |
-| Heat capacity | 29.2 GJ/K = 8.10 MWh/K | cp 3.90 kJ/kg·K |
-| Temperature rise with no heat rejection | 1 K every 9.7 min | at 50 MW |
-| Ride-through on a 10 K swing | 97 min, 81 MWh | input swing. A mixed store can be held 10 K below its limit only in mild weather. |
+| Liquid mass | 6,655 t | 1020 kg/m³ |
+| Heat capacity | 26.0 GJ/K = 7.21 MWh/K | cp 3.90 kJ/kg·K |
+| Temperature rise with no heat rejection | 1 K every 8.7 min | at 50 MW |
+| Ride-through on a 10 K swing | 87 min, 72 MWh | input swing. A mixed store can be held 10 K below its limit only in mild weather. |
 | Ride-through with the store layered | 86 min | [check 5](report.md#9-check-5-heat-balance-of-the-store): one pass of the store, 90% usable, in any weather |
 | Static pressure at the base | 318 kPa | ρ g h |
-| Outer skin hoop tension at the base | 3,890 kN/m, 15.6 MPa on the gross section | p r, thin wall |
-| Inner skin hoop compression at the base | 2,779 kN/m, 11.1 MPa | p r, thin wall |
+| Outer skin hoop tension at the base | 3,843 kN/m, 9.6 MPa on the gross section | p r, thin wall |
+| Inner skin hoop compression at the base | 2,858 kN/m, 5.7 MPa | p r, thin wall |
 
-**This geometry holds 1.94 million US gallons, 29% more than the 1.5 M target.**
+**This geometry holds 1.72 million US gallons, 15% more than the 1.5 M target.**
 
 ### Does the store match the load?
 
@@ -47,11 +47,11 @@ The store's job is to carry the load while heat rejection is reduced. The measur
 
 | Outside diameter | Bore | Height | Load | Store | Ride-through on 10 K |
 | ---: | ---: | ---: | ---: | ---: | ---: |
-| 20 m | 13 m | 30 m | 32 MW | 4,626 m³ | 96 min |
-| 22 m | 13 m | 30 m | 50 MW | 6,542 m³ | 87 min |
-| 25 m | 17 m | 32 m | 50 MW | 7,331 m³ | 97 min (this design) |
+| 20 m | 13 m | 30 m | 32 MW | 4,034 m³ | 84 min |
+| 22 m | 13 m | 30 m | 50 MW | 5,922 m³ | 79 min |
+| 25 m | 17 m | 32 m | 50 MW | 6,524 m³ | 87 min (this design) |
 
-Widening the bore from 13 m to 17 m for the in-line turbine sets takes 3,092 m³ out of the store. The 25 m outer wall and the 32 m height more than give it back.
+Widening the bore from 13 m to 17 m for the in-line turbine sets takes 3,192 m³ out of the store. The 25 m outer wall and the 32 m height more than give it back.
 
 ## 3. Loop flows
 
@@ -63,7 +63,7 @@ Based on a 10 K rise across the load and the same 10 K drop across the coolers.
 | One 4SU pod (one CDU pump) | 781 kW | 20.0 kg/s | 1,178 L/min, 311 US gpm |
 | One dry cooler (one pump) | 2000 kW | 51.3 kg/s | 3,017 L/min, 797 US gpm |
 
-At full flow the store turns over once every 97 minutes.
+At full flow the store turns over once every 87 minutes.
 
 ## 4. Heat rejection
 
@@ -78,7 +78,7 @@ At full flow the store turns over once every 97 minutes.
 | Margin over the heat load | 20% | 60 / 50 MW |
 | One cooler out of service | 58 MW | still carries the full load |
 | One whole frame out of service | 54 MW | still carries the full load |
-| Two whole frames out of service | 48 MW | store warms 1 K every 4.1 h at full load |
+| Two whole frames out of service | 48 MW | store warms 1 K every 3.6 h at full load |
 
 25 coolers carry the load and ten frames of three give 30, so 5 are spare. A whole frame can be lowered for service at full load.
 
@@ -225,11 +225,11 @@ Road trucks are taken at the usual US limit of 36.3 t gross (80,000 lb), working
 
 | Load | Vehicle | Trucks | Days | Trucks a day |
 | --- | --- | ---: | ---: | ---: |
-| Concrete for the walls | 7.6 m³ mixer | 140 | -9 to 0 | 14.0 |
+| Concrete for the walls | 7.6 m³ mixer | 250 | -9 to 0 | 25.0 |
 | Pod cage steel | flatbed, 3 a level | 27 | -8 to 0 | 3.0 |
 | Dry coolers with their pump units | flatbed, one each | 30 | 3 to 12 | 3.0 |
 | Cooler frame steel | flatbed, one frame each | 10 | 3 to 12 | 1.0 |
-| Water-glycol | 24 t tanker | 312 | 15 to 28 | 22.3 |
+| Water-glycol | 24 t tanker | 278 | 15 to 28 | 19.9 |
 | 4SU pods | flatbed, 2 each | 32 | 6 to 15 | 3.2 |
 | Propane tanks and the diesel tank | oversize load, one each | 9 | 8 to 11 | 2.2 |
 | Propane | 36 m³ transport | 26 | 16 to 22 | 3.7 |
@@ -238,7 +238,7 @@ Road trucks are taken at the usual US limit of 36.3 t gross (80,000 lb), working
 | Diesel sets | lowboy, 23.5 t each | 4 | 9 to 18 | 0.4 |
 | Deck steel for the power levels | flatbed | 4 | 9 to 18 | 0.4 |
 
-After the last pour 432 loads arrive in 28 days. The busiest days are day 16: 27, day 17: 27, day 18: 27 loads.
+After the last pour 398 loads arrive in 28 days. The busiest days are day 16: 25, day 17: 25, day 18: 25 loads.
 
 ### Pods: the heaviest legal load
 
@@ -272,19 +272,19 @@ In real time one lane would be enough. The second lane lets one truck back in wh
 
 | Quantity | Value | Basis |
 | --- | ---: | --- |
-| Store | 7,331 m³, 7,478 t | section 2 |
-| Of which glycol | 1,833 m³ | 25% by volume |
+| Store | 6,524 m³, 6,655 t | section 2 |
+| Of which glycol | 1,631 m³ | 25% by volume |
 | One tanker | 24 t, 23.5 m³ | 36.3 t gross |
-| **Tanker loads** | **312** | |
-| Loads a day | 22 | 14 days, one every 27 minutes |
+| **Tanker loads** | **278** | |
+| Loads a day | 20 | 14 days, one every 30 minutes |
 | Time in a bay | 30 min | 10 minutes to connect, then 1.2 m³ a minute |
 | One bay unloads | 20 loads a day | |
-| Bays needed / provided | 2 / 3 | one spare |
+| Bays needed / provided | 1 / 3 | 2 spare |
 | Level rises | 2.3 m a day | |
 | Youngest concrete the water reaches | 24 days old | lifts poured one a day, fill from day 15 |
 | Bottom lift at full head | 37 days old | day 28 |
 
-The fill is left to the last 14 days so the concrete has as long as possible to dry and gain strength first. The tankers have their own drive off the public road, so 312 loads never enter the haul ring.
+The fill is left to the last 14 days so the concrete has as long as possible to dry and gain strength first. The tankers have their own drive off the public road, so 278 loads never enter the haul ring.
 
 ### Liner inside the store
 
@@ -293,9 +293,9 @@ The faces of the store are sprayed with a liner before the fill, to keep the wat
 | Quantity | Value | Basis |
 | --- | ---: | --- |
 | System | Spray-applied polyurea liner | input, to be confirmed with a coating supplier for warm water-glycol |
-| Wall faces | 4,222 m² | both faces of the gap, 32 m high |
-| Floor of the gap | 231 m² | |
-| **Area to coat** | **4,453 m²** | |
+| Wall faces | 4,242 m² | both faces of the gap, 32 m high |
+| Floor of the gap | 205 m² | |
+| **Area to coat** | **4,448 m²** | |
 | Liner | 2 mm, 8.9 m³ | |
 | Output | 1,120 m² a day | 4 sprayers at 28 m² an hour, from 4 stages hung in the gap |
 | Time needed / allowed | 4.0 / 4 days | days 11 to 14 |
@@ -312,12 +312,12 @@ The faces of the store are sprayed with a liner before the fill, to keep the wat
 | One propane transport | 36 m³, 17.7 t | MC-331 trailer at 36.3 t gross |
 | **Propane loads** | **26** | 4.1 a day with the diesel, 20 a day through 2 bays |
 | Fuel tanks | 8 propane and 1 diesel | one oversize load each, 34 t a propane tank |
-| Concrete in the walls | 1,056 m³ | 10 lifts of 106 m³ |
-| **Mixers for one lift** | **14** | 7.6 m³ each, one every 10 minutes |
-| Pour time for one lift | 2.3 h | 45 m³ an hour through one pump |
-| Mixers for the walls | 140 | |
+| Concrete in the walls | 1,869 m³ | 10 lifts of 187 m³ |
+| **Mixers for one lift** | **25** | 7.6 m³ each, one every 10 minutes |
+| Pour time for one lift | 4.2 h | 45 m³ an hour through one pump |
+| Mixers for the walls | 250 | |
 | Base slab, before the walls | 542 m³, 72 mixers | 1 m thick, an allowance |
-| Reinforcement | 240 t, 11 trucks | 150 kg per m³, an allowance |
+| Reinforcement | 395 t, 19 trucks | 314 t in the walls from the design report, with 15% for laps, feet, ties and openings. The slab at 150 kg per m³ is an allowance. |
 
 ### Crew on a typical lift
 
@@ -374,15 +374,15 @@ Day 0 is the last wall pour. The concrete reaches its 28-day strength on day 28,
 | Dock enclosed as the control office | 24 | 27 | 4 |
 | Full strength, handed over | 28 | 28 | 1 |
 
-The walls take 10 days at 1 lift a day and are outside the 28 days. The pod cage is built beside the silo in those days, a level a day, so it is ready to lift in on day 3. One crawler crane does every heavy lift, so the cooler frames are hung before the power levels and the lid. The power levels are fabricated on the ground while the pods load. The store is coated on days 11 to 14 and filled over the last 14 days. Commissioning follows handover and is not part of this programme. The busiest day is day 16 with about 27 loads.
+The walls take 10 days at 1 lift a day and are outside the 28 days. The pod cage is built beside the silo in those days, a level a day, so it is ready to lift in on day 3. One crawler crane does every heavy lift, so the cooler frames are hung before the power levels and the lid. The power levels are fabricated on the ground while the pods load. The store is coated on days 11 to 14 and filled over the last 14 days. Commissioning follows handover and is not part of this programme. The busiest day is day 16 with about 25 loads.
 
 ## 10. Open questions raised by these numbers
 
-1. **Store size.** 1.94 M US gal gives 97 minutes of ride-through at 50 MW. Decide the ride-through the site needs. See section 2. Check 5 of the [design report](report.md#9-check-5-heat-balance-of-the-store) finds that the store has to be layered, cool below warm, for the 30 coolers to carry the load above 25 °C outside. Layered, they carry it to 34 °C and the store rides through 86 minutes in any weather. The pipes inside the store that layering needs are not drawn.
+1. **Store size.** 1.72 M US gal gives 87 minutes of ride-through at 50 MW. Decide the ride-through the site needs. See section 2. Check 5 of the [design report](report.md#9-check-5-heat-balance-of-the-store) finds that the store has to be layered, cool below warm, for the 30 coolers to carry the load above 25 °C outside. Layered, they carry it to 34 °C and the store rides through 86 minutes in any weather. The pipes inside the store that layering needs, a cover and an overflow are in the model.
 2. **Rack heat.** 195 kW per rack is 50 MW over 256 racks. Published figures for the Vera Rubin NVL72 run from about 190 to 230 kW, so the upper end would be 59 MW.
 3. **Generation.** Two 25 MW sets match the 50 MW load with no spare, and pumps, fans and conversion losses add to that load. The diesels cover 20%.
 4. **Fit of the power levels.** The two levels need 8.48 m and have 8.51 m, so the turbine sets stand 30 mm under the lid. The floor structure for 283 t is an allowance, not a design.
-5. **Wall design.** 318 kPa at the base puts about 16 MPa of hoop tension in a 250 mm outer skin, which cannot be reinforced for it. Check 3 of the [design report](report.md#8-check-3-silo-walls) proposes walls without post-tensioning: an outer wall of 750 mm at the base stepping to 400 mm, and an inner wall of 450 mm. They would cut the store from 7,331 m³ to 6,373 m³ and nearly double the concrete. [Section 10](report.md#10-reinforcement-of-the-outer-wall-options) of the report then proposes stainless steel bars, which make the outer wall 400 mm for its whole height, with an inner wall of 500 mm and a store of 6,524 m³. Neither is adopted yet: this file and the model still use the walls as drawn.
+5. **Wall design.** 318 kPa at the base puts 3,843 kN/m of hoop tension in the outer wall. The walls have no post-tensioning. The outer wall is 400 mm for its whole height with two layers of duplex stainless steel hoop bars, designed for strength and for the crack the liner can bridge. The inner wall is 500 mm, set by buckling with the creep of warm concrete. This departs from the durability factor of ACI 350 and needs the agreement of the checker and the authority. See [check 3](report.md#8-check-3-silo-walls) and the [reinforcement options](report.md#10-reinforcement-of-the-outer-wall-options) in the design report. The walls as first drawn were 250 mm.
 6. **Air in the bore.** There is no general ventilation. The bore is surrounded by a store at 42 to 52 °C, so it will sit near that temperature. Check 5 finds about 79 kW coming through the inner wall with the bore held at 30 °C. Work inside needs cooled air or short shifts, and this is not designed.
 7. **Heat next to the pods.** Each turbine rejects about 44 MW, mostly up the stack at 566 °C. Insulation of the stacks and the turbine level above the pods and the store is not designed.
 8. **Cooler air path.** Three coolers stacked vertically discharge outward at 4.6 m/s. Recirculation between rows and between the two tiers has not been checked.

@@ -191,6 +191,16 @@ These were needed to draw the decisions. Each one is an input in [project.json](
 | 2026-11-22 | Glass FRP bars to ASTM D7957 are taken at 550 MPa guaranteed strength, and high-modulus bars at 60 GPa and 1,000 MPa. | Typical values, to be confirmed against the standard and a supplier. | `structure.walls.reinforcement` |
 | 2026-11-22 | The outer wall is not insulated. | With stainless bars the winter stress is accepted, and insulation is another trade at height. | [Report 10.9](report.md#109-temperature) |
 | 2026-11-22 | Stainless reinforcement is proposed but the walls are still not changed in the design file or the model. | The wall thickness is a project decision, and the films are not being rendered for now. | [Report 10.13](report.md#1013-conclusion) |
+| 2026-11-22 | The walls are 400 mm and 500 mm in the design file and the model. Before: 250 mm each. | Adopted by the project after checks 3 and 5 and the comparison of reinforcement. | `silo`, [Report 10.11](report.md#1011-the-walls-with-stainless-reinforcement) |
+| 2026-11-22 | The CDU keeps its heat exchanger, the store is layered, and the assumed range of outside air stands. | Adopted by the project. | [Report 9](report.md#9-check-5-heat-balance-of-the-store) |
+| 2026-11-22 | One pair of 400 mm pipes for each bay of pods, on the inner wall, and one for each cooler frame, on the outer wall. Each open end faces a 1.2 m plate 350 mm away. | First estimate that keeps the Froude number at the openings below 1 and the speed in the pipes near 1.4 m/s. | [layering.py](../gpu_silo/layering.py) |
+| 2026-11-22 | The top openings are 0.5 m under the cold fill level. | So they are covered before the store warms and rises. | `thermal.layering` |
+| 2026-11-22 | The cover is a sealed deck 20 mm under the rim, with a breather through the outer wall. | The lid closes the silo but leaves the store open to the power levels. | [layering.py](../gpu_silo/layering.py) |
+| 2026-11-22 | The overflow is a standpipe inside the store with its rim 100 mm above the warm level, leaving beside the fill line to a 20 m³ catch tank by the pump skid. | Nothing at the foot of the wall is clear of a cooler frame coming down for service. The tank size is an allowance. | [layering.py](../gpu_silo/layering.py), [site.py](../gpu_silo/site.py) |
+| 2026-11-22 | The pipes, the cover and the overflow appear in the films when the fill begins. | Fitting them is not yet a scene or a programme activity. | [layering.py](../gpu_silo/layering.py) |
+| 2026-11-22 | The open branches on each pod sleeve are removed. | The store pipes now take each line to the bottom or the top of the store. | [services.py](../gpu_silo/services.py) |
+| 2026-11-22 | Reinforcement for trucking is the designed wall bars plus 15%, and the slab at 150 kg/m³. Before: 150 kg/m³ throughout. | The walls are designed. The 15% is for laps, feet, ties and openings. | `logistics.concrete` |
+| 2026-11-22 | The inner wall has ordinary bars at the least ratio. | It is in compression, lined on one face and dry on the other. | [reinforcement.py](../gpu_silo/reinforcement.py) |
 
 ## Open questions
 

@@ -27,6 +27,7 @@ from . import programme
 from . import film
 from . import cagebuild
 from . import coating
+from . import layering
 from . import shortfilm
 from . import structure
 from . import traffic
@@ -523,6 +524,7 @@ def build():
         return show(start)+[(end-1,ON),(end,OFF)]
     jumpform.install(scene,node,sys.modules[__name__])
     scene.liquid=services.add_fixed(scene,node,flat_keys,[liquid_level(f) for f in range(FRAMES)])
+    layering.install(scene,node,scene.liquid)
     for lite in (False,True):
         m=casing(lite)
         if not lite:m=services.bore_rows(m,0,[services.port_height(l) for l in range(1,LEVELS+1)])

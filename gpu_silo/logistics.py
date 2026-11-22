@@ -122,7 +122,9 @@ def compute():
     c["mixer_headway_min"] = c["lift_pour_h"] * 60 / c["lift_trucks"]
     c["slab_m3"] = math.pi * (ro + k["slab_overhang_m"])**2 * k["slab_thickness_m"]
     c["slab_trucks"] = math.ceil(c["slab_m3"] / k["mixer_load_m3"])
-    c["rebar_t"] = (c["wall_m3"] + c["slab_m3"]) * k["reinforcement_kg_per_m3"] / 1000
+    from . import reinforcement
+    c["wall_bar_t"] = (reinforcement.C["proposed"]["bar_mass"] + reinforcement.C["inner_mass"]) / 1000 * (1 + k["wall_bar_allowance"])
+    c["rebar_t"] = c["wall_bar_t"] + c["slab_m3"] * k["reinforcement_kg_per_m3"] / 1000
     c["rebar_trucks"] = math.ceil(c["rebar_t"] / flat["payload_t"])
     c["wall_days"] = lifts / J["lifts_per_day"]
     c["crew"] = sum(count for _, count in J["crew"])
