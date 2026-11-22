@@ -830,13 +830,8 @@
       "first_drawn_mm": 250
     },
     "foundation": {
-      "basis": "Check 4. The site is not fixed: the stiffness of the ground is an assumption and three values are carried through.",
-      "subgrade_modulus_mn_m3": {
-        "soft": 15,
-        "medium": 40,
-        "stiff": 100
-      },
-      "design_ground": "medium",
+      "basis": "Check 4. The site is not fixed: the stiffness of the ground is an assumption and three kinds of ground are carried through.",
+      "design_ground": "very dense gravel or hard clay",
       "concrete_fc_mpa": 40,
       "fy_mpa": 420,
       "cover_mm": 75,
@@ -846,7 +841,9 @@
         1.25,
         1.5,
         1.75,
-        2.0
+        2.0,
+        2.5,
+        3.0
       ],
       "load_factor": 1.4,
       "loads": {
@@ -890,7 +887,13 @@
         "most_use_in_accident": 0.75,
         "plate_fy_mpa": 345,
         "friction": 0.4
-      }
+      },
+      "ground_modulus_mpa": {
+        "dense sand or stiff clay": 80,
+        "very dense gravel or hard clay": 250,
+        "weak rock": 1000
+      },
+      "ground_poisson": 0.3
     },
     "root": {
       "basis": "Check 6. A hub of two rings joined by a drum turns on the shaft at each level. Each truss hangs from an arm at the top ring and bears on an arm at the bottom ring.",
@@ -972,7 +975,7 @@
   },
   "design_checks": {
     "document": "GS-STR-001",
-    "revision": "G",
+    "revision": "H",
     "date": "2026-11-22",
     "status": "Preliminary, issued for review. Not checked. Not for construction.",
     "prepared_by": "Claude (Anthropic), for Steltic",
@@ -1004,7 +1007,7 @@
         "id": 4,
         "title": "Foundation",
         "scope": "Base slab, bearing pressure, and the anchorage of the shaft base",
-        "status": "Slab and shaft base checked on assumed ground. For review. The ground is not known.",
+        "status": "Slab and shaft base checked on three assumed grounds. Corrected in revision H. For review. The ground is not known.",
         "section": "11"
       },
       {

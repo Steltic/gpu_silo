@@ -18,7 +18,6 @@ from . import walls
 
 F = cfg.PROJECT["structure"]["foundation"]
 BASE = F["shaft_base"]
-GROUND = {name: value * 1e6 for name, value in F["subgrade_modulus_mn_m3"].items()}
 FC = F["concrete_fc_mpa"]
 EC = 4700 * math.sqrt(FC) * 1e6
 NU = walls.NU
@@ -26,6 +25,10 @@ FY = F["fy_mpa"] * 1e6
 GAMMA_C = F["unit_weight_kn_m3"] * 1e3
 LOAD = F["load_factor"]
 RADIUS = cfg.OUTSIDE_R + cfg.PROJECT["logistics"]["concrete"]["slab_overhang_m"]
+# The spring under a slab is not a property of the ground alone: it falls as the slab gets wider. For a stiff round
+# slab on an elastic ground of modulus E the settlement is q D (1 - v²) π / (4 E), so the spring is 4 E / (π D (1 - v²)).
+MODULUS = {name: value * 1e6 for name, value in F["ground_modulus_mpa"].items()}
+GROUND = {name: 4 * e / (math.pi * 2 * RADIUS * (1 - F["ground_poisson"]**2)) for name, e in MODULUS.items()}
 T_OUT, T_IN = cfg.SILO["outer_wall_m"], cfg.SILO["inner_wall_m"]
 R_OUTER = cfg.OUTSIDE_R - T_OUT / 2                    # centre of the outer wall
 R_INNER = cfg.BORE_R + T_IN / 2
@@ -257,15 +260,19 @@ def anchorage():
 
 
 def compute():
-    options = [design(t) for t in F["thickness_options_m"]]
-    chosen = next((o for o in options if o["shear_ok"] and o["punch"] <= o["punch_strength"] and not o["stirrups"]), None) \
-        or next(o for o in options if o["shear_ok"] and o["punch"] <= o["punch_strength"])
-    grounds = {name: design(chosen["thickness"], name) for name in GROUND}
+    def least(options):
+        """The thinnest slab that is strong enough, with shear ties if it needs them."""
+        return next(o for o in options if o["shear_ok"] and o["punch"] <= o["punch_strength"])
+    table = {name: [design(t, name) for t in F["thickness_options_m"]] for name in GROUND}
+    grounds = {name: least(options) for name, options in table.items()}
+    options = table[F["design_ground"]]
+    chosen = grounds[F["design_ground"]]
     drawn = cfg.PROJECT["logistics"]["concrete"]["slab_thickness_m"]
+    as_drawn = {name: next(o for o in options_ if abs(o["thickness"] - drawn) < 1e-9) for name, options_ in table.items()}
     weights = dict(walls=(T_OUT * 2 * math.pi * R_OUTER + T_IN * 2 * math.pi * R_INNER) * walls.HEIGHT * GAMMA_C,
                    liquid=L["liquid"][2] * math.pi * (WET[1]**2 - WET[0]**2), slab=chosen["thickness"] * GAMMA_C * math.pi * RADIUS**2,
                    floor=L["floor"][2] * math.pi * cfg.BORE_R**2, **L["totals"])
-    return dict(options=options, chosen=chosen, grounds=grounds, drawn=drawn, weights=weights, total=sum(weights.values()),
+    return dict(options=options, chosen=chosen, grounds=grounds, drawn=drawn, as_drawn=as_drawn, table=table, weights=weights, total=sum(weights.values()),
                 area=math.pi * RADIUS**2, base=anchorage())
 
 
@@ -274,6 +281,11 @@ C = compute()
 
 def check():
     c = C
+    # The spring used gives back the settlement of a stiff slab on an elastic ground.
+    name = F["design_ground"]
+    stiff_slab = results(solve(50., GROUND[name]))["w"].mean()
+    mean = solve(50., GROUND[name])["applied"] / (math.pi * RADIUS**2)
+    assert abs(stiff_slab - mean * 2 * RADIUS * (1 - F["ground_poisson"]**2) * math.pi / (4 * MODULUS[name])) < 2e-2 * stiff_slab
     for d in list(c["grounds"].values()) + c["options"]:
         # The ground pushes back with the whole load, and nowhere does the slab lift off it.
         assert abs(d["reaction"] - d["applied"]) < 2e-3 * d["applied"], (d["reaction"], d["applied"])
@@ -283,7 +295,7 @@ def check():
     stiff = results(solve(50., 1e5))
     assert abs(stiff["pressure"].max() / stiff["pressure"].min() - 1) < 2e-3
     # A plate under even pressure with nothing else on it settles evenly, with no bending.
-    even = solve(1.5, GROUND["medium"], liquid=False, others=False)
+    even = solve(1.5, GROUND[F["design_ground"]], liquid=False, others=False)
     flat = results(even)
     assert abs(flat["w"].max() / flat["w"].min() - 1) < 1e-6 and abs(flat["mr"]).max() < 1e-3 * 1.5 * GAMMA_C * RADIUS**2
     assert c["chosen"]["shear_ok"] and c["chosen"]["punch"] <= c["chosen"]["punch_strength"]
@@ -293,5 +305,5 @@ def check():
 def summary():
     c = C
     d, b = c["chosen"], c["base"]
-    return (f"Foundation: slab {d['thickness']:.2f} m, {'with' if d['stirrups'] else 'without'} shear ties. On medium ground the pressure is {d['pressure']['least']/1e3:.0f} to {d['pressure']['most']/1e3:.0f} kPa "
+    return (f"Foundation: slab {d['thickness']:.2f} m, {'with' if d['stirrups'] else 'without'} shear ties. On {F['design_ground']} the pressure is {d['pressure']['least']/1e3:.0f} to {d['pressure']['most']/1e3:.0f} kPa "
             f"and the fill lowers the inner wall {(d['settle']['fill_inner']-d['settle']['fill_shaft'])*1000:.1f} mm more than the shaft. Shaft base: {b['n']} {b['bolt']} anchors.")
