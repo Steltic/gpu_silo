@@ -22,6 +22,11 @@ def kn(value, digits=1):
     return f"{value/1000:,.{digits}f}"
 
 
+def signed(value):
+    """A force in kN with its sign. A force that rounds to zero carries none, so the text does not depend on rounding noise."""
+    return "0.0" if abs(value) < 50 else f"{value/1000:+.1f}"
+
+
 def svg(width, height, body):
     return (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {width} {height}" width="{width}" height="{height}" '
             f'font-family="Helvetica, Arial, sans-serif" font-size="12">\n<rect width="{width}" height="{height}" fill="{PAPER}"/>\n'
@@ -174,7 +179,7 @@ def members_table(d):
     for kind in ("Top chord", "Bottom chord", "Diagonal", "Vertical"):
         for row in d["rows"]:
             if row["kind"] != kind: continue
-            lines.append(f"| {kind} | {row['panel']} | {row['length']:.3f} | {row['docked']/1000:+.1f} | {row['hoisted']/1000:+.1f} | "
+            lines.append(f"| {kind} | {row['panel']} | {row['length']:.3f} | {signed(row['docked'])} | {signed(row['hoisted'])} | "
                          f"{kn(row['tension'])} | {kn(row['compression'])} | {row['slenderness']:.0f} | {row['ratio']:.2f} |")
     return "\n".join(lines)
 
