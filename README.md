@@ -27,7 +27,7 @@ The animation is the working drawing for this project. Design decisions are made
 | Roof | 2 turbine exhaust stacks, 2 air inlet houses, diesel exhausts and room vents |
 | Trucking | 32 pod trucks at 2 pods each, 312 water tankers, 30 cooler trucks, 26 propane transports, 140 mixers for the walls |
 | Store liner | 2 mm spray-applied polyurea on both faces of the store, 4,453 m², sprayed from four stages on days 11 to 14 |
-| Programme | Walls in 10 daily lifts by a crew of 22 while the pod cage is built beside them a level a day, then 28 days to handover. Water goes in last, on days 15 to 28. Commissioning is by others after day 28. |
+| Programme | Walls in 10 daily lifts by a crew of 22 while the pod cage is built beside them a level a day, then 28 days to handover. The support rig is set on days 4 and 5 to hold the top of the shaft before the first pod. Water goes in last, on days 15 to 28. Commissioning is by others after day 28. |
 
 These figures are written by `python -m gpu_silo calcs` and also appear on screen throughout the film. The [calculations](design/calcs.md#10-open-questions-raised-by-these-numbers) list the open questions they raise. The largest are the wall design, no spare turbine, heat from the turbines next to the pods and the store, and air for people working in the bore.
 

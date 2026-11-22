@@ -259,8 +259,8 @@ def main(path):
         pts=points(body)
         # Every level fits in the bore, sits on its floor structure and stays under the lid.
         assert np.linalg.norm(pts[:,:2],axis=1).max()<p.s.RI-.05
-        # The diesel level is the support rig: its shoes hang below the ring beam and still clear the crown of the cage.
-        assert np.isclose(np.min(pts[:,2]),a.SEAT_Z-.14 if j==0 else -a.DECK+.05,atol=.02)
+        # Each level has shoes below its ring beam. Those of the support rig still clear the crown of the cage.
+        assert np.isclose(np.min(pts[:,2]),a.SEAT_Z-.14,atol=.02)
         assert a.power_base(p.CROWN,0)+a.SEAT_Z-.14>p.CROWN-.10
         first=p.FILLED+a.PICK_STARTS[j]
         landing=first+a.PICK_LENGTH
@@ -269,7 +269,7 @@ def main(path):
         assert abs(get(body,"rotation",[0])[-1,0]-a.POWER_YAW)<.00002
         while_crossing=(np.linalg.norm(xyz[:,[0,2]],axis=1)>1.e-4)&(np.linalg.norm(xyz[:,[0,2]],axis=1)<15.)
         assert np.min(xyz[while_crossing,1]+pts[:,2].min())>p.s.WALL_HEIGHT+2
-        assert xyz[-1,1]+pts[:,2].min()>=p.CROWN-(.10 if j==0 else .001) and xyz[-1,1]+pts[:,2].max()<a.LID_Z
+        assert xyz[-1,1]+pts[:,2].min()>=p.CROWN-.10 and xyz[-1,1]+pts[:,2].max()<a.LID_Z
         assert get(body,"scale",[1,1,1])[p.FILLED+(a.FAB_DONE-1 if short else 0),0]<.001
     assert a.power_base(p.CROWN,1)-a.power_base(p.CROWN,0)>=a.GEN_H+a.DECK-1e-9
     assert a.power_base(p.CROWN,1)+a.SET_H<=a.LID_Z
@@ -343,17 +343,19 @@ def main(path):
     walkways_and_fuel(p,a,doc,names,parents,get,points,ids,planar_overlap,roof,floor,short)
     # The support rig holds the top of the shaft. Its plates are cast into the wall before their pour, the shaft runs up
     # into the collar, and the deck girders stop clear of the shaft.
-    rig=p.structure.RIG;seat=a.power_base(p.CROWN,0)+a.SEAT_Z
-    mounts=[i for name,i in names.items() if name.startswith("Top rig mount")]
-    assert len(mounts)==rig["wall_mounts"]>=8
-    pour=p.services.lift_start(int((seat-.45)//p.s.LIFT))
-    for i in mounts:
-        where=get(i,"translation",[0,0,0]);final=where[-1]
-        assert abs(np.hypot(final[0],final[2])-p.s.RI)<1e-5 and abs(final[1]-seat)<1e-5,"a wall plate is not on the bore face at the seat level"
-        assert get(i,"scale",[1,1,1])[pour-1,0]>.999 and np.allclose(where[pour-1:],final,atol=1e-5),"a wall plate is not in the forms before its pour"
-        bearing=(math.atan2(-final[2],final[0])-a.POWER_YAW-math.pi/2+math.pi)%(2*math.pi)-math.pi
-        assert abs(bearing)>a.ACCESS_HALF,"a wall plate is in the access wedge"
-    assert seat-.45>p.CROWN-1 and seat-.45+a.PLATE_H<p.s.WALL_HEIGHT
+    rig=p.structure.RIG
+    for level,label,count in ((0,"Top rig mount",rig["wall_mounts"]),(1,"Turbine level mount",a.TURBINE_MOUNTS)):
+        seat=a.power_base(p.CROWN,level)+a.SEAT_Z
+        mounts=[i for name,i in names.items() if name.startswith(label)]
+        assert len(mounts)==count>=8
+        pour=p.services.lift_start(int((seat-.45)//p.s.LIFT))
+        for i in mounts:
+            where=get(i,"translation",[0,0,0]);final=where[-1]
+            assert abs(np.hypot(final[0],final[2])-p.s.RI)<1e-5 and abs(final[1]-seat)<1e-5,"a wall plate is not on the bore face at the seat level"
+            assert get(i,"scale",[1,1,1])[pour-1,0]>.999 and np.allclose(where[pour-1:],final,atol=1e-5),"a wall plate is not in the forms before its pour"
+            bearing=(math.atan2(-final[2],final[0])-a.POWER_YAW-math.pi/2+math.pi)%(2*math.pi)-math.pi
+            assert abs(bearing)>a.ACCESS_HALF,"a wall plate is in the access wedge"
+        assert seat-.45>p.CROWN-1 and seat-.45+a.PLATE_H<p.s.WALL_HEIGHT
     crown=points(names["Steel module | crown and hoist beams"]) if "Steel module | crown and hoist beams" in names else points(names["Steel module | shaft, bearings, rim girders and braced columns"])
     assert crown[:,2].max()>=p.structure.SHAFT_TOP,"the shaft does not reach the connector"
     deck=points(names["Power level 01 | diesel deck assembly"])

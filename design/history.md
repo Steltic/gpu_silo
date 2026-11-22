@@ -64,6 +64,10 @@ Add a dated entry when a choice changes. Say what the viewer should see, the dim
 | 2026-11-22 | Fixed shaft | The shaft is fixed and does not turn. | Open question | [Report 5.1](report.md#51-arrangement) |
 | 2026-11-22 | 5 mm deflection limit | A 5 mm deflection limit is imposed. | span/1,000, which was 7.3 mm | [Report 3.7](report.md#37-serviceability) |
 | 2026-11-22 | Access round the shaft 0.62 m | The access is widened to 0.62 m to give 100 mm between pod frames at their roots. | 0.5 m and 25 mm | Both films, every pod scene. [Calculations](calcs.md#clearance-at-the-pod-roots) |
+| 2026-11-22 | Rig steel before the pods | The rig steel is set on its mounts straight after the cage, and the generator sets are landed on it later. | The rig arriving with the generator sets on days 19 to 21 | Programme chart. The films are to be re-cut at the next render. [Report 5.10](report.md#510-why-the-support-rig-is-set-before-the-pods) |
+| 2026-11-22 | Limits on tip movement | 5 mm anywhere on its own, or 10 mm for accumulated deflections. | 5 mm applied to the truss and to the shaft separately, with no limit on the total | [Report 3.7](report.md#37-serviceability) |
+| 2026-11-22 | Turbine level on its own mounts | The turbine level has its own mounts and cast-in anchors, and they are added to the design task list. | Open question | Amber plates at the turbine level. [Report 7](report.md#7-checks-7-to-10-support-rig-shaft-connector-and-wall-mounts-design-loads) |
+| 2026-11-22 | Films rendered on request | The video is not re-rendered for every task. Several tasks are done first. | A full render with every change | [Workflows](../.github/workflows) |
 
 ## Assumptions made while applying these decisions
 
@@ -156,7 +160,12 @@ These were needed to draw the decisions. Each one is an input in [project.json](
 | 2026-11-22 | 16 wall mounts, each a 0.6 m × 0.95 m plate cast flush with studs, and a shoe on the rig welded to each. | The cage has to pass down the bore, so nothing cast in can stand proud of the wall. Number and size are not designed. | `structure.top_rig` |
 | 2026-11-22 | The mounts are drawn in every view, including the cutaways. | They are a load path to be looked at, unlike the other wall fittings. | [pod_scene.py](../gpu_silo/pod_scene.py) |
 | 2026-11-22 | The shaft is drawn 0.45 m above the crown, into the collar, and the girder over the axis stops at the collar. | The connector is at mid-depth of the rig. | [pod_scene.py](../gpu_silo/pod_scene.py), [plant.py](../gpu_silo/plant.py) |
-| 2026-11-22 | The programme and the films are not changed: the rig still arrives with the diesel sets on days 19 to 21, after the pods. | Moving it is a programme decision. The report records that the shaft must be held before the first pod. | [Report 5.10](report.md#510-the-shaft-before-the-support-rig-is-in-place) |
+| 2026-11-22 | The programme and the films are not changed: the rig still arrives with the diesel sets on days 19 to 21, after the pods. | Moving it is a programme decision. The report records that the shaft must be held before the first pod. | [Report 5.10](report.md#510-why-the-support-rig-is-set-before-the-pods) |
+| 2026-11-22 | The shaft counts as one part for the 5 mm limit: its shortening and its lean are added first. | Both come from the one member. It is the safer reading. | [structure.py](../gpu_silo/structure.py) |
+| 2026-11-22 | The rig steel is fabricated on days -3 to 3 and set on days 4 and 5, between the cage on day 3 and the first pod on day 6. | The only gap in the programme. | `schedule.activities` |
+| 2026-11-22 | The turbine level has 16 mounts like those of the rig, cast into the next wall lift. | Not designed. Flush plates let the rig pass them on its way down. | `structure.turbine_mounts`, [plant.py](../gpu_silo/plant.py) |
+| 2026-11-22 | The model still lifts the rig in with the generator sets. | The re-cut waits for the next render. | [sequence.md](../docs/sequence.md) |
+| 2026-11-22 | Truss and shaft sizes are not changed, although they leave 0.4 mm of the 10 mm for the root connection. | Which part gives up allowance is a decision for check 6. | [Report 3.7](report.md#37-serviceability) |
 
 ## Open questions
 

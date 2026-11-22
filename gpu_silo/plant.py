@@ -113,9 +113,12 @@ SEAT_Z=-DECK+.05
 PLATE_W,PLATE_H=RIG["mount_plate_m"]
 
 
-def mount_angles():
+TURBINE_MOUNTS=cfg.PROJECT["structure"]["turbine_mounts"]["wall_mounts"]
+
+
+def mount_angles(n=None):
     """Bearings of the wall mounts in the frame of the power level: evenly round the ring beam, clear of the access wedge."""
-    n=RIG["wall_mounts"]
+    n=n or RIG["wall_mounts"]
     start=math.pi/2+ACCESS_HALF+math.radians(5);arc=s.TAU-2*(ACCESS_HALF+math.radians(5))
     return [start+k*arc/(n-1) for k in range(n)]
 
@@ -126,15 +129,19 @@ def shaft_connector(m):
     for k in range(RIG["arms"]):
         a=math.pi/4+k*s.TAU/RIG["arms"]
         s.bar(m,s.polar(COLLAR-.04,a,-DECK/2),s.polar(s.RI-.34,a,-DECK/2),.26,HOLD,DECK-.18)
-    # A shoe under the ring beam at every mount, welded to the plate cast into the wall once the rig is down.
-    for a in mount_angles():
+    shoes(m,mount_angles())
+
+
+def shoes(m,angles):
+    """A shoe under the ring beam at every mount, welded to the plate cast into the wall once the level is down."""
+    for a in angles:
         s.bar(m,s.polar(s.RI-.46,a,SEAT_Z-.07),s.polar(s.RI-.056,a,SEAT_Z-.07),.40,HOLD,.14)
         s.bar(m,s.polar(s.RI-.085,a,SEAT_Z+.22),s.polar(s.RI-.056,a,SEAT_Z+.22),.50,HOLD,.44)
 
 
 def mount_plate():
     """A plate cast into the inner wall, flush with the bore, with studs back into the concrete. Local x points out through the wall."""
-    m=mesh("Top rig | cast-in wall plate and studs")
+    m=mesh("Power level | cast-in wall plate and studs")
     closed(m,-.014,-PLATE_W/2,.02,PLATE_W/2,-.45,PLATE_H-.45,HOLD)
     for y in (-PLATE_W/2+.1,PLATE_W/2-.1):
         for z in (-.33,-.05,.22,.38):
@@ -182,6 +189,8 @@ def power_mesh(index):
     m=mesh("Power level 2 | two in-line gas turbine generator sets and deck steel")
     l,w=SET_L/2,SET_W/2
     deck_steel(m,[chord(y) for y in (1.2,3.4,-1.2,-3.4)])
+    # The turbine level bears on mounts of its own, not on the support rig below it.
+    shoes(m,mount_angles(TURBINE_MOUNTS))
     if film.SHORT:
         # The short film leaves the enclosures off so both turbine sets can be seen.
         return m
@@ -503,12 +512,13 @@ def add(scene,node,p):
     # Plates for the support rig are set in the forms of the wall lift that holds them, like the cooler fixings.
     from . import cooler_frames
     plate=addmesh(mount_plate())
-    seat=power_base(p.CROWN,0)+SEAT_Z
-    start,cast=cooler_frames.pour_frames(seat,-.45)
-    for k,a in enumerate(mount_angles()):
-        x,y,_=s.polar(s.RI,POWER_YAW+a,0)
-        node(f"Top rig mount {k+1:02} | cast-in wall plate",plate,"Rig mounts",ang=POWER_YAW+a,
-             tracks={"scale":show(start),"translation":[(0,(x,y,seat+.46)),(start,(x,y,seat+.46)),(cast,(x,y,seat))]})
+    for level,label,count in ((0,"Top rig mount",RIG["wall_mounts"]),(1,"Turbine level mount",TURBINE_MOUNTS)):
+        seat=power_base(p.CROWN,level)+SEAT_Z
+        start,cast=cooler_frames.pour_frames(seat,-.45)
+        for k,a in enumerate(mount_angles(count)):
+            x,y,_=s.polar(s.RI,POWER_YAW+a,0)
+            node(f"{label} {k+1:02} | cast-in wall plate",plate,"Rig mounts",ang=POWER_YAW+a,
+                 tracks={"scale":show(start),"translation":[(0,(x,y,seat+.46)),(start,(x,y,seat+.46)),(cast,(x,y,seat))]})
     crib=mesh("Power-unit ground crib | bearing strips")
     for x in (-5.2,0,5.2):
         closed(crib,x-.25,-6.0,x+.25,6.0,0,GROUND-DECK+.05,"93846b")

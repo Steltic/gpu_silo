@@ -192,7 +192,7 @@ def section_row(s):
 
 ANCHORS = {"4": "4-check-2-pod-truss", "5": "5-check-1-central-shaft",
            "6": "6-check-6-root-connection-and-level-drive-design-loads",
-           "7": "7-checks-7-8-and-9-support-rig-shaft-connector-and-wall-mounts-design-loads"}
+           "7": "7-checks-7-to-10-support-rig-shaft-connector-and-wall-mounts-design-loads"}
 
 
 def markdown():
@@ -240,6 +240,16 @@ def markdown():
         f"| {case['name']} | {kn(case['reaction'],0)} | {kn(case['factored'],0)} | {kn(case['mount'],0)} |" for case in rig["cases"])
     level_rows = "\n".join(f"| {level} | {st.level_height(level):.2f} | {drop*1000:.2f} |" for level, drop in zip(range(1, cfg.LEVELS + 1), mv["by_level"]))
     hub = S["hub_and_floor_t_per_level"]
+    plant_level = cfg.PROJECT["diesel"]["set_height_m"]
+    options = []
+    for limit, sizes in ((st.LIMIT, None), (st.LIMIT, (1.5,)), (st.LIMIT, (2,)), (.004, None), (.004, (2,))):
+        truss = st.lightest(limit)
+        wall = next(w for w in sh["walls"] if (w["section"]["wall_in"] in sizes if sizes else w is ch))
+        total = truss["tip"] + wall["movement"]["total"]
+        extra = (truss["steel"] - d["steel"]) * cfg.TOTAL / 1000 + (wall["mass"] - ch["mass"]) / 1000
+        options.append(f"| {truss['chord']['name']} and {truss['web']['name']} | {st.inches(wall['section']['wall_in'])} | {truss['tip']*1000:.2f} | {wall['movement']['total']*1000:.2f} | "
+                       f"{total*1000:.2f} | {(st.ACCUMULATED-total)*1000:.2f} | {'as designed' if extra < .01 else f'{extra:.0f}'} |")
+    budget_rows = "\n".join(options)
     seq, unc, comp = cases["sequence"], cases["uncontrolled"], cases["complete"]
     return f"""# GPU Silo: structural design report
 
@@ -256,6 +266,7 @@ def markdown():
 | --- | --- | --- |
 | A | 2026-11-21 | First issue. Register of checks, basis of design, pod truss, loads on the shaft. |
 | B | 2026-11-22 | Access round the shaft widened from 0.50 m to {st.ACCESS:.2f} m. Truss limit changed from span/1,000 to {c['limit']*1000:g} mm. Shaft confirmed as fixed, with the levels turning on it, and held at its top by the support rig. Check 1 carried out. Checks 7, 8 and 9 added. |
+| C | 2026-11-22 | Limits on tip movement set by the project: {st.TIP['single_mm']:g} mm from any one part and {st.TIP['accumulated_mm']:g} mm accumulated. Support rig steel set straight after the cage, generator sets landed on it later. Turbine level given its own mounts and cast-in anchors, as check 10. |
 
 This report is generated from [project.json](project.json) by `python -m gpu_silo calcs`. Every number in it is calculated by [structure.py](../gpu_silo/structure.py) from the inputs in that file. To change a result, change an input and run the command.
 
@@ -267,7 +278,7 @@ This report is generated from [project.json](project.json) by `python -m gpu_sil
 4. [Check 2: pod truss](#{ANCHORS['4']})
 5. [Check 1: central shaft](#{ANCHORS['5']})
 6. [Check 6: root connection and level drive, design loads](#{ANCHORS['6']})
-7. [Checks 7, 8 and 9: support rig, shaft connector and wall mounts, design loads](#{ANCHORS['7']})
+7. [Checks 7 to 10: support rig, shaft connector and wall mounts, design loads](#{ANCHORS['7']})
 8. [Open items](#8-open-items)
 9. [Appendix A: member forces in the pod truss](#appendix-a-member-forces-in-the-pod-truss)
 10. [Appendix B: section properties](#appendix-b-section-properties)
@@ -282,7 +293,7 @@ This revision covers:
 - check 2, the pod trusses, sized for gravity load;
 - check 1, the central shaft, sized for gravity load;
 - the loads at the pod root and the rotating mass of a level, for check 6;
-- the loads on the support rig, the shaft connector and the wall mounts, for checks 7, 8 and 9.
+- the loads on the support rig, the shaft connector and the wall mounts of both power levels, for checks 7 to 10.
 
 Lateral load is not covered by any check yet, because the site is not fixed. It is the main limitation of this revision.
 
@@ -370,14 +381,30 @@ Dead load, D, is the only load in this revision. Fixed equipment and its liquid 
 
 ### 3.7 Serviceability
 
-The tip of each pod carries the coupling that connects its CDU to the water-glycol store through a sleeve in the inner wall, so the vertical position of the tip matters. Two limits control it, and both are inputs. A deflection limit of 5 mm was set by the project for revision B. This report applies it twice, once to the truss and once to the shaft, and that reading is to be confirmed (open item 4).
+The tip of each pod carries the coupling that connects its CDU to the water-glycol store through a sleeve in the inner wall, so the vertical position of the tip matters. The project set two limits on its movement for revision C.
 
-| No. | Criterion | Limit | Checked in |
-| ---: | --- | ---: | --- |
-| 1 | Deflection of the pod truss at its tip under dead load | {c['limit']*1000:g} mm | section 4.5 |
-| 2 | Movement of a pod tip caused by the shaft: its shortening as the store is filled, plus its lean in the worst filling state | {sh['limit']*1000:g} mm | section 5.7 |
+| Criterion | Limit |
+| --- | ---: |
+| Movement of a pod tip caused by any one part of the structure on its own | {st.TIP['single_mm']:g} mm |
+| Movement of a pod tip accumulated over all the parts | {st.TIP['accumulated_mm']:g} mm |
 
-The first is a fixed amount that can be set out when a pod is built. The second develops after a pod has been docked, as other pods are added, and is what the coupling has to follow. The tolerance of the coupling is not yet known. The rotation of the root connection also moves the tip and belongs to check 6.
+Where the accumulated limit stands with the parts designed so far:
+
+| Part | Tip movement, mm | Single limit, mm | Where |
+| --- | ---: | ---: | --- |
+| Pod truss, deflection under dead load | {c['budget']['truss']*1000:.2f} | {st.TIP['single_mm']:g} | section 4.5 |
+| Shaft, shortening as the store is filled plus lean in the worst filling state | {c['budget']['shaft']*1000:.2f} | {st.TIP['single_mm']:g} | section 5.7 |
+| Root connection and hub | not yet designed | {st.TIP['single_mm']:g} | check 6 |
+| **Accumulated so far** | **{c['budget']['total']*1000:.2f}** | | limit {st.TIP['accumulated_mm']:g} mm |
+| **Left for the root connection and hub** | **{c['budget']['reserve']*1000:.2f}** | | |
+
+The truss and the shaft are each the lightest that meets its own {st.TIP['single_mm']:g} mm, and together they use {c['budget']['total']/c['budget']['limit']*100:.0f}% of the accumulated limit. That leaves {c['budget']['reserve']*1000:.1f} mm for the root connection, which section 6.1 shows is the part most able to move the tip. Check 6 will therefore need some of the allowance back. The table shows what that costs. Stiffening the one shaft is much cheaper than stiffening {cfg.TOTAL} trusses.
+
+| Truss | Shaft wall, in | Truss, mm | Shaft, mm | Accumulated, mm | Left for check 6, mm | Extra steel, t |
+| --- | --- | ---: | ---: | ---: | ---: | ---: |
+{budget_rows}
+
+No change is made to the sizes in this revision. The choice is open item 1.
 
 ## 4. Check 2: pod truss
 
@@ -397,7 +424,7 @@ Each pod is carried by two vertical trusses, one each side of the racks, {st.TRU
 
 | No. | Criterion | Limit | Basis |
 | ---: | --- | --- | --- |
-| 1 | Tip deflection under dead load | {c['limit']*1000:g} mm | section 3.7 |
+| 1 | Tip deflection under dead load | {c['limit']*1000:g} mm | section 3.7, limit for one part |
 | 2 | Member strength | required strength ≤ design strength | AISC 360-22 Chapters D and E |
 | 3 | Member slenderness | L<sub>c</sub>/r ≤ {T['max_slenderness']} for every member | AISC 360-22 Section E2, user note. Applied to all members because the web forces reverse when the pod is hoisted. |
 | 4 | Wall slenderness | (b − 3t)/t ≤ 1.40 √(E/F<sub>y</sub>) = {st.WALL_LIMIT:.1f} | AISC 360-22 Table B4.1a, case 6. No slender walls. |
@@ -507,7 +534,8 @@ These points were confirmed for revision B.
 
 - The shaft is fixed to the foundation at its base and does not turn. Each level has a hub that turns on the shaft, and the eight pods of a level hang from the hub.
 - The base is a heavy fixed connection to the foundation. It is designed with the foundation under check 4, for the reactions in section 5.8.
-- The top of the shaft is held sideways by a connector to the support rig that carries the diesel generator level. The rig passes the force to mounts cast into the inner wall. The connector takes sideways force only, so the shaft is free to shorten under load and the weight of the rig does not come onto the shaft.
+- The top of the shaft is held sideways by a connector to the support rig that carries the diesel generator sets. The steel of the rig is set on its wall mounts and connected to the shaft straight after the cage is lifted in, before any pod is hung. The generator sets are landed on it later.
+- The connector, the rig and the mounts were added in revision B. The rig passes the force to mounts cast into the inner wall. The connector takes sideways force only, so the shaft is free to shorten under load and the weight of the rig does not come onto the shaft.
 - The store is filled from the top level down. A pod is lifted up a lane at the ground entry by the hoist under the crown. While it is lifted, every level that is already full closes up from {360/cfg.BAYS:g}° to {cfg.STORE['packed_pitch_degrees']:g}° between pods to open the lane.
 
 The shaft is a round tube of {st.SHAFT_D*1000:.0f} mm outside diameter, rolled from plate, {st.SHAFT_TOP:.2f} m from the top of the foundation to the connector. Its wall thickness is the result of this check.
@@ -550,7 +578,7 @@ The last row is not part of the planned sequence. It is the moment that would ar
 
 | No. | Criterion | Limit | Basis |
 | ---: | --- | --- | --- |
-| 1 | Movement of a pod tip caused by the shaft | {sh['limit']*1000:g} mm | section 3.7. Shortening under the full store plus lean in the worst state of the filling sequence. |
+| 1 | Movement of a pod tip caused by the shaft | {sh['limit']*1000:g} mm on its own, and {st.TIP['accumulated_mm']:g} mm accumulated with the truss | section 3.7. Shortening under the full store plus lean in the worst state of the filling sequence. |
 | 2 | Strength under axial load and bending | interaction ≤ 1.0 in all three loading states | AISC 360-22 Sections E3, F8 and H1 |
 | 3 | Wall slenderness | D/t ≤ 0.11 E/F<sub>y</sub> = {.11*e_fy:.1f} | AISC 360-22 Table B4.1a, case 9. No slender wall in compression. |
 | 4 | Member slenderness | L<sub>c</sub>/r ≤ {T['max_slenderness']} | AISC 360-22 Section E2, user note |
@@ -558,6 +586,8 @@ The last row is not part of the planned sequence. It is the moment that would ar
 Strength is checked for the uncontrolled fill as well as for the planned sequence. This is a decision made in this report so that a mistake in the fill order cannot overload the shaft. It costs nothing, because criterion 1 governs. The movement limit is checked for the planned sequence only.
 
 The thinnest plate in the list in the design file that meets all four is chosen.
+
+The shaft is treated as one part: its shortening and its lean are added before they are compared with the limit for one part.
 
 ### 5.5 Analysis
 
@@ -637,9 +667,9 @@ The results above assume that the top of the shaft does not move sideways. The s
 
 {f"**The restraint needs a stiffness of at least {sh['needed']/1e6:.0f} kN/mm** at the top of the shaft for the movement limit to be met with the selected wall. This is a design requirement for checks 7, 8 and 9. A moderately soft restraint gives slightly less lean than a rigid one, because the slope of the shaft changes sign up its height and the two ends balance better." if sh['needed'] else "The movement limit is met at every stiffness in the table."}
 
-### 5.10 The shaft before the support rig is in place
+### 5.10 Why the support rig is set before the pods
 
-In the present programme the pods are loaded on days {logistics.span('pods')[0]} to {logistics.span('pods')[1]} and the power levels, with the support rig, are lifted in on days {logistics.span('power')[0]} to {logistics.span('power')[1]}. The worst out-of-balance state occurs during pod loading, so in the present programme it would occur with the top of the shaft free.
+The worst out-of-balance state occurs while the pods are being loaded. If the top of the shaft were free then:
 
 | Selected tube, top free, worst state of the filling sequence | Value |
 | --- | ---: |
@@ -649,9 +679,11 @@ In the present programme the pods are loaded on days {logistics.span('pods')[0]}
 | Strength interaction, planned sequence | {free_cases['sequence']['ratio']:.2f} |
 | Strength interaction, uncontrolled fill | {free_cases['uncontrolled']['ratio']:.2f} |
 
-The shaft would not collapse, but the pods would be {free['movement']['lean_drop']*1000:.0f} mm out of level at their tips and the top of the shaft would be {abs(free_cases['sequence']['result']['top'])*1000:.0f} mm off the axis. An uncontrolled fill would use {'all' if free_cases['uncontrolled']['ratio']>=.995 else f"{free_cases['uncontrolled']['ratio']*100:.0f}%"} of the strength of the tube.
+The shaft would not collapse, but the pods would be {free['movement']['lean_drop']*1000:.0f} mm out of level at their tips and the top of the shaft would be {abs(free_cases['sequence']['result']['top'])*1000:.0f} mm off the axis.
 
-**Requirement: the top of the shaft is to be held before the first pod is hung.** Either the steel of the support rig is set on its wall mounts and connected to the shaft straight after the cage is lifted in, and the generator sets are landed on it later, or the shaft is braced to the wall by temporary works until the rig arrives. The programme and the animation do not yet show either. This is open item 1.
+The programme was changed in revision C to prevent this. The steel of the support rig is fabricated on site on days {logistics.span('rigfab')[0]} to {logistics.span('rigfab')[1]}, the cage is lifted in on day {logistics.span('cage')[0]}, and the rig is set on its wall mounts and connected to the shaft on days {logistics.span('rig')[0]} to {logistics.span('rig')[1]}. The first pod is hung on day {logistics.span('pods')[0]}. The generator sets are landed on the rig on days {logistics.span('power')[0]} to {logistics.span('power')[1]}, with the turbine level and the lid. The programme check in [logistics.py](../gpu_silo/logistics.py) fails if the rig is not in before the pods.
+
+The films still show the rig arriving with the generator sets. They will be re-cut at the next render.
 
 ### 5.11 Verification
 
@@ -665,7 +697,7 @@ The shaft would not collapse, but the pods would be {free['movement']['lean_drop
 
 A {st.SHAFT_D*1000:.0f} mm tube with a {st.inches(sec['wall_in'])} in ({sec['wall']*1000:.1f} mm) wall of A572 Grade 50 plate, fixed at its base and held at its top, carries the {cfg.TOTAL} pods with a highest strength interaction of {ch['ratio']:.2f}. The pod tips move {mv['total']*1000:.1f} mm against the limit of {sh['limit']*1000:g} mm, and this governs the wall. The shaft weighs {ch['mass']/1000:.1f} t.
 
-The result depends on the top restraint. It needs a stiffness of at least {sh['needed']/1e6 if sh['needed'] else 0:.0f} kN/mm, and it has to be in place before the first pod is hung.
+The result depends on the top restraint. It needs a stiffness of at least {sh['needed']/1e6 if sh['needed'] else 0:.0f} kN/mm, and it is in place before the first pod is hung.
 
 ### 5.13 Not covered by this check
 
@@ -706,17 +738,18 @@ The tip drops {st.SPAN/d['model']['depth']:.1f} mm for each millimetre of horizo
 
 The inertia torque is small. The drive will be sized by the friction of the hub bearing under the weight and the out-of-balance moment, and by holding a level against the lean of the shaft. Both depend on the bearing chosen under check 6.
 
-## 7. Checks 7, 8 and 9: support rig, shaft connector and wall mounts, design loads
+## 7. Checks 7 to 10: support rig, shaft connector and wall mounts, design loads
 
-These three checks were added in revision B. Holding the top of the shaft makes the rig, its connector and its mounts part of the structure that carries the pods. They are not designed in this revision. This section describes them as modelled and gives their loads.
+Checks 7, 8 and 9 were added in revision B and check 10 in revision C. Holding the top of the shaft makes the rig, its connector and its mounts part of the structure that carries the pods. None of the four is designed in this revision. This section describes them as modelled and gives their loads.
 
 ### 7.1 Description
 
-- **Support rig (check 7).** The steel deck under the diesel generator level: girders under the sets and a ring beam inside the wall, {cfg.POWER['floor_structure_m']:g} m deep, at {cfg.CROWN:.2f} m to {cfg.CROWN+cfg.POWER['floor_structure_m']:.2f} m above the foundation.
+- **Support rig (check 7).** The steel deck that carries the diesel generator sets: girders under the sets and a ring beam inside the wall, {cfg.POWER['floor_structure_m']:g} m deep, at {cfg.CROWN:.2f} m to {cfg.CROWN+cfg.POWER['floor_structure_m']:.2f} m above the foundation. It is set on its mounts straight after the cage, and the generator sets are landed on it later.
 - **Shaft connector (check 8).** A collar round the top of the shaft with {st.RIG['arms']} arms out to the ring beam, in the depth of the rig. The shaft runs up into the collar and can slide in it, so the connector passes sideways force and nothing else.
-- **Wall mounts (check 9).** {rig['mounts']} steel plates, {st.RIG['mount_plate_m'][0]:g} m × {st.RIG['mount_plate_m'][1]:g} m, cast flush into the bore face of the inner wall with studs into the concrete, evenly spaced round the ring beam and clear of the access wedge. They are set in the forms of the wall lift that contains them. They have to be flush for the cage to pass, so the rig carries a shoe at each mount that is welded to the plate once the rig is down.
+- **Rig mounts (check 9).** {rig['mounts']} steel plates, {st.RIG['mount_plate_m'][0]:g} m × {st.RIG['mount_plate_m'][1]:g} m, cast flush into the bore face of the inner wall with studs into the concrete, evenly spaced round the ring beam and clear of the access wedge. They are set in the forms of the wall lift that contains them. They have to be flush for the cage to pass, so the rig carries a shoe at each mount that is welded to the plate once the rig is down.
+- **Turbine level mounts and cast-in anchors (check 10).** The turbine level does not bear on the support rig. It has {rig['turbine_mounts']} mounts of its own of the same kind, {cfg.POWER['floor_structure_m']+plant_level:.2f} m higher, cast into the next wall lift. The rig has to pass these on its way down, which is a second reason for them to be flush.
 
-### 7.2 Loads from the shaft
+### 7.2 Loads from the shaft on the rig, its connector and its mounts
 
 | Loading state | Sideways force at the top of the shaft, kN | Factored, kN | Largest force on one mount, kN |
 | --- | ---: | ---: | ---: |
@@ -726,36 +759,37 @@ The direction of the force changes as the levels turn during a lift, so every mo
 
 The inner wall carries these forces in addition to the pressure of the store behind it. That is to be included in check 3.
 
-### 7.3 Gravity loads on the rig
+### 7.3 Gravity loads
 
 | Item | Mass, t | Basis |
 | --- | ---: | --- |
 | Diesel generator sets | {cfg.PROJECT['diesel']['sets']*cfg.PROJECT['diesel']['set_weight_t']:.1f} | {cfg.PROJECT['diesel']['sets']} × {cfg.PROJECT['diesel']['set_weight_t']:g} t |
 | Day tanks, full | {cfg.PROJECT['diesel']['day_tanks']*rig['tank_t']:.1f} | fuel only |
-| Deck steel | {rig['deck_t']:g} | allowance |
-| **Diesel generator level** | **{rig['diesel_t']:.0f}** | {kn(rig['vertical_mount'],0)} kN on each mount if shared equally |
-| Turbine level | {rig['turbine_t']:.0f} | {cfg.POWER['modules']} × {cfg.POWER['set_weight_t']:g} t and {rig['deck_t']:g} t of deck steel |
-| Both levels | {rig['diesel_t']+rig['turbine_t']:.0f} | {kn(rig['vertical_mount_both'],0)} kN on each mount if the turbine level also bears on the rig |
+| Rig steel | {rig['deck_t']:g} | allowance |
+| **On the {rig['mounts']} rig mounts** | **{rig['diesel_t']:.0f}** | {kn(rig['vertical_mount'],0)} kN on each mount if shared equally |
+| Turbine generator sets | {cfg.POWER['modules']*cfg.POWER['set_weight_t']:.1f} | {cfg.POWER['modules']} × {cfg.POWER['set_weight_t']:g} t |
+| Turbine deck steel | {rig['deck_t']:g} | allowance |
+| **On the {rig['turbine_mounts']} turbine level mounts** | **{rig['turbine_t']:.0f}** | {kn(rig['vertical_turbine_mount'],0)} kN on each mount if shared equally |
 
-The weight of the rig and its machines does not come onto the shaft.
+None of this weight comes onto the shaft. Before the generator sets are landed, the rig mounts carry the rig steel alone, {rig['deck_t']*st.G/rig['mounts']:.0f} kN each, together with the sideways force in section 7.2.
 
 ### 7.4 Requirements from check 1
 
 1. Sideways stiffness at the top of the shaft of at least {sh['needed']/1e6 if sh['needed'] else 0:.0f} kN/mm, through the connector, the rig and the mounts together.
-2. The restraint in place before the first pod is hung (section 5.10).
+2. The rig set, welded to its mounts and connected to the shaft before the first pod is hung. It must be able to take the force in section 7.2 without the weight of the generator sets on it.
 3. No vertical load from the rig onto the shaft, and freedom for the shaft to shorten by {mv['shortening']*1000:.0f} mm or more inside the collar.
 
 ## 8. Open items
 
 | No. | Item | Affects | Needed from |
 | ---: | --- | --- | --- |
-| 1 | The top of the shaft must be held before the pods are loaded: set the rig steel early, or brace the shaft temporarily | checks 1, 7, 8 and 9, the programme and the animation | project |
+| 1 | Allowance for the root connection within the {st.TIP['accumulated_mm']:g} mm accumulated limit: {c['budget']['reserve']*1000:.1f} mm is left with the present sizes (section 3.7) | checks 1, 2 and 6 | project, with check 6 |
 | 2 | Site and seismic design category, for the lateral case | all structural checks | project |
 | 3 | Weight of a rack in operation, and of the CDU, pump and coolant | checks 1, 2, 4 and 6 | equipment supplier |
-| 4 | Whether the {c['limit']*1000:g} mm limit is meant for the truss and the shaft separately, as applied here, or for the two together. The tolerance of the wall coupling decides it. | checks 1, 2 and 6 | project and coupling supplier |
-| 5 | Does the turbine level bear on the support rig or on mounts of its own? | checks 3, 7 and 9 | project |
-| 6 | Weight of the hub, bearing and access floor at each level | checks 1 and 6 | check 6 |
-| 7 | Comparison of section properties with the AISC Manual | check 2 | checker |
+| 4 | Tolerance of the wall coupling, to confirm the limits on tip movement | checks 1, 2 and 6 | coupling supplier |
+| 5 | Weight of the hub, bearing and access floor at each level | checks 1 and 6 | check 6 |
+| 6 | Comparison of section properties with the AISC Manual | check 2 | checker |
+| 7 | The films still show the support rig arriving with the generator sets | animation | next render |
 
 ## Appendix A: member forces in the pod truss
 

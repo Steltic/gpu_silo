@@ -33,7 +33,10 @@ CDU_ZONE = cfg.SECTION
 SPAN = RACK_ZONE + CDU_ZONE
 TIP_R = ROOT + SPAN
 TRUSS_SPACING = round(cfg.BODY_WIDTH + (cfg.FRAME_WIDTH - cfg.BODY_WIDTH) / 2, 6)
-LIMIT = T["tip_deflection_limit_mm"] / 1000
+# No one part may move a pod tip by more than the single limit, and all the parts together by no more than the accumulated limit.
+TIP = P["tip_movement"]
+LIMIT = TIP["single_mm"] / 1000
+ACCUMULATED = TIP["accumulated_mm"] / 1000
 SHAFT = P["shaft"]
 RIG = P["top_rig"]
 SHAFT_D = 2 * SHAFT_R
@@ -397,7 +400,8 @@ def shaft_check(section, c, stiffness=None):
     lean = next(k for k in cases if k["key"] == "sequence")["result"]["lean"]
     movement = dict(shortening=max(drops), lean=lean, lean_drop=lean * TIP_R, total=max(drops) + lean * TIP_R, by_level=drops)
     ok = dict(wall=lam <= .11 * E / FY_SHAFT, flexure=lam < .45 * E / FY_SHAFT, strength=max(k["ratio"] for k in cases) <= 1,
-              slenderness=slender <= T["max_slenderness"], movement=movement["total"] <= SHAFT["tip_drop_limit_mm"] / 1000 + 1e-12)
+              slenderness=slender <= T["max_slenderness"], movement=movement["total"] <= LIMIT + 1e-12,
+              accumulated=c["design"]["tip"] + movement["total"] <= ACCUMULATED + 1e-12)
     return dict(section=section, ei=ei, line=line, slender=slender, fcr=fcr, pc=pc, mc=mc, vc=vc, compact=lam <= compact, cases=cases,
                 movement=movement, ok=ok, passes=all(ok.values()), ratio=max(k["ratio"] for k in cases),
                 mass=section["kg_m"] * length)
@@ -409,7 +413,7 @@ def shaft_design(c):
     if chosen is None:
         raise ValueError("No wall thickness in structure.shaft meets the criteria. Add thicker plate, a larger shaft or relax the limit.")
     section = chosen["section"]
-    limit = SHAFT["tip_drop_limit_mm"] / 1000
+    limit = LIMIT
     free = shaft_check(section, c, 0)
     springs = [(k, shaft_check(section, c, k * 1e6)) for k in SHAFT["rig_stiffness_kn_per_mm"]]
     # Stiffness of the top restraint at which the movement just meets the limit.
@@ -438,7 +442,8 @@ def rig_loads(c):
         out["cases"].append(dict(key=case["key"], name=case["name"], reaction=r, factored=T["dead_load_factor"] * r,
                                  mount=2 * r / mounts))
     out["vertical_mount"] = diesel_level * 1000 * G / mounts
-    out["vertical_mount_both"] = (diesel_level + turbine_level) * 1000 * G / mounts
+    out["turbine_mounts"] = P["turbine_mounts"]["wall_mounts"]
+    out["vertical_turbine_mount"] = turbine_level * 1000 * G / out["turbine_mounts"]
     return out
 
 
@@ -457,6 +462,9 @@ def compute():
     c["unbalance"] = unbalance(c["moment_axis"])
     c["shaft"] = shaft_design(c)
     c["rig"] = rig_loads(c)
+    moved = c["shaft"]["chosen"]["movement"]["total"]
+    c["budget"] = dict(truss=design["tip"], shaft=moved, total=design["tip"] + moved, limit=ACCUMULATED,
+                       reserve=ACCUMULATED - design["tip"] - moved)
     drive = P["level_drive"]
     c["index_alpha"] = 4 * (2 * math.pi / cfg.BAYS) / drive["index_seconds"]**2
     c["index_torque"] = c["inertia_level"] * c["index_alpha"]
@@ -486,6 +494,7 @@ def check():
         total = sum(m for _, m in case["couples"])
         assert abs(case["result"]["base"] - (total - case["result"]["reaction"] * height)) < 1e-6 * max(1., abs(total))
     assert shaft["chosen"]["passes"] and shaft["chosen"]["movement"]["total"] <= shaft["limit"]
+    assert C["budget"]["total"] <= ACCUMULATED and C["budget"]["reserve"] >= 0
 
 
 def summary():

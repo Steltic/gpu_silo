@@ -318,10 +318,22 @@
         "end": 2
       },
       {
+        "key": "rigfab",
+        "name": "Support rig steel fabricated",
+        "start": -3,
+        "end": 3
+      },
+      {
         "key": "cage",
         "name": "Lift in the pod cage",
         "start": 3,
         "end": 3
+      },
+      {
+        "key": "rig",
+        "name": "Support rig set, shaft held",
+        "start": 4,
+        "end": 5
       },
       {
         "key": "dock",
@@ -355,7 +367,7 @@
       },
       {
         "key": "fabricate",
-        "name": "Power levels fabricated on site",
+        "name": "Power sets made ready on site",
         "start": 9,
         "end": 18
       },
@@ -379,7 +391,7 @@
       },
       {
         "key": "power",
-        "name": "Power levels and lid lifted in",
+        "name": "Power sets and lid lifted in",
         "start": 19,
         "end": 21
       },
@@ -422,8 +434,11 @@
       "density_kg_m3": 7850,
       "design_wall_factor": 0.93
     },
+    "tip_movement": {
+      "single_mm": 5.0,
+      "accumulated_mm": 10.0
+    },
     "pod_truss": {
-      "tip_deflection_limit_mm": 5.0,
       "sensitivity_limits_mm": [
         10,
         7.5,
@@ -544,9 +559,6 @@
       "connection_allowance": 0.1,
       "housing_kg_per_m2": 10
     },
-    "level_drive": {
-      "index_seconds": 60
-    },
     "shaft": {
       "steel": "ASTM A572 Grade 50 plate, rolled and seam welded",
       "fy_mpa": 345,
@@ -561,7 +573,6 @@
         1.75,
         2
       ],
-      "tip_drop_limit_mm": 5.0,
       "effective_length_factor": 0.8,
       "hub_and_floor_t_per_level": 3.0,
       "services_kg_per_m": 300,
@@ -580,11 +591,17 @@
         0.95
       ],
       "arms": 4
+    },
+    "turbine_mounts": {
+      "wall_mounts": 16
+    },
+    "level_drive": {
+      "index_seconds": 60
     }
   },
   "design_checks": {
     "document": "GS-STR-001",
-    "revision": "B",
+    "revision": "C",
     "date": "2026-11-22",
     "status": "Preliminary, issued for review. Not checked. Not for construction.",
     "prepared_by": "Claude (Anthropic), for Steltic",
@@ -636,7 +653,7 @@
       {
         "id": 7,
         "title": "Top support rig",
-        "scope": "The steel rig at the crown that carries the diesel generator level and holds the top of the shaft",
+        "scope": "The steel rig at the crown that carries the diesel generator sets and holds the top of the shaft. Set on its mounts straight after the cage.",
         "status": "Design loads issued. Design not started.",
         "section": "7"
       },
@@ -651,6 +668,13 @@
         "id": 9,
         "title": "Cast-in wall mounts",
         "scope": "The mounts cast into the inner wall that carry the support rig, and the wall locally",
+        "status": "Design loads issued. Design not started.",
+        "section": "7"
+      },
+      {
+        "id": 10,
+        "title": "Turbine level mounts and cast-in anchors",
+        "scope": "The turbine level's own mounts and the anchors cast into the inner wall for them",
         "status": "Design loads issued. Design not started.",
         "section": "7"
       }
