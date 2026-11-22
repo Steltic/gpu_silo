@@ -10,6 +10,7 @@ from pathlib import Path
 from . import design as cfg
 from . import logistics
 from . import structure as st
+from . import walls
 
 US_GAL = 0.003785411784  # m3
 G = 9.80665
@@ -308,6 +309,7 @@ def markdown():
     lg = logistics.C
     sc = st.C
     sd = sc["design"]
+    wl = walls.C
     lines = f"""# Design calculations
 
 This file is generated from [project.json](project.json) by `python -m gpu_silo calcs`. Change an input, run the command and commit both files. The same numbers appear on the design panels in the animation.
@@ -533,7 +535,7 @@ The backup covers black start, controls, the cooling plant and about a fifth of 
 2. **Rack heat.** {c['rack_kw']:.0f} kW per rack is {c['heat_mw']:.0f} MW over {c['racks']} racks. Published figures for the Vera Rubin NVL72 run from about 190 to 230 kW, so the upper end would be {c['racks']*.23:.0f} MW.
 3. **Generation.** Two {pw['module_output_mw']:g} MW sets match the {c['heat_mw']:.0f} MW load with no spare, and pumps, fans and conversion losses add to that load. The diesels cover {c['diesel_share']*100:.0f}%.
 4. **Fit of the power levels.** The two levels need {c['levels_need']:.2f} m and have {c['levels_have']:.2f} m, so the turbine sets stand {(c['levels_have']-c['levels_need'])*1000:.0f} mm under the lid. The floor structure for {c['top_weight_t']:.0f} t is an allowance, not a design.
-5. **Wall design.** {c['head_kpa']:.0f} kPa at the base puts about {c['outer_hoop_mpa']:.0f} MPa of hoop tension in a {s['outer_wall_m']*1000:.0f} mm outer skin. That needs post-tensioning or a thicker wall, and the inner skin needs a buckling check under external pressure.
+5. **Wall design.** {c['head_kpa']:.0f} kPa at the base puts about {c['outer_hoop_mpa']:.0f} MPa of hoop tension in a {s['outer_wall_m']*1000:.0f} mm outer skin, which cannot be reinforced for it. Check 3 of the [design report](report.md#8-check-3-silo-walls) proposes walls without post-tensioning: an outer wall of {wl['lifts'][0]['t']*1000:.0f} mm at the base stepping to {wl['lifts'][-1]['t']*1000:.0f} mm, and an inner wall of {wl['inner']['t']*1000:.0f} mm. They would cut the store from {wl['now_volume']:,.0f} m³ to {wl['volume']:,.0f} m³ and nearly double the concrete. They are not yet adopted: this file and the model still use the walls as drawn.
 6. **Air in the bore.** There is no general ventilation. The bore is surrounded by a store at 45 to 55 °C, so it will sit near that temperature. Work inside needs cooled air or short shifts, and this is not designed.
 7. **Heat next to the pods.** Each turbine rejects about {c['turbine_heat_mw']:.0f} MW, mostly up the stack at {pw['exhaust_temperature_c']:.0f} °C. Insulation of the stacks and the turbine level above the pods and the store is not designed.
 8. **Cooler air path.** Three coolers stacked vertically discharge outward at {c['cooler_face_ms']:.1f} m/s. Recirculation between rows and between the two tiers has not been checked.
