@@ -77,6 +77,8 @@ jobs:
           mono --version | head -n 1
       - name: Check that the calculations match the design file
         run: python -m gpu_silo calcs --check
+      - name: Export and validate the operating-state IFC4 deliverable
+        run: python -m gpu_silo ifc
       - name: Render the long film and its animated GLB
         run: python -m gpu_silo build
       - name: Verify the long film
@@ -95,6 +97,7 @@ jobs:
         with:
           name: gpu-silo-animation-${{ needs.source.outputs.tree }}
           path: |
+            renders/GPU_Silo.ifc
             renders/GPU_Silo.mp4
             renders/GPU_Silo.glb
             renders/silo_short.mp4
@@ -130,7 +133,7 @@ jobs:
           if [[ "$current" != "$GITHUB_SHA" ]]; then exit 0; fi
           tag="render-$GITHUB_SHA"
           args=(--repo "$GITHUB_REPOSITORY")
-          files=(renders/GPU_Silo.mp4 renders/GPU_Silo.glb renders/silo_short.mp4 renders/silo_short.glb)
+          files=(renders/GPU_Silo.ifc renders/GPU_Silo.mp4 renders/GPU_Silo.glb renders/silo_short.mp4 renders/silo_short.glb)
           if gh release view "$tag" "${args[@]}" >/dev/null 2>&1; then
             if [[ "$(gh release view "$tag" "${args[@]}" --json isDraft --jq .isDraft)" == true ]]; then
               gh release upload "$tag" "${files[@]}" "${args[@]}" --clobber
@@ -139,5 +142,5 @@ jobs:
           else
             gh release create "$tag" "${files[@]}" "${args[@]}" \
               --target "$GITHUB_SHA" --title "GPU Silo · ${GITHUB_SHA:0:7}" \
-              --notes "Watch silo_short.mp4 for the 28-day build and GPU_Silo.mp4 for the full presentation. The editable GLBs and the source snapshot belong to commit $GITHUB_SHA." --latest
+              --notes "Watch silo_short.mp4 for the 28-day build and GPU_Silo.mp4 for the full presentation. GPU_Silo.ifc contains the complete installed facility. The editable GLBs, IFC and source snapshot belong to commit $GITHUB_SHA." --latest
           fi

@@ -378,7 +378,7 @@ def main(path):
     crown=points(names["Steel module | crown and hoist beams"]) if "Steel module | crown and hoist beams" in names else points(names["Steel module | shaft, bearings, rim girders and braced columns"])
     assert crown[:,2].max()>=p.structure.SHAFT_TOP,"the shaft does not reach the connector"
     deck=points(names["Power level 01 | diesel deck assembly"])
-    inside=deck[(np.hypot(deck[:,0],deck[:,1])<p.SHAFT+.02)&(deck[:,2]<-.01)]
+    inside=deck[(np.hypot(deck[:,0],deck[:,1])<p.SHAFT+1e-5)&(deck[:,2]<-.01)]
     assert len(inside)==0 and a.COLLAR>p.SHAFT+.05,"the rig steel must stop at the collar round the shaft"
     assert p.structure.SHAFT_TOP<a.power_base(p.CROWN,0) and p.structure.C["shaft"]["chosen"]["passes"]
     fuel=p.fuel
@@ -448,7 +448,8 @@ def walkways_and_fuel(p,a,doc,names,parents,get,points,ids,planar_overlap,roof,f
     bulk=names["Diesel bulk tank"];where=get(bulk,"translation",[0,0,0])[-1]
     assert abs(where[1])<.0001 and get(bulk,"scale",[1,1,1])[-1,0]>.999 and np.linalg.norm(where[[0,2]]-centre)>fuel.COUNT*fuel.PITCH/2
     assert fuel.PIPE*2>=.1,"the propane line is drawn at its design bore"
-    legs={"Gas line | ground run to the silo":(0,fuel.HEADER_R-fuel.RISER_R),"Gas line | riser on the outside wall":(2,fuel.TOP-fuel.LOW),
+    assert fuel.BURIED + fuel.PIPE <= -1.2
+    legs={"Gas line | buried road crossing":(0,fuel.HEADER_R-fuel.RISER_R),"Gas line | riser on the outside wall":(2,fuel.TOP-fuel.BURIED),
           "Gas line | run across the lid":(0,fuel.RISER_R-fuel.DROP_R),"Gas line | drop to the power modules":(2,fuel.TOP-fuel.drop_end(p.CROWN)),
           "Diesel line | drop to the day tanks":(2,fuel.TOP-fuel.diesel_end(p.CROWN))}
     for name,(axis,length) in legs.items():

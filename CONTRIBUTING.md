@@ -42,6 +42,8 @@ python -m gpu_silo stills 60 1700 3800 4800 6100 7100
 
 The outputs are `renders/GPU_Silo.mp4` and `renders/GPU_Silo.glb`.
 
+Run `python -m gpu_silo ifc` to export the installed facility and verify its IFC4 schema, inventory, placements and geometric bodies. Run `python -m gpu_silo ifc --check --output path/to/model.ifc` to reopen an existing exchange. The render release includes the verified IFC.
+
 The short film of the build is a second edition of the same model. Add `--film short` to `build`, `check` and `stills`, and set `GPU_SILO_FILM=short` for the movie check:
 
 ```shell

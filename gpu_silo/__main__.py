@@ -6,6 +6,9 @@ from pathlib import Path
 def main():
     parser = argparse.ArgumentParser(prog="python -m gpu_silo", description=__doc__)
     commands = parser.add_subparsers(dest="command", required=True)
+    bim = commands.add_parser("ifc", help="export the complete operating-state IFC4 coordination model")
+    bim.add_argument("--output", type=Path, default=Path("renders/GPU_Silo.ifc"))
+    bim.add_argument("--check", action="store_true", help="reopen and validate an existing IFC")
     build = commands.add_parser("build", help="build the movie and the editable model")
     build.add_argument("--output", type=Path, default=Path("renders"))
     build.add_argument("--scene-only", action="store_true", help="export the GLB only (needs Python and NumPy)")
@@ -23,6 +26,15 @@ def main():
         command.add_argument("--film", choices=("long", "short"), default="long",
                              help="long is the full presentation, short is the build only (silo_short)")
     args = parser.parse_args()
+    if args.command == "ifc":
+        import os
+        os.environ["GPU_SILO_FILM"] = "short"
+        from . import bim
+        if not args.check:
+            print(f"{bim.write(args.output)} tagged assets written to {args.output}")
+        from .validation.verify_ifc import verify
+        verify(args.output)
+        return
     if getattr(args, "film", "long") == "short":
         import os
         os.environ["GPU_SILO_FILM"] = "short"
@@ -32,8 +44,8 @@ def main():
         print(f"{path} ({seconds:.1f} s)")
         return
     if args.command == "calcs":
-        from . import calcs, connection, foundation, layering, reinforcement, report, structure, thermal, walls
-        checks = (structure, walls, thermal, reinforcement, foundation, connection)
+        from . import calcs, completion, connection, foundation, layering, reinforcement, report, structure, thermal, walls
+        checks = (structure, walls, thermal, reinforcement, foundation, connection, completion)
         if args.check:
             if not calcs.current():
                 parser.exit(1, "A generated design document is out of date. Run: python -m gpu_silo calcs\n" + "\n".join(calcs.differences()) + "\n")

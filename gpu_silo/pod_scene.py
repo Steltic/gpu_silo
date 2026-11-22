@@ -28,6 +28,7 @@ from . import film
 from . import cagebuild
 from . import coating
 from . import connection
+from . import components
 from . import layering
 from . import shortfilm
 from . import structure
@@ -287,7 +288,7 @@ def cage_bounds():
     return cuts+[CROWN+.2]
 
 
-def cage_parts():
+def cage_parts(include_shaft=True):
     """The cage as it is built: a module for each pod level and one for the crown. Together they are the whole cage."""
     cuts=cage_bounds()
     parts=[newsteel(f"Steel module | level {k+1:02}" if k<LEVELS else "Steel module | crown and hoist beams") for k in range(CAGE_TOP)]
@@ -297,15 +298,18 @@ def cage_parts():
     for k,m in enumerate(parts):
         # The shaft runs on above the crown into the collar of the support rig.
         z0,z1=max(-.08,cuts[k]),(structure.SHAFT_TOP+.15 if k==CAGE_TOP-1 else min(CROWN,cuts[k+1]))
-        annulus(m,0,SHAFT,z0,z1,"617b79",n=28)
+        if include_shaft:
+            annulus(m,SHAFT-structure.C["shaft"]["chosen"]["section"]["wall"],SHAFT,z0,z1,"617b79",n=48)
         for j in range(perimeter_posts):
             a=ENTRY+(j+.5)*TAU/perimeter_posts
             s.bar(m,s.polar((s.RI-0.065),a,max(0,cuts[k])),s.polar((s.RI-0.065),a,z1),.078,STEEL)
     m=parts[0]
-    annulus(m,0,.78,-.08,.18,DARK,n=24)
-    for a in [j*TAU/12 for j in range(12)]:
-        x,y,_=s.polar(.69,a,0)
-        end_box(m,x-.036,y-.036,x+.036,y+.036,.18,.235,"b69b70")
+    from . import foundation
+    base=foundation.BASE
+    annulus(m,base["ring_inside_m"]/2,base["ring_outside_m"]/2,0,.045,DARK,n=48)
+    for j in range(base["bolts"]):
+        a=s.TAU*j/base["bolts"]
+        s.bar(m,s.polar(SHAFT,a,.12),s.polar(base["ring_outside_m"]/2-.04,a,.06),.024,STEEL,.12)
     # A recessed base grille and overhead crown connect the inner and outer structures.
     for j in range(BAYS):
         a=ENTRY+(j+.5)*UNIFORM
@@ -665,6 +669,7 @@ def build():
         care.install(scene,node,sys.modules[__name__])
         service.install(scene,node,sys.modules[__name__])
     fuel.install(scene,node,sys.modules[__name__])
+    components.install(scene,node,sys.modules[__name__])
     scene.storage_inspection=(FIRST_POD,FILLED+plant.VENT_END)
     traffic.install(scene,node,sys.modules[__name__])
     yard.install_terminal(scene,node,sys.modules[__name__])

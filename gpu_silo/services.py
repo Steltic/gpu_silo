@@ -11,7 +11,9 @@ BAYS=cfg.BAYS
 PITCH=cfg.STORE["pitch_m"]
 LEVELS=cfg.LEVELS
 PORT_Z=round(cfg.STORE["lowest_berth_m"]+cfg.BODY_HEIGHT/2,8)
-PORT_RADIUS=.106
+BRANCH_BORE=cfg.PROJECT["coordination"]["services"]["pod_branch_id_m"]/2
+PORT_OFFSET=.083
+PORT_RADIUS=.205
 PORT_ANGLES=[s.ENTRY+TAU/BAYS*(i+.5) for i in range(BAYS)]
 POD_FACE=cfg.STORE["root_radius_m"]+cfg.BODY_LENGTH
 WALL_FACE=s.RI+.009
@@ -78,28 +80,27 @@ def station_mesh():
     """A sleeve through the inner skin only. The pod's CDU draws from and returns to the store through it."""
     m=s.Mesh("Cast-in pod service sleeve | supply and return through the inner wall")
     m.material=3
-    barrel(m,WALL_FACE,TANK_END,PORT_RADIUS,BRONZE,.082)
-    barrel(m,s.RO_INNER+.02,s.RO_INNER+.065,.157,"89938c",.083)
-    barrel(m,WALL_FACE,WALL_FACE+.040,.142,"799794",.094)
-    barrel(m,WALL_FACE+.005,WALL_FACE+.040,.090,SEAL)
-    for lateral,col in [(-.043,INLET),(.043,RETURN)]:
-        pipe(m,(WALL_FACE+.001,lateral,.015),(TANK_END+.001,lateral,.015),.028,col,ri=.017)
+    barrel(m,WALL_FACE,TANK_END,PORT_RADIUS,BRONZE,.19)
+    barrel(m,s.RO_INNER+.02,s.RO_INNER+.065,.26,"89938c",.19)
+    barrel(m,WALL_FACE,WALL_FACE+.040,.226,"799794",.18)
+    for lateral,col in [(-PORT_OFFSET,INLET),(PORT_OFFSET,RETURN)]:
+        pipe(m,(WALL_FACE+.001,lateral,.015),(TANK_END+.001,lateral,.015),BRANCH_BORE+.006,col,ri=BRANCH_BORE)
     # The two lines end here. The store pipes of layering.py take them to the bottom and the top of the store.
     return m
 
 
 def moving_parts(face=POD_FACE):
     socket=s.Mesh("Pod service socket | flush end face")
-    barrel(socket,face-.027,face+.0008,.116,"677575")
-    barrel(socket,face+.0008,face+.0019,.080,"324e52")
+    barrel(socket,face-.027,face+.0008,.192,"677575",.17)
+    for sign in (-1,1):
+        y=sign*PORT_OFFSET
+        pipe(socket,(face-.33,y,0),(face-.02,y,0),BRANCH_BORE+.013,"354a4c",ri=BRANCH_BORE)
     slide=s.Mesh("Retractable service plug | telescopic stroke")
-    barrel(slide,0,WALL_FACE-face,.064,"94bdb8")
-    # A visible shoulder identifies the latch even at small screen sizes.
-    barrel(slide,.065,.090,.086,"cba46e")
-    # The flexible section that takes up movement between the pod and the wall, drawn as a bellows.
-    for k in range(4):
-        barrel(slide,.008+k*.014,.016+k*.014,.080,"2e3a3d")
-    barrel(slide,.124,WALL_FACE-face,.085,"4d9b8e")
+    for sign in (-1,1):
+        y=sign*PORT_OFFSET
+        pipe(slide,(0,y,0),(WALL_FACE-face,y,0),BRANCH_BORE+.006,"94bdb8",ri=BRANCH_BORE)
+        for k in range(4):
+            pipe(slide,(.008+k*.024,y,0),(.017+k*.024,y,0),BRANCH_BORE+.014,"2e3a3d",ri=BRANCH_BORE)
     lamp=s.Mesh("Service connected | status lamp")
     lamp.material=6
     barrel(lamp,face+.002,face+.005,.056,"81e3bc")

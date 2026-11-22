@@ -3,9 +3,9 @@
 | | |
 | --- | --- |
 | Document | GS-STR-001 |
-| Revision | I, 2026-11-22 |
+| Revision | J, 2026-11-22 |
 | Status | Preliminary, issued for review. Not checked. Not for construction. |
-| Prepared by | Claude (Anthropic), for Steltic |
+| Prepared by | Revisions A–I by Claude (Anthropic), revision J by Codex for Steltic |
 | Checked by | Not yet checked |
 | Approved by | Not yet approved |
 
@@ -20,6 +20,7 @@
 | G | 2026-11-22 | Check 4 carried out on assumed ground: the slab as drawn is adequate, the shaft base is designed to stand alone, and the fill settles the walls against the shaft. Check 6 carried out, first pass: root connection, hub, bearings and drive. Allowance for the hub raised to 4 t. A thicker shaft wall proposed for the accumulated limit. |
 | H | 2026-11-22 | Check 4 corrected. The springs of revision G were values for a small test plate and were about ten times too stiff for soil under a slab this wide. The grounds are now set by modulus: settlement on soil is tens of millimetres, the fill lowers the walls 3 mm against the shaft on dense sand or stiff clay, and the slab as drawn is not strong enough on dense sand or stiff clay. |
 | I | 2026-11-22 | Decisions of the project adopted: shaft wall 2 in, base slab 2 m on ground taken as dense sand or stiff clay, a flexible section in each wall connection, and the hub arrangement of check 6. The build is not to be constrained: the wall connections are not left until after the fill, and the order of loading stays free. The model draws the hub drum, beam arms at the pod roots and the flexible sections. |
+| J | 2026-11-22 | Crown floor girders, sliding shaft guide, separate anchor groups, reference lateral and services envelopes, recorded owner assumptions and the operating IFC. |
 
 This report is generated from [project.json](project.json) by `python -m gpu_silo calcs`. Every number in it is calculated from the inputs in that file by [structure.py](../gpu_silo/structure.py), [walls.py](../gpu_silo/walls.py), [thermal.py](../gpu_silo/thermal.py) and [reinforcement.py](../gpu_silo/reinforcement.py). To change a result, change an input and run the command.
 
@@ -37,7 +38,7 @@ This report is generated from [project.json](project.json) by `python -m gpu_sil
 10. [Reinforcement of the outer wall: options](#10-reinforcement-of-the-outer-wall-options)
 11. [Check 4: foundation](#11-check-4-foundation)
 12. [Check 6: root connection, hub and level drive](#12-check-6-root-connection-hub-and-level-drive)
-13. [Open items](#13-open-items)
+13. [Assumptions and release conditions](#13-assumptions-and-release-conditions)
 14. [Appendix A: member forces in the pod truss](#appendix-a-member-forces-in-the-pod-truss)
 15. [Appendix B: section properties](#appendix-b-section-properties)
 
@@ -58,7 +59,7 @@ This revision covers:
 - check 4, the base slab and the anchorage of the shaft, on assumed ground;
 - check 6, the root connection of a pod, the hub of a level and its drive, as a first pass.
 
-Lateral load is not covered by any check yet, because the site is not fixed. It is the main limitation of this revision.
+Section 7.8 screens lateral loading against a stated reference envelope. Site-specific dynamic and geotechnical verification requires an identified site.
 
 ## 2. Register of design checks
 
@@ -70,10 +71,10 @@ Lateral load is not covered by any check yet, because the site is not fixed. It 
 | 4 | Foundation | Base slab, bearing pressure, and the anchorage of the shaft base | Slab 2.0 m on dense sand or stiff clay, adopted. Shaft base designed. For review. The ground is not known. | [Section 11](#11-check-4-foundation) |
 | 5 | Heat balance of the store | Water-glycol temperatures, mixing and ride-through in the store | First pass complete. The store is layered: pipes, cover and overflow are in the model. For review. | [Section 9](#9-check-5-heat-balance-of-the-store) |
 | 6 | Pod-to-shaft connection and level drive | Root connection of the pod, the hub at each level, and the capacity of the drive that turns a level on the fixed shaft | First pass: root connection, hub, bearings and drive sized. Arrangement adopted. For review. | [Section 12](#12-check-6-root-connection-hub-and-level-drive) |
-| 7 | Top support rig | The steel rig at the crown that carries the diesel generator sets and holds the top of the shaft. Set on its mounts straight after the cage. | Design loads issued. Design not started. | [Section 7](#7-checks-7-to-10-support-rig-shaft-connector-and-wall-mounts-design-loads) |
-| 8 | Shaft-top connector | The connector that puts the horizontal force from the top of the shaft into the support rig | Design loads issued. Design not started. | [Section 7](#7-checks-7-to-10-support-rig-shaft-connector-and-wall-mounts-design-loads) |
-| 9 | Cast-in wall mounts | The mounts cast into the inner wall that carry the support rig, and the wall locally | Design loads issued. Design not started. | [Section 7](#7-checks-7-to-10-support-rig-shaft-connector-and-wall-mounts-design-loads) |
-| 10 | Turbine level mounts and cast-in anchors | The turbine level's own mounts and the anchors cast into the inner wall for them | Design loads issued. Design not started. | [Section 7](#7-checks-7-to-10-support-rig-shaft-connector-and-wall-mounts-design-loads) |
+| 7 | Top support rig | The steel rig at the crown that carries the diesel generator sets and holds the top of the shaft. Set on its mounts straight after the cage. | Fabricated rail and open ring sized at actual mount positions. Coordination design for review. | [Section 7](#7-checks-7-to-10-support-rig-shaft-connector-and-wall-mounts-design-loads) |
+| 8 | Shaft-top connector | The connector that puts the horizontal force from the top of the shaft into the support rig | Sliding collar, four arms, pad pressure and stiffness checked for the assumed envelope. | [Section 7](#7-checks-7-to-10-support-rig-shaft-connector-and-wall-mounts-design-loads) |
+| 9 | Cast-in wall mounts | The mounts cast into the inner wall that carry the support rig, and the wall locally | Cast-in rig plates, positive keys and developed anchor reinforcement sized for review. | [Section 7](#7-checks-7-to-10-support-rig-shaft-connector-and-wall-mounts-design-loads) |
+| 10 | Turbine level mounts and cast-in anchors | The turbine level's own mounts and the anchors cast into the inner wall for them | Independent turbine rail, ring, seats and anchor groups sized for review. | [Section 7](#7-checks-7-to-10-support-rig-shaft-connector-and-wall-mounts-design-loads) |
 
 ## 3. Basis of design
 
@@ -334,7 +335,9 @@ HSS6×3×3/16 chords with HSS2×2×3/16 verticals and diagonals carry the pod wi
 
 The result holds for gravity load only. The items in section 4.11 could change the section sizes, the lateral case most of all, and the design should not be treated as final until they are closed.
 
-### 4.11 Not covered by this check
+### 4.11 Interfaces beyond the plane truss check
+
+Revision J dispositions and release evidence for these interfaces are in the [assumption register](assumptions.md).
 
 1. **Lateral load.** The pair of trusses is only 0.68 m wide and cantilevers 7.16 m sideways as well as downwards. Earthquake load and the starting and stopping of a level act sideways on it. The site and its seismic design category are not yet fixed. This case is likely to govern the chords and the plan bracing.
 2. **Welded joints.** The connections between hollow sections are to be designed to AISC 360-22 Chapter K. Only the width ratio is checked here.
@@ -540,11 +543,11 @@ A 1160 mm tube with a 2 in (50.8 mm) wall of A572 Grade 50 plate, fixed at its b
 
 The result depends on the top restraint. It needs a stiffness of at least 16 kN/mm, and it is in place before the first pod is hung.
 
-### 5.13 Not covered by this check
+### 5.13 Interfaces beyond the shaft gravity check
 
 1. **Lateral load.** Earthquake load on 572 t of pods is likely to govern the shaft, its base, the connector, the rig and the mounts. It waits for the site.
 2. **Local loads at the hubs.** Each hub puts 740 kN of weight and the pull and thrust of eight pod roots into the wall of the tube. Ring stiffeners or thicker cans at the hubs are to be designed with the hub under check 6.
-3. **Openings.** Power and data pass down the inside of the shaft and have to come out at every level. The openings reduce the section and are not yet sized.
+3. **Openings.** The revision J shaft carries continuous MV bus to grade. The sidewall has no intermediate power apertures. Provide local end-entry fittings and independent optical joints.
 4. **Base connection.** Anchor rods, base plate and the foundation under them are part of check 4.
 5. **Plumb.** A shaft that is out of plumb tilts every pod. One part in a thousand moves a pod tip 8.4 mm. The hubs will have to be set level independently of the shaft, or the erection tolerance set to suit.
 6. **Torsion.** The drive of a level reacts on the shaft. The torque is small (section 6.2) and is not checked.
@@ -581,7 +584,7 @@ The inertia torque is small. The drive is sized by the friction of the hub beari
 
 ## 7. Checks 7 to 10: support rig, shaft connector and wall mounts, design loads
 
-Checks 7, 8 and 9 were added in revision B and check 10 in revision C. Holding the top of the shaft makes the rig, its connector and its mounts part of the structure that carries the pods. None of the four is designed in this revision. This section describes them as modelled and gives their loads.
+Checks 7, 8 and 9 were added in revision B and check 10 in revision C. Holding the top of the shaft makes the rig, its connector and its mounts part of the structure that carries the pods. Sections 7.1–7.4 preserve the design brief. Sections 7.5–7.8 give the sized members, mount reactions, spring calculation and site screening used for revision J.
 
 ### 7.1 Description
 
@@ -598,7 +601,7 @@ Checks 7, 8 and 9 were added in revision B and check 10 in revision C. Holding t
 | Worst state of the filling sequence: 7 levels full and bunched, 5 pods on the next | 119 | 167 | 15 |
 | Uncontrolled fill: 4 pods on the same side of every level | 311 | 435 | 39 |
 
-The direction of the force changes as the levels turn during a lift, so every mount is taken to see the largest share. The force on one mount assumes that the ring beam spreads the force round all 16 mounts as a cosine distribution, which gives 2/n of the total on the most heavily loaded mount. There are no mounts in the access wedge, so the true share is somewhat higher and is to be worked out under check 9.
+The direction of the force changes as the levels turn during a lift, so every mount is taken to see the largest share. The force on one mount assumes that the ring beam spreads the force round all 16 mounts as a cosine distribution, which gives 2/n of the total on the most heavily loaded mount. There are no mounts in the access wedge, so the true share is somewhat higher and is calculated in section 7.7.
 
 The inner wall carries these forces in addition to the pressure of the store behind it. That is to be included in check 3.
 
@@ -608,19 +611,72 @@ The inner wall carries these forces in addition to the pressure of the store beh
 | --- | ---: | --- |
 | Diesel generator sets | 94.0 | 4 × 23.5 t |
 | Day tanks, full | 4.6 | fuel only |
-| Rig steel | 38 | allowance |
-| **On the 16 rig mounts** | **137** | 84 kN on each mount if shared equally |
+| Rig steel | 120 | allowance |
+| **On the 16 rig mounts** | **219** | 134 kN on each mount if shared equally |
 | Turbine generator sets | 189.0 | 2 × 94.5 t |
-| Turbine deck steel | 38 | allowance |
-| **On the 16 turbine level mounts** | **227** | 139 kN on each mount if shared equally |
+| Turbine deck steel | 120 | allowance |
+| **On the 16 turbine level mounts** | **309** | 189 kN on each mount if shared equally |
 
-None of this weight comes onto the shaft. Before the generator sets are landed, the rig mounts carry the rig steel alone, 23 kN each, together with the sideways force in section 7.2.
+None of this weight comes onto the shaft. Before the generator sets are landed, the rig mounts carry the rig steel alone, 74 kN each, together with the sideways force in section 7.2.
 
 ### 7.4 Requirements from check 1
 
 1. Sideways stiffness at the top of the shaft of at least 16 kN/mm, through the connector, the rig and the mounts together.
 2. The rig set, welded to its mounts and connected to the shaft before the first pod is hung. It must be able to take the force in section 7.2 without the weight of the generator sets on it.
 3. No vertical load from the rig onto the shaft, and freedom for the shaft to shorten by 2 mm or more inside the collar.
+
+### 7.5 Checks 7 and 10 · Independent gravity floors
+
+Each machine bears on fabricated box girders spanning to the open perimeter ring. Rail centrelines and actual skid positions are in the design inputs. Lower and upper mounting planes are independent. A simple span with 15% operating machinery allowance, full 120 t permanent floor budget and 2.5 kPa live load is used. For the member envelope all rail point loads move to midspan, and a conservative factor of 1.6 applies to all service forces for strength. The elastic box properties omit corner weld metal. The reaction calculation keeps the equipment at its actual horizontal position. Chord-end forces are distributed to the bracketing ring seats. Each floor balances the applied vertical load to numerical precision.
+
+| Floor | Box width × depth × flange × web, mm | Primary steel / all-in budget, t | Rail moment / resistance, kN·m | Rail shear / resistance, kN | Service deflection, mm | Ring M / resistance, kN·m |
+| --- | --- | ---: | ---: | ---: | ---: | ---: |
+| Diesel | 760 × 580 × 57 × 22 | 86.7 / 120 | 3,838 / 6,766 | 633 / 3,820 | 42.8 (L/370) | 429 / 3,267 |
+| Turbine | 880 × 580 × 65 × 25 | 87.3 / 120 | 4,860 / 8,571 | 777 / 4,192 | 44.6 (L/363) | 547 / 3,267 |
+
+The modeled 480 × 580 × 35 × 25 mm ring is discontinuous at the service wedge. Girders finish on the supported arc. The span limit is L/300. Provide transverse diaphragms at rail ends, skid feet and collar arms, 20 mm seat stiffeners, continuously welded box seams and positively restrained resilient machine mounts. The allowance above the primary steel takeoff covers diaphragms, shoes, decking, gratings and fittings. Obtain equipment foot reactions, operating frequencies and a floor modal analysis before releasing either deck. Raising the bolted lid by 0.75 m gives 0.78 m nominal access above the turbine skid envelope.
+
+### 7.6 Check 8 · Shaft-top guide
+
+Four 280 × 380 × 20 × 16 mm box arms connect the split collar to the ring. Use four replaceable 200 × 300 × 15 mm preadjusted sliding pads, 0.20 mm maximum installed lateral play and ±25 mm unobstructed vertical travel. The rig has no vertical shaft seat. Mechanical stops lie outside the operating travel. Require pad service-temperature compressive capacity ≥25 MPa. Bounded pressure is 14.6 MPa. Design shaft force is 877 kN including the assumed acceleration and the uncontrolled loading envelope. A single arm carrying that force has 4,911 kN compression resistance at the adopted pin-ended length.
+
+Pad compression, axial arms, in-plane ring bending and the wall seats are springs in series. Their directional stiffnesses are 360, 1198, 824, 842 kN/mm. The effective secant stiffness **including guide play** is 150.2 kN/mm at the uncontrolled service reaction, against 16 kN/mm required. Prove the assumed installed seat/pad stiffness and release of axial motion after welding. Do not load the first pod until the bare rig is seated and the guide engaged.
+
+### 7.7 Checks 9 and 10 · Cast-in support groups
+
+For the actual mount bearings, the lateral reaction in a radial seat of direction n is nᵀ(Σ n nᵀ)⁻¹H. The greatest share over all load directions is **14.18%**. The rig takes the factored shaft force and its own horizontal inertia. The upper mounts carry turbine floor inertia. The gravity envelope from §7.5 governs the most heavily loaded seats.
+
+| Group | Peak vertical, kN | Peak horizontal, kN | Eccentric tension / resistance, kN | Bearing key force / resistance, kN | Combined bar utilisation | Weld force / resistance, kN |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| Rig | 684 | 152 | 366 / 1,013 | 684 / 1,724 | 0.70 | 776 / 5,587 |
+| Turbine | 909 | 38 | 322 / 1,013 | 909 / 1,724 | 0.77 | 965 / 5,587 |
+
+Each 600 × 950 × 40 mm flush plate has eight 32 mm headed studs embedded 320 mm and a 520 × 120 mm bearing key. A 200 mm eccentricity over a 640 mm lever arm adds tension. Four developed two-legged 32 mm anchor hairpins transfer splitting and shear to both wall reinforcement mats. The tension resistance is the lesser of four engaged studs and four developed bar legs. Shear uses eight legs, with linear tension/shear interaction. A 16 mm effective-leg perimeter fillet transfers the shoe force. Cast plates stay flush with the wall. The lifted assembly retains at least 50 mm radial clearance. Fit and weld separate closure plates only after each floor has landed. The numerical checks depend on a fully developed reinforced load path in cracked concrete. Verify local strut bearing, edge distances, confinement, pryout, weld access, lift-joint proximity and anchorage development on the final detail before casting.
+
+### 7.8 Site envelope and secondary checks
+
+| Quantity | Calculated result | Adopted limit or disposition |
+| --- | ---: | --- |
+| Assumed equivalent lateral shear of facility and design wind resultant | 7,733 and 800 kN | Base contact and sliding screened together |
+| Contact pressure with lateral action | 192–375 kPa | 0–400 kPa |
+| Friction resistance / demand at base | 6.34 | ≥1.5 with μ = 0.35 |
+| Slosh crest / hot free depth to underside of cover | 97 / 150 mm | Reference long-period spectrum only |
+| Combined shaft elastic stress / screening limit | 135 / 310 MPa | Gravity, eccentric operating loads and 0.05g inertia |
+| Pod chord axial screening utilisation | 0.18 | Gravity result with superposed transverse action |
+| Primary cooler seat vertical / horizontal | 193 / 98 kN | Reinforced load path utilisation 0.47 |
+| Raft shear demand / reinforced strip resistance | 807 / 1904 kN/m | Two-legged 16 mm links at 400 × 400 mm |
+| Shaft anchor steel per half-circle provided / required | 19,302 / 18,937 mm² | Twenty-four two-legged hairpins overall |
+| Pod / cooler branch velocity | 1.66 / 1.60 m/s | At 125 / 200 mm internal diameter |
+| Pod / cooler calculated pump input | 8.2 / 23.5 kW | Design head 30 / 35 m at 75% efficiency |
+| Normal auxiliary subtotal / allowance | 3.78 / 4 MW | 1.23 MW pumps, 30 × 45 kW fans, 0.40 MW other services including HVAC and 1.6% electrical losses |
+| Normal / island / diesel-only IT limit | 50 / 46 / 7 MW | Thermal dispatch can require a lower limit |
+| Two main buses / each transformer primary | 1101 A each / 275 A | 1,600 / 400 A at 13.8 kV |
+| Pod branch current / example cable drop | 475 A / 0.30% | 630 A plug, 120 m example, two parallel conductors per phase, 0.060 Ω/km each. Verify actual grouped ampacity and impedance |
+| Layered, all coolers off | 76.0 min gross, 74.4 min with 2% displacement allowance | 60 min target from a fully charged store |
+| Bore room load / duty air handler | 129 / 150 kW | One additional standby unit |
+| Controlled fill overrun / receiver | 12.5 / 20 m³ | Verify independent high-high trip |
+
+The [assumption register](assumptions.md) records the site, procurement, programme and independent checks for this issue. The design actions and response spectrum need confirmation at a real location before the numerical results can be used there.
 
 ## 8. Check 3: silo walls
 
@@ -779,7 +835,7 @@ These thicknesses were the proposal of revision D, for the liquid load only. The
 
 **Sections 9 and 10 take this further.** Check 5 raises the inner wall to 500 mm, because warm concrete creeps more. Section 10 then compares reinforcement and finds that stainless steel bars bring the outer wall down to 400 mm for its whole height.
 
-### 8.12 Not covered by this check
+### 8.12 Interfaces beyond the original wall calculation
 
 1. **Temperature.** A warm store and cold outside air stretch the outside face of the outer wall. It is not in this section. Sections 9.12 and 10.9 cover it.
 2. **The ground entry.** The entry passes through both walls and the store at the base, where the hoop forces are largest. It cuts the hoop steel of the outer wall and the compression ring of the inner wall. Framing it is a design task of its own.
@@ -804,8 +860,8 @@ The site is not fixed. The outside air temperatures are therefore assumptions, a
 | Quantity | Value | Basis |
 | --- | ---: | --- |
 | Heat from the racks | 50.0 MW | 256 racks at 195.3 kW |
-| Heat from the pumps | 1.5%, 0.75 MW | allowance. The power of the CDU pumps and cooler pumps ends up in the liquid. |
-| **Heat to reject** | **50.75 MW** | |
+| Heat from the pumps | 2.5%, 1.25 MW | allowance. The power of the CDU pumps and cooler pumps ends up in the liquid. |
+| **Heat to reject** | **51.25 MW** | |
 | Warmest coolant into a rack | 45 °C | NVIDIA, for the Vera Rubin generation |
 | Rise across the racks | 10 K | input. NVIDIA gives about 55 °C leaving the rack. |
 | Approach of the CDU | 3 K | **assumption.** The CDU has a plate heat exchanger between the rack loop and the store, so store liquid does not pass through the cold plates. |
@@ -832,7 +888,7 @@ A rack may take coolant at 45 °C. The CDU needs 3 K to pass the heat on. So:
 
 - the store may supply the CDUs at **42 °C** at most;
 - the liquid comes back from the CDUs at **52 °C**;
-- 1,301 kg/s, 1.29 m³/s, passes through the pods, and the same through the coolers.
+- 1,314 kg/s, 1.30 m³/s, passes through the pods, and the same through the coolers.
 
 Each kelvin of CDU approach moves both temperatures by one kelvin. If the store liquid went straight through the racks they would be 45 °C and 55 °C.
 
@@ -851,25 +907,25 @@ The store can run in two ways.
 
 | Outside air, °C | Layered: one cooler, MW | Layered: 30 coolers, MW | Layered: coolers needed | Mixed: store settles at, °C | Mixed: supply against 42 °C |
 | ---: | ---: | ---: | ---: | ---: | --- |
-| -20 | 2.00 | 60.0 | 26 | -3.1 | within |
-| 0 | 2.00 | 60.0 | 26 | 16.9 | within |
-| 12 | 2.00 | 60.0 | 26 | 28.9 | within |
-| 25 | 2.00 | 60.0 | 26 | 41.9 | within |
-| 30 | 2.00 | 60.0 | 26 | 46.9 | 4.9 K too warm |
-| 35 | 1.60 | 48.1 | more than 30 | 51.9 | 9.9 K too warm |
-| 40 | 0.87 | 26.2 | more than 30 | 56.9 | 14.9 K too warm |
+| -20 | 2.00 | 60.0 | 26 | -2.9 | within |
+| 0 | 2.00 | 60.0 | 26 | 17.1 | within |
+| 12 | 2.00 | 60.0 | 26 | 29.1 | within |
+| 25 | 2.00 | 60.0 | 26 | 42.1 | 0.1 K too warm |
+| 30 | 2.00 | 60.0 | 26 | 47.1 | 5.1 K too warm |
+| 35 | 1.60 | 48.1 | more than 30 | 52.1 | 10.1 K too warm |
+| 40 | 0.87 | 26.2 | more than 30 | 57.1 | 15.1 K too warm |
 
 ![Heat rejected against outside air temperature](figures/heat_rejection.svg)
 
 | | Mixed store | Layered store |
 | --- | ---: | ---: |
-| Warmest outside air at which 30 coolers carry the load | 25.1 °C | **34.3 °C** |
-| The same with 26 coolers | 22.5 °C | 32.4 °C |
-| Coolers needed on the 35 °C design day | 73 | 32, see section 9.8 |
+| Warmest outside air at which 30 coolers carry the load | 24.9 °C | **34.2 °C** |
+| The same with 26 coolers | 22.3 °C | 32.2 °C |
+| Coolers needed on the 35 °C design day | 74 | 32, see section 9.8 |
 
-**The store has to be layered. This is the main finding of check 5.** A mixed store with the 30 coolers holds its supply temperature only up to 25 °C outside. On the design day it would settle about 10 K too warm, and it would take 73 coolers to prevent that.
+**The store has to be layered. This is the main finding of check 5.** A mixed store with the 30 coolers holds its supply temperature only up to 25 °C outside. On the design day it would settle about 10 K too warm, and it would take 74 coolers to prevent that.
 
-With the pump heat included, 26 coolers are needed at their rating, not 25. That leaves 4 spare.
+With the pump heat included, 26 coolers are needed at their rating, not 26. That leaves 4 spare.
 
 ### 9.6 What layering needs
 
@@ -877,7 +933,7 @@ Each pod reaches the store through sleeves at its own level, and each cooler thr
 
 1. **Pods draw from the bottom of the store and return to the top.** One pair of vertical pipes in the store for each of the 8 bays would serve the 8 pods above one another.
 2. **Coolers draw from the top and return to the bottom.** One pair of vertical pipes for each of the 10 frames.
-3. **Liquid enters slowly and sideways.** The warm and cool layers differ by 5.2 kg/m³, about eight times the difference in a chilled-water store, where layered tanks are routine. Spread round the store, the whole flow can enter through an opening 124 mm high without stirring the layers (densimetric Froude number of 1).
+3. **Liquid enters slowly and sideways.** The warm and cool layers differ by 5.2 kg/m³, about eight times the difference in a chilled-water store, where layered tanks are routine. Spread round the store, the whole flow can enter through an opening 125 mm high without stirring the layers (densimetric Froude number of 1).
 4. **The two flows are kept equal.** The boundary between the layers then stays where it is. The coolers need variable flow, and the store needs temperature sensors up its height to show where the boundary is.
 5. **The boundary is re-made often.** Conduction thickens it by about 230 mm in a day. Running it to the top of the store each night, as section 9.8 describes, keeps it thin.
 
@@ -892,7 +948,7 @@ This check takes 90% of the store as usable, which is in the usual range for a l
 | Speed in a pod pipe | 1.4 m/s | 8 pods |
 | Speed in a cooler pipe | 1.1 m/s | 3 coolers, with all frames sharing the flow |
 | Opening at each open end | a 1.2 m plate, 350 mm from the pipe | the liquid leaves sideways all round the plate |
-| Froude number where warm liquid enters, at the top | 0.92 | 8 pod returns. 1 or less does not stir the layers. |
+| Froude number where warm liquid enters, at the top | 0.93 | 8 pod returns. 1 or less does not stir the layers. |
 | Froude number where cool liquid enters, at the bottom | 0.74 | 10 cooler returns |
 | Top openings | 30.70 m | 500 mm under the cold fill level of section 9.9, so they are covered before the store warms |
 | Bottom openings | 0.50 m | above the floor |
@@ -905,9 +961,9 @@ Ride-through is how long the pods keep their supply temperature after the cooler
 
 | Walls | Store, m³ | Heat held, GJ/K | Minutes to warm 1 K | Layered | Mixed, 12 °C outside | Mixed, 35 °C outside |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| As first drawn, 250 mm | 7,331 | 29.2 | 9.6 | **86 min** | 125 min | none |
-| Check 3, carbon steel bars | 6,373 | 25.4 | 8.3 | **75 min** | 109 min | none |
-| Adopted: section 10, stainless steel bars | 6,524 | 26.0 | 8.5 | **77 min** | 112 min | none |
+| As first drawn, 250 mm | 7,331 | 29.2 | 9.5 | **85 min** | 123 min | none |
+| Check 3, carbon steel bars | 6,373 | 25.4 | 8.2 | **74 min** | 106 min | none |
+| Adopted: section 10, stainless steel bars | 6,524 | 26.0 | 8.4 | **76 min** | 109 min | none |
 
 - **Layered**, the ride-through is one pass of the store through the pods, less the part lost at the boundary. The supply stays at 42 °C the whole time, then rises by 10 K at once when the cool layer is used up. It does not depend on the weather, provided the store was full of cool liquid when the coolers stopped. In cool weather the coolers can hold the cool layer below 42 °C, which lengthens the ride-through. This check does not count on it.
 - **Mixed**, the supply warms from the first minute, and the ride-through is the time to reach 42 °C from wherever the store sat. In mild weather that is long. On the design day there is none.
@@ -922,9 +978,9 @@ The layered store also carries the plant through air that is too warm for the co
 
 | Outside air | 30 coolers reject | Store makes up | For |
 | --- | ---: | ---: | ---: |
-| 35 °C, summer design | 48.1 MW | 2.6 MW | 24.6 h |
-| 40 °C, extreme | 26.2 MW | 24.6 MW | 2.6 h |
-| 23 °C, the night after a design day | 60.0 MW | 9.3 MW to spare | refills a spent store in 7.0 h |
+| 35 °C, summer design | 48.1 MW | 3.1 MW | 20.7 h |
+| 40 °C, extreme | 26.2 MW | 25.1 MW | 2.6 h |
+| 23 °C, the night after a design day | 60.0 MW | 8.8 MW to spare | refills a spent store in 7.4 h |
 
 Above 34 °C the coolers fall behind and the cool layer is drawn down. At night they catch up. Whether 30 coolers are enough therefore depends on how many hours a day the site spends above 34 °C, which needs the site's weather record. A site hotter than the one assumed needs more coolers or a smaller CDU approach.
 
@@ -1013,22 +1069,22 @@ These are the same size as the 5 mm and 10 mm limits on the movement of a pod ti
 | Check | Value | Independent value | Agreement |
 | --- | ---: | ---: | --- |
 | Cooler model at its rating condition | 2.000 MW, liquid out at 45.0 °C | 2.000 MW, 45.0 °C | equal |
-| Heat rejected by 30 coolers at the layered limit of 34.3 °C | 50.75 MW | heat to reject, 50.75 MW | equal |
+| Heat rejected by 30 coolers at the layered limit of 34.2 °C | 51.25 MW | heat to reject, 51.25 MW | equal |
 | Layered limit less mixed limit, 26 coolers at rated flow | 9.9 K | rise across the pods, 10 K | close. The liquid flow of a cooler differs between the two cases. |
-| Ride-through of the adopted store, by hand | 0.9 × 6,524 m³ × 3.978 MJ/m³·K × 10 K ÷ 50.75 MW = 76.7 min | 76.7 min | equal |
+| Ride-through of the adopted store, by hand | 0.9 × 6,524 m³ × 3.978 MJ/m³·K × 10 K ÷ 51.25 MW = 76.0 min | 76.0 min | equal |
 | Heat flow through the lowest lift | 168.1 W/m² overall | 168.1 W/m² through the concrete alone | equal |
 
 The first, second and fifth are checked at every build by [thermal.py](../gpu_silo/thermal.py).
 
 ### 9.15 Conclusion
 
-The balance closes: 30 coolers of 2 MW reject the 50.75 MW in outside air up to 34 °C, and the store carries the plant for 77 minutes with no coolers at all. Both statements hold only for a layered store, with the pods fed from the bottom and the coolers from the top. A mixed store falls short by 10 K, which the weather cannot be relied on to give back.
+The balance closes: 30 coolers of 2 MW reject the 51.25 MW in outside air up to 34 °C, and the store carries the plant for 76 minutes with no coolers at all. Both statements hold only for a layered store, with the pods fed from the bottom and the coolers from the top. A mixed store falls short by 10 K, which the weather cannot be relied on to give back.
 
 The check also finds that the fill level has to allow 552 mm for the liquid to swell, that the store has to be closed at the top, that stopped coolers need protecting below -10 °C, and that the inner wall has to be 500 mm because warm concrete creeps more.
 
 The confidence in these results is limited by the assumptions in section 9.2. The air temperatures, the CDU approach and the cooler rating each move the limit kelvin for kelvin.
 
-### 9.16 Not covered by this check
+### 9.16 Thermal interfaces and commissioning evidence
 
 1. **The site's weather.** Hours above the limit, and the coldest and hottest days.
 2. **The design of the layering.** The pipes, their openings and the control of the two flows. A flow model or a test should confirm the 90%.
@@ -1179,7 +1235,7 @@ An FRP cage is lighter, but lightness is not what limits a cage here. A stainles
 | Inner wall | 250 mm | 450 mm, 500 mm after check 5 | **500 mm** |
 | Width of the store | 3.10 m | 2.75 m to 3.10 m | 3.10 m |
 | Volume of the store | 7,331 m³ | 6,284 m³ | **6,524 m³** against a target of 5,678 m³ |
-| Ride-through, layered | 86 min | 74 min | **77 min** |
+| Ride-through, layered | 85 min | 73 min | **76 min** |
 | Concrete in the walls | 1,056 m³ | 2,110 m³ | **1,869 m³** |
 | Bars in the outer wall | | 353 t | **204 t** |
 | Bars in the lowest lift of the outer wall | | 62 t | **34 t** |
@@ -1232,13 +1288,13 @@ The site is not fixed and there is no ground investigation. The project has said
 | Base slab, 2.00 m | 26.0 |
 | Shaft, hubs and 64 pods | 6.3 |
 | Coolers and their frames | 4.2 |
-| The two power levels | 3.6 |
+| The two power levels | 5.2 |
 | Lid | 0.7 |
 | Cage posts and decks | 0.6 |
 | Load on the floor of the bore | 1.1 |
-| **Total** | **152.7** |
+| **Total** | **154.3** |
 
-Spread evenly over the 542 m² of the slab this is **282 kPa**. Nearly half of it is the liquid, and four fifths of it comes down on the ring between the bore and the outside, so the pressure on the ground is not even.
+Spread evenly over the 542 m² of the slab this is **284 kPa**. Nearly half of it is the liquid, and four fifths of it comes down on the ring between the bore and the outside, so the pressure on the ground is not even.
 
 The feet of the two walls also bend the slab, by 436 kN·m/m at the outer wall and 389 kN·m/m at the inner wall, and pull it apart across the floor of the store with 526 kN/m.
 
@@ -1252,14 +1308,14 @@ The slab is 2.00 m thick and the store is full. The ground assumed is in bold.
 
 | Ground | Modulus, MPa | Spring, MN/m³ | Thinnest slab that is strong enough, m | Pressure on the ground, kPa | Settlement of the shaft, mm | Inner wall, mm | Outer wall, mm | Filling lowers the inner wall more than the shaft by, mm | Largest moment, kN·m/m |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| **Dense sand or stiff clay** | 80 | 4.3 | 1.25 | 265 to 295 | 62 | 66 | 69 | **2.7** | 2,736 |
-| Very dense gravel or hard clay | 250 | 13.3 | 1.00 | 238 to 317 | 18 | 21 | 23 | **2.3** | 2,369 |
-| Weak rock | 1,000 | 53.2 | 1.00 | 176 to 371 | 3 | 5 | 7 | **1.4** | 1,524 |
+| **Dense sand or stiff clay** | 80 | 4.3 | 1.25 | 268 to 298 | 63 | 67 | 69 | **2.7** | 2,743 |
+| Very dense gravel or hard clay | 250 | 13.3 | 1.00 | 241 to 320 | 18 | 21 | 23 | **2.3** | 2,377 |
+| Weak rock | 1,000 | 53.2 | 1.00 | 179 to 374 | 3 | 5 | 7 | **1.4** | 1,530 |
 
 ![Settlement of the base slab](figures/foundation.svg)
 
 - **On dense sand or stiff clay the silo settles about 69 mm**, as the load goes on. On very dense gravel or hard clay it is about 23 mm and on weak rock about 7 mm. Clay goes on settling for years afterwards, which is not in these figures.
-- **The pressure on the ground is about 282 kPa on average and 265 to 295 kPa across the slab.** A slab this wide is unlikely to fail the ground in sand or gravel. In clay the strength of the ground has to be checked as well. In either, it is the settlement that decides whether the silo can stand on a slab or needs piles. This is the first question for the site, and is open item 18.
+- **The pressure on the ground is about 284 kPa on average and 268 to 298 kPa across the slab.** A slab this wide is unlikely to fail the ground in sand or gravel. In clay the strength of the ground has to be checked as well. In either, it is the settlement that decides whether the silo can stand on a slab or needs piles. This is the first question for the site, and is open item 18.
 - **The 2 m slab goes down nearly level.** The walls and the store are heavy and the bore is light, so a thin slab lets the rim go down more than the centre. At 2 m the difference across the slab is 7 mm.
 
 ### 11.5 What settlement does to the pod tips
@@ -1277,13 +1333,13 @@ Settlement that goes on after the fill, as the ground consolidates under a load 
 
 | Thickness, m | Largest radial moment, top in tension, kN·m/m | Bottom in tension, kN·m/m | Factored shear at the walls, kN/m | Shear strength with no ties, kN/m | With ties, kN/m | Ties needed | Factored punching at the shaft against strength, MN | Fill settlement, wall against shaft, mm | |
 | ---: | ---: | ---: | ---: | ---: | ---: | --- | ---: | ---: | --- |
-| 1.00 | -1,828 | 162 | 750 | 391 | 706 | Yes | 7.4 against 8.4 | 13.9 | Not strong enough |
-| 1.25 | -2,235 | 165 | 808 | 411 | 907 | Yes | 6.8 against 10.6 | 8.8 |  |
-| 1.50 | -2,487 | 167 | 825 | 419 | 1,109 | Yes | 6.3 against 12.8 | 5.7 |  |
-| 1.75 | -2,640 | 168 | 817 | 421 | 1,310 | Yes | 5.7 against 15.2 | 3.8 |  |
-| **2.00** | -2,736 | 168 | 793 | 420 | 1,512 | Yes | 5.2 against 17.6 | 2.7 | Adopted |
-| 2.50 | -2,838 | 169 | 722 | 414 | 1,915 | Yes | 4.1 against 22.6 | 1.4 |  |
-| 3.00 | -2,885 | 169 | 634 | 406 | 2,318 | Yes | 2.8 against 27.9 | 0.8 |  |
+| 1.00 | -1,835 | 163 | 766 | 392 | 706 | Yes | 7.4 against 8.4 | 13.9 | Not strong enough |
+| 1.25 | -2,242 | 165 | 823 | 412 | 907 | Yes | 6.8 against 10.6 | 8.8 |  |
+| 1.50 | -2,494 | 167 | 840 | 420 | 1,109 | Yes | 6.3 against 12.8 | 5.7 |  |
+| 1.75 | -2,648 | 168 | 831 | 421 | 1,310 | Yes | 5.6 against 15.2 | 3.8 |  |
+| **2.00** | -2,743 | 169 | 807 | 420 | 1,512 | Yes | 5.2 against 17.6 | 2.7 | Adopted |
+| 2.50 | -2,845 | 170 | 735 | 414 | 1,915 | Yes | 4.0 against 22.6 | 1.4 |  |
+| 3.00 | -2,893 | 170 | 645 | 407 | 2,318 | Yes | 2.7 against 27.9 | 0.8 |  |
 
 Moments are unfactored. The table is for dense sand or stiff clay. The shear is taken at the effective depth from the face of each wall, and the largest is on the inside of the inner wall.
 
@@ -1295,10 +1351,10 @@ Reinforcement of the 2.00 m slab, by strength:
 
 | Direction and face | Moment, kN·m/m | Steel needed, mm²/m | Bars |
 | --- | ---: | ---: | --- |
-| Radial, bottom | +168 | 1,800 | 1 layer of #8 at 280 mm |
-| Radial, top | -2,736 | 6,004 | 1 layer of #10 at 130 mm |
-| Hoop, bottom | -1,106 | 1,800 | 1 layer of #8 at 280 mm |
-| Hoop, top | -2,557 | 5,611 | 1 layer of #10 at 140 mm |
+| Radial, bottom | +169 | 1,800 | 1 layer of #8 at 280 mm |
+| Radial, top | -2,743 | 6,021 | 1 layer of #10 at 130 mm |
+| Hoop, bottom | -1,100 | 1,800 | 1 layer of #8 at 280 mm |
+| Hoop, top | -2,564 | 5,628 | 1 layer of #10 at 140 mm |
 | Across the floor of the store, both faces together | tension 526 kN/m | 1,949 | added to the radial bars between the walls |
 
 The reinforcement is to be designed again once the ground is known.
@@ -1328,8 +1384,8 @@ The project asked for a heavy fixed base, because the out-of-balance loads are s
 
 | Check | Value | Independent value | Agreement |
 | --- | ---: | ---: | --- |
-| Upward push of the ground, summed over the slab | 152.70 MN | loads applied, 152.70 MN | equal |
-| Sum of the loads in section 11.2 | 152.70 MN | loads applied to the plate, 152.70 MN | equal |
+| Upward push of the ground, summed over the slab | 154.31 MN | loads applied, 154.31 MN | equal |
+| Sum of the loads in section 11.2 | 154.31 MN | loads applied to the plate, 154.31 MN | equal |
 | A plate under even pressure alone | settles evenly, with no bending | exact result | equal |
 | A very stiff plate on very soft ground | pressure even to within 0.2% | mean pressure | equal |
 | Pressure on the ground | above zero everywhere | | the slab does not lift |
@@ -1338,13 +1394,13 @@ These are checked at every build by [foundation.py](../gpu_silo/foundation.py).
 
 ### 11.9 Conclusion
 
-The slab is 2.00 m thick, on ground taken as dense sand or stiff clay. It is strong enough, with shear ties near the walls and heavy top bars. The silo weighs 153 MN full and settles about 69 mm on that ground as it is loaded. Filling the store lowers the walls 2.7 mm against the shaft, which the flexible section of each wall connection takes. The base of the shaft takes 24 M56 anchors and stands alone under the worst out-of-balance load.
+The slab is 2.00 m thick, on ground taken as dense sand or stiff clay. It is strong enough, with shear ties near the walls and heavy top bars. The silo weighs 154 MN full and settles about 69 mm on that ground as it is loaded. Filling the store lowers the walls 2.7 mm against the shaft, which the flexible section of each wall connection takes. The base of the shaft takes 24 M56 anchors and stands alone under the worst out-of-balance load.
 
 The ground is an assumption. A ground investigation has to confirm it, and has to give the settlement over time, before the slab or the choice between a slab and piles is final.
 
 **Correction in revision H.** Revision G took springs of 15, 40 and 100 MN/m³ and called them soft, medium and stiff ground. Those are values for a small test plate. Under a slab 26 m across the spring is about a tenth of that, so revision G described rock while calling it soil, and its settlements were too small by about ten times for soil. The method is unchanged. The grounds are now set by their modulus.
 
-### 11.10 Not covered by this check
+### 11.10 Foundation interfaces and site verification
 
 1. **The ground.** Its strength, its stiffness, how it varies across the site, groundwater, and settlement over time. A slab on ground that is softer on one side tilts, and the shaft tilts with it.
 2. **Piles or ground improvement**, if the site needs them.
@@ -1520,42 +1576,20 @@ The thing to watch is the stiffness of the hub bearings: 3,165 kN/mm each, or a 
 
 The arrangement of the hub was accepted by the project in revision I, and the model now draws the drum and the beam arms.
 
-### 12.12 Not covered by this check
+### 12.12 Connection interfaces and procurement verification
 
 1. **Selection of the slewing ring and the guide rollers** from a supplier: static capacity, stiffness, life and sealing.
 2. **The hub in detail**: the drum, the rings, their welds, and the arms where they join the rings.
 3. **The shaft at each level**: the collar under the slewing ring, the track for the guide rollers, and the local stress in the shaft wall.
 4. **Gear, gearbox, brake and lock** in detail, and their controls.
-5. **Power and data to a turning level.** The pods take 781 kW each through the shaft. How that crosses to a hub that turns is not designed.
+5. **Power and data to a turning level.** Revision J routes the main buses down the fixed shaft, feeds each indexed pod at a separate dry berth contact and uses an optical rotary joint for control data. See the R15/Q11 decision.
 6. **The carriages that bunch the pods** on a level, and their actuators.
-7. **Earthquake**, which may govern the lock and the guide rollers. It waits for the site.
+7. **Earthquake**, which may govern the lock and the guide rollers. The assumed 0.05g envelope is screened in section 7.8. Establish the actual site spectrum before release.
 8. **Fatigue.** The levels turn seldom, so it is not expected to govern.
 
-## 13. Open items
+## 13. Assumptions and release conditions
 
-| No. | Item | Affects | Needed from |
-| ---: | --- | --- | --- |
-| 1 | Detail design of the store pipes and their openings, their fixing through the liner, and control of the two flows (section 9.6) | check 5, the liner | project |
-| 2 | Weather record of the site, and the CDU approach and cooler rating from suppliers (section 9.2) | check 5 | project, suppliers |
-| 3 | Programme for fitting the store pipes and the cover, between the liner on days 11 to 14 and the fill from day 15 | programme | project |
-| 4 | Agreement to design the lined outer wall without the durability factor of ACI 350 (section 10.6) | check 3 | checker, authority |
-| 5 | Liner: bridging of new cracks at 52 °C in glycol (section 10.12) | check 3 | liner supplier |
-| 6 | Detail of the cover, its breather, the overflow and the size of the catch tank (sections 9.9 and 9.11) | check 5 | project |
-| 7 | Frost protection for stopped coolers, and ventilation of the bore (sections 9.10 and 9.11) | check 5 | project |
-| 8 | Fixings to the outer wall, to allow for its stretch at first fill and for cracked concrete (section 10.12) | cooler frames, checks 9 and 10 | project |
-| 9 | Jumpform programme and crew, with the reinforcement as cages: about 34 t in the lowest lift of the outer wall with stainless bars, 62 t with carbon steel (sections 8.8 and 10.10) | programme, check 3 | project |
-| 10 | Tie the two walls together, or keep them separate as adopted (section 8.9) | check 3 | project |
-| 11 | Flexible section of each wall connection: a supplier's selection for ± 25 mm across and ± 15 mm along at 52 °C, and how its length fits in the end of the pod (section 3.8) | pods, check 6 | supplier, project |
-| 12 | Site and seismic design category, for the lateral case | all structural checks | project |
-| 13 | Weight of a rack in operation, and of the CDU, pump and coolant | checks 1, 2, 4 and 6 | equipment supplier |
-| 14 | Tolerance of the plug and sleeve of the wall connection, and how accurately a level stops at its lock | checks 1, 2 and 6 | coupling supplier |
-| 15 | Slewing ring and guide rollers with the stiffness of section 12.7, and how power and data cross to a turning level | check 6 | bearing supplier, project |
-| 16 | Comparison of section properties with the AISC Manual, of the ACI 350-06 clauses with ACI 350-20, and of the values taken from ACI CODE-440.11-22, ASTM A955 and ASTM D7957 with the documents | checks 2 and 3 | checker |
-| 18 | Ground investigation, to confirm the dense sand or stiff clay assumed, the 2 m slab and the choice of a slab over piles (section 11.4) | check 4 | project |
-| 19 | Settlement over time, for which the wall connection allows 10 mm (sections 3.8 and 11.5) | check 4, wall connection | ground investigation |
-| 20 | Reinforcement of the 2 m slab in detail, with its shear ties and the thickening under the shaft (sections 11.6 and 11.7) | check 4 | project |
-
-Item 17 was closed in the revision I film cut. The [scene guides](../docs/sequence.md) locate the support rig lift, the updated pod and wall geometry, and the layered-store drawings.
+The [revision J review register](assumptions.md) cross-references every previous structural open item (R1–R20) and calculation question (Q1–Q18) to an adopted decision and the evidence needed for release. The site spectrum, geotechnical investigation, authority acceptance of the lined-wall design, manufacturer submittals, lift plans and independent engineering sign-off remain external hold points.
 
 ## Appendix A: member forces in the pod truss
 

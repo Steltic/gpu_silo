@@ -13,7 +13,7 @@ from . import film
 
 import math
 
-from . import services
+from . import completion, services
 from . import silo_model as s
 from . import clock
 from . import closing
@@ -34,7 +34,7 @@ LEVEL = (GEN_H+DECK, SET_H+DECK)
 # The diesel sets leave that wedge clear so its work deck can pass.
 GEN_AT = ((0.,-.6,0),(-5.65,-.4,90),(0.,-4.9,0),(5.65,-.4,90))[:D["sets"]]
 DAY_TANKS = ((3.2,3.2),(-3.2,3.2))[:D["day_tanks"]]
-ACCESS_HALF = math.radians(26)
+ACCESS_HALF = math.radians(completion.D["access_half_deg"])
 EXHAUST_R, EXHAUST_H = P["exhaust_stack_diameter_m"]/2, P["exhaust_stack_height_m"]
 EXHAUST_AT = ((.6,SET_Y),(.6,-SET_Y))
 INLET_HOUSE = tuple(P["inlet_house_m"])
@@ -54,11 +54,12 @@ DIESEL_SEATED = PICK_STARTS[0]+(len(DIESEL_LOADS)-1)*DIESEL_CYCLE+DIESEL_FLIGHT
 # After the second level is seated the crane goes for the lid.
 VENT_START, VENT_END, END = PICK_STARTS[1]+PICK_LENGTH+4, care.POWER_DONE, closing.END
 LID_THICK = .22
-VENT_RISE = .03+LID_THICK+EXHAUST_H
+CURB = completion.D["roof_curb_m"]
+VENT_RISE = CURB+.03+LID_THICK+EXHAUST_H
 LID = care.LID
 LID_SITE = (-46.,-30.)
 LID_R = s.RO+.14
-LID_Z = s.WALL_HEIGHT+.03
+LID_Z = s.WALL_HEIGHT+CURB+.03
 LID_GROUND, LID_TRANSIT, LID_APEX = .30, s.WALL_HEIGHT+4.5, EXHAUST_H+3.6
 PICK_SITES = ((-26.,-12.),(-26.,8.))
 CRANE_BASE = (-20.,-23.,0.)
@@ -101,19 +102,51 @@ def turned(x,y,z=0.):
     return (x*c-y*q,x*q+y*c,z)
 
 
-def deck_steel(m,lines):
-    """Girders under the machines and a ring beam at the wall, open at the access wedge."""
-    for a,b in lines:
-        s.bar(m,(*a,-DECK/2),(*b,-DECK/2),.28,STRUCT,DECK-.10)
-    r=s.RI-.22
-    s.sector(m,r-.14,r+.14,-DECK+.05,-.05,math.pi/2+ACCESS_HALF,math.pi/2+s.TAU-ACCESS_HALF,40,[STRUCT]*4,caps=True)
+def deck_components(level):
+    """Individual fabricated members in local deck coordinates, shared with the IFC."""
+    d = completion.D
+    r = d["ring_radius_m"]
+    section = d["turbine_box_m" if level else "diesel_box_m"]
+    b,h,tf,tw = section
+    for i,y in enumerate(completion.rails(level),1):
+        m = mesh(f"Rail girder {i:02}")
+        x = math.sqrt((r-d["ring_box_m"][0]/2)**2-y*y)
+        for z in (-h,-tf):
+            closed(m,-x,y-b/2,x,y+b/2,z,z+tf,STRUCT)
+        for side in (-1,1):
+            yc = y+side*(b-tw)/2
+            closed(m,-x,yc-tw/2,x,yc+tw/2,-h+tf,-tf,STRUCT)
+        yield "IfcBeam", m
+    b,h,tf,tw = d["ring_box_m"]
+    m = mesh("Open ring beam")
+    for low,high,z0,z1 in ((r-b/2,r+b/2,-h,-h+tf),(r-b/2,r+b/2,-tf,0),
+                            (r-b/2,r-b/2+tw,-h+tf,-tf),(r+b/2-tw,r+b/2,-h+tf,-tf)):
+        s.sector(m,low,high,z0,z1,completion.START,completion.END,64,[STRUCT]*4,caps=True)
+    yield "IfcBeam", m
+    if not level:
+        m = mesh("Sliding shaft collar and four replaceable guide pads")
+        s.sector(m,SHAFT_R+.015,COLLAR,-DECK+.04,-.04,0,s.TAU,48,[HOLD]*4,caps=True)
+        for k in range(RIG["arms"]):
+            a = math.pi/4+k*s.TAU/RIG["arms"]
+            s.sector(m,SHAFT_R+.0002,SHAFT_R+.015,-.45,-.15,a-.17,a+.17,5,[DARK]*4,caps=True)
+        yield "IfcDiscreteAccessory", m
+        for k in range(RIG["arms"]):
+            m = mesh(f"Collar drag arm {k+1:02}")
+            a = math.pi/4+k*s.TAU/RIG["arms"]
+            b,h,_,_ = d["guide_arm_box_m"]
+            s.bar(m,s.polar(COLLAR,a,-DECK/2),s.polar(r-d["ring_box_m"][0]/2,a,-DECK/2),b,HOLD,h)
+            yield "IfcMember", m
+    for i,a in enumerate(mount_angles(),1):
+        m = mesh(f"Bearing shoe {i:02}")
+        shoes(m,[a])
+        yield "IfcDiscreteAccessory", m
 
 
 # The load path that holds the top of the shaft is drawn in one colour: connector, seats and cast-in plates.
 HOLD="c8862e"
 RIG=cfg.PROJECT["structure"]["top_rig"]
 SHAFT_R=cfg.STORE["shaft_radius_m"]
-COLLAR=SHAFT_R+.24
+COLLAR=completion.D["connector_radius_m"]
 SEAT_Z=-DECK+.05
 PLATE_W,PLATE_H=RIG["mount_plate_m"]
 
@@ -124,33 +157,27 @@ TURBINE_MOUNTS=cfg.PROJECT["structure"]["turbine_mounts"]["wall_mounts"]
 def mount_angles(n=None):
     """Bearings of the wall mounts in the frame of the power level: evenly round the ring beam, clear of the access wedge."""
     n=n or RIG["wall_mounts"]
-    start=math.pi/2+ACCESS_HALF+math.radians(5);arc=s.TAU-2*(ACCESS_HALF+math.radians(5))
-    return [start+k*arc/(n-1) for k in range(n)]
-
-
-def shaft_connector(m):
-    """Collar round the top of the shaft with arms out to the ring beam. It passes sideways force only: the shaft can slide in it."""
-    s.sector(m,SHAFT_R+.03,COLLAR,-DECK+.04,-.04,0,s.TAU,32,[HOLD]*4,caps=True)
-    for k in range(RIG["arms"]):
-        a=math.pi/4+k*s.TAU/RIG["arms"]
-        s.bar(m,s.polar(COLLAR-.04,a,-DECK/2),s.polar(s.RI-.34,a,-DECK/2),.26,HOLD,DECK-.18)
-    shoes(m,mount_angles())
+    return completion.angles(n)
 
 
 def shoes(m,angles):
     """A shoe under the ring beam at every mount, welded to the plate cast into the wall once the level is down."""
     for a in angles:
-        s.bar(m,s.polar(s.RI-.46,a,SEAT_Z-.07),s.polar(s.RI-.056,a,SEAT_Z-.07),.40,HOLD,.14)
-        s.bar(m,s.polar(s.RI-.085,a,SEAT_Z+.22),s.polar(s.RI-.056,a,SEAT_Z+.22),.50,HOLD,.44)
+        s.bar(m,s.polar(s.RI-.46,a,SEAT_Z-.07),s.polar(s.RI-.072,a,SEAT_Z-.07),.40,HOLD,.14)
+        s.bar(m,s.polar(s.RI-.085,a,SEAT_Z+.22),s.polar(s.RI-.072,a,SEAT_Z+.22),.50,HOLD,.44)
 
 
 def mount_plate():
     """A plate cast into the inner wall, flush with the bore, with studs back into the concrete. Local x points out through the wall."""
     m=mesh("Power level | cast-in wall plate and studs")
-    closed(m,-.014,-PLATE_W/2,.02,PLATE_W/2,-.45,PLATE_H-.45,HOLD)
-    for y in (-PLATE_W/2+.1,PLATE_W/2-.1):
-        for z in (-.33,-.05,.22,.38):
-            closed(m,.02,y-.02,.21,y+.02,z-.02,z+.02,"5d6468")
+    t = completion.D["plate_thickness_m"]
+    depth = completion.D["stud_embed_m"]
+    closed(m,.0,-PLATE_W/2,t,PLATE_W/2,-.45,PLATE_H-.45,HOLD)
+    closed(m,t,-.26,t+.12,.26,-.28,-.22,STRUCT)
+    for y in (-.20,.20):
+        for z in (-.32,-.10,.10,.32):
+            services.pipe(m,(t,y,z),(depth,y,z),completion.D["stud_diameter_mm"]/2000,STRUCT,n=10)
+            services.pipe(m,(depth-.015,y,z),(depth,y,z),.032,STRUCT,n=10)
     return m
 
 
@@ -190,18 +217,13 @@ def diesel_load(index):
 
 
 def power_mesh(index):
+    m=mesh("Top support rig | bare girders, ring beam, shaft collar and mounting shoes" if index==0
+           else "Power level 2 | two in-line gas turbine generator sets and deck steel")
+    for _,part in deck_components(index):
+        m.tris.extend(part.tris)
     if index==0:
-        m=mesh("Top support rig | bare girders, ring beam, shaft collar and mounting shoes")
-        # The girder over the axis stops at the collar that holds the top of the shaft.
-        (x0,y0),(x1,y1)=chord(.3)
-        deck_steel(m,[((x0,y0),(-COLLAR+.03,y0)),((COLLAR-.03,y1),(x1,y1))]+[chord(y) for y in (-1.5,-4.0,-5.8)]+[((x,-4.4),(x,3.0)) for x in (-6.55,-4.75,4.75,6.55)])
-        shaft_connector(m)
         return m
-    m=mesh("Power level 2 | two in-line gas turbine generator sets and deck steel")
     l,w=SET_L/2,SET_W/2
-    deck_steel(m,[chord(y) for y in (1.2,3.4,-1.2,-3.4)])
-    # The turbine level bears on mounts of its own, not on the support rig below it.
-    shoes(m,mount_angles(TURBINE_MOUNTS))
     if film.SHORT:
         # The short film leaves the enclosures off so both turbine sets can be seen.
         return m

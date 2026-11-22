@@ -82,7 +82,7 @@ def compute():
     c["cooler_pumps"] = c["coolers"] * co["pumps_per_cooler"]
     c["reject_mw"] = c["coolers"] * co["cooler_capacity_mw"]
     c["margin"] = c["reject_mw"] / c["heat_mw"] - 1
-    c["duty_coolers"] = math.ceil(c["heat_mw"] / co["cooler_capacity_mw"] - 1e-9)
+    c["duty_coolers"] = math.ceil(th.LOAD / 1e6 / co["cooler_capacity_mw"] - 1e-9)
     c["standby_coolers"] = c["coolers"] - c["duty_coolers"]
     # Air side of one cooler and pipe bores for 2 m/s
     air_rho, air_cp = 1.2, 1.006
@@ -149,7 +149,7 @@ def compute():
     # Height above the pods
     di=cfg.PROJECT["diesel"]
     c["levels_need"]=di["set_height_m"]+pw["set_height_m"]+2*pw["floor_structure_m"]
-    c["levels_have"]=silo["height_m"]-cfg.CROWN
+    c["levels_have"]=silo["height_m"]+cfg.PROJECT["coordination"]["decks"]["roof_curb_m"]-cfg.CROWN
     # Propane line: both turbines at full load
     c["fuel_mw_th"]=c["gen_mw"]/fu["generation_efficiency"]
     c["propane_kg_s"]=c["fuel_mw_th"]/fu["lhv_mj_per_kg"]
@@ -237,13 +237,13 @@ def summary():
         ("Water-glycol", f"{n(C['tank_m3'])} m³"),
         ("", f"{C['tank_gal']/1e6:.2f} M US gal"),
         ("Loop flow", f"{n(C['flow_total'][1]/1000,1)} m³/min"),
-        ("Heat buffer", f"{C['min_per_k']:.1f} min / K"),
+        ("Ride-through", f"{th.C['rides']['adopted']['layered']/60:.0f} min"),
         ("HEAT REJECTION", ""),
         ("Dry coolers", f"{C['coolers']} × {co['cooler_capacity_mw']:g} MW"),
         ("Steel frames", f"{C['frames']}"),
         ("Frame size", f"{co['frame_width_m']:g} × {co['frame_height_m']:g} m"),
         ("Cooler pumps", f"{C['cooler_pumps']}"),
-        ("Capacity / load", f"{C['reject_mw']:.0f} / {C['heat_mw']:.0f} MW"),
+        ("Capacity / duty", f"{C['reject_mw']:.0f} / {th.LOAD/1e6:.2f} MW"),
     ]
 
 
@@ -253,7 +253,7 @@ def panel():
         "store": [("Liquid gap", f"{C['wall_gap']:.2f} m"), ("Fill level", f"{C['liquid_top']:.2f} m"),
                   ("Volume", f"{n(C['tank_m3'])} m³"), ("", f"{C['tank_gal']/1e6:.2f} M US gal"),
                   ("Target", f"{C['target_gal']/1e6:.2f} M US gal"),
-                  ("Heat buffer", f"{C['min_per_k']:.1f} min / K")],
+                  ("Ride-through", f"{th.C['rides']['adopted']['layered']/60:.0f} min")],
         "fuel": [("Tanks", f"{cfg.PROJECT['fuel']['tanks']} × {cfg.PROJECT['fuel']['tank_length_m']:g} m"),
                  ("Stored propane", f"{n(C['fuel_m3'])} m³"),
                  (f"Run time at {C['heat_mw']:.0f} MW", f"{C['fuel_hours']:.0f} h"),
@@ -268,7 +268,7 @@ def panel():
                     ("Exhaust", f"{cfg.POWER['exhaust_temperature_c']:.0f} °C")],
         "backup": [("Diesel sets", f"{cfg.PROJECT['diesel']['sets']} × {cfg.PROJECT['diesel']['set_output_mw']:g} MW"),
                    ("Backup", f"{C['diesel_mw']:.0f} MW"), ("Day tanks", f"{C['day_hours']:.1f} h"), ("Bulk diesel", f"{C['bulk_hours']:.0f} h")],
-        "section": [("Power modules", f"{cfg.POWER['modules']} × {cfg.POWER['module_output_mw']:g} MW"), ("Electrical load", f"{C['heat_mw']:.0f} MW"),
+        "section": [("Power modules", f"{cfg.POWER['modules']} × {cfg.POWER['module_output_mw']:g} MW"), ("Facility / IT", f"{C['heat_mw']+cfg.PROJECT['coordination']['services']['facility_aux_mw']:.0f} / {C['heat_mw']:.0f} MW"),
                     (f"{cfg.NAME} pods on the shaft", f"{C['pods']}"), ("Dry coolers", f"{C['coolers']} × {cfg.COOL['cooler_capacity_mw']:g} MW"),
                     ("Propane stored", f"{n(C['fuel_m3'])} m³"), ("Run time", f"{C['fuel_hours']:.0f} h")],
         "crew": [(name, str(count)) for name, count in cfg.PROJECT["jumpform"]["crew"]]
@@ -385,7 +385,7 @@ At full flow the store turns over once every {c['turnover_min']:.0f} minutes.
 | --- | ---: | --- |
 | Steel frames | {c['frames']} | {c['frames_per_tier']} per tier, tiers based at {' and '.join(f'{z:g} m' for z in co['tier_base_m'])} |
 | Dry coolers installed | {c['coolers']} × {co['cooler_capacity_mw']:g} MW | {co['coolers_per_frame']} stacked per frame |
-| Dry coolers needed for the load | {c['duty_coolers']} | {c['heat_mw']:.0f} MW ÷ {co['cooler_capacity_mw']:g} MW |
+| Dry coolers needed for the load | {c['duty_coolers']} | {th.LOAD/1e6:.2f} MW including pump heat ÷ {co['cooler_capacity_mw']:g} MW |
 | Spare coolers | {c['standby_coolers']} | N+{c['standby_coolers']} |
 | Cooler pumps | {c['cooler_pumps']} | one per cooler |
 | **Rejection capacity** | **{c['reject_mw']:.0f} MW** | |
@@ -394,7 +394,7 @@ At full flow the store turns over once every {c['turnover_min']:.0f} minutes.
 | One whole frame out of service | {c['frame_out_mw']:.0f} MW | {out_frame} |
 | Two whole frames out of service | {c['reject_mw']-2*co['coolers_per_frame']*co['cooler_capacity_mw']:.0f} MW | {out_two} |
 
-{c['duty_coolers']} coolers carry the load and ten frames of three give {c['coolers']}, so {c['standby_coolers']} are spare. A whole frame can be lowered for service at full load.
+{c['duty_coolers']} coolers carry the load and ten frames of three give {c['coolers']}, so {c['standby_coolers']} are spare. A whole frame can be lowered at full load when the remaining coils have sufficient measured thermal duty.
 
 ### One 2 MW cooler
 
@@ -478,12 +478,12 @@ Two in-line gas turbine generator sets stand side by side on the top level, unde
 | Diagonal of one set | {c['set_diagonal']:.2f} m | the bore is {s['inside_diameter_m']:g} m |
 | Two sets side by side | {c['pair_clear']:.2f} m clear of the wall | {pw['aisle_m']:g} m aisle between them |
 | Height needed above the pods | {c['levels_need']:.2f} m | diesel level and turbine level, each with {pw['floor_structure_m']:g} m of floor structure |
-| Height available | {c['levels_have']:.2f} m | crown at {cfg.CROWN:g} m, lid at {s['height_m']:g} m |
+| Height available | {c['levels_have']:.2f} m | crown at {cfg.CROWN:g} m, raised lid seat at {s['height_m']+cfg.PROJECT['coordination']['decks']['roof_curb_m']:g} m |
 | Weight at the top of the silo | {c['top_weight_t']:.0f} t | {pw['modules']} turbine sets and {di['sets']} diesel sets |
 
 ### Roof vents
 
-The lid carries everything that breathes. There is no general ventilation of the bore.
+The lid carries the machine intakes and exhausts. Two interlocked air handlers serve the bore through separate supply and return ducts at the raised curb.
 
 | Vent | Flow | Size on the roof | Speed |
 | --- | ---: | --- | ---: |
@@ -534,26 +534,11 @@ The backup covers black start, controls, the cooling plant and about a fifth of 
 
 {trucking}
 
-## 10. Open questions raised by these numbers
+## 10. Operating limits and coordination decisions
 
-1. **Store size.** {c['tank_gal']/1e6:.2f} M US gal gives {c['ride_min']:.0f} minutes of ride-through at {c['heat_mw']:.0f} MW. Decide the ride-through the site needs. See section 2. Check 5 of the [design report](report.md#9-check-5-heat-balance-of-the-store) finds that the store has to be layered, cool below warm, for the {th.INSTALLED} coolers to carry the load above {th.C['limit'][th.INSTALLED, True]:.0f} °C outside. Layered, they carry it to {th.C['limit'][th.INSTALLED, False]:.0f} °C and the store rides through {th.C['rides']['drawn']['layered']/60:.0f} minutes in any weather. The pipes inside the store that layering needs, a cover and an overflow are in the model.
-2. **Rack heat.** {c['rack_kw']:.0f} kW per rack is {c['heat_mw']:.0f} MW over {c['racks']} racks. Published figures for the Vera Rubin NVL72 run from about 190 to 230 kW, so the upper end would be {c['racks']*.23:.0f} MW.
-3. **Generation.** Two {pw['module_output_mw']:g} MW sets match the {c['heat_mw']:.0f} MW load with no spare, and pumps, fans and conversion losses add to that load. The diesels cover {c['diesel_share']*100:.0f}%.
-4. **Fit of the power levels.** The two levels need {c['levels_need']:.2f} m and have {c['levels_have']:.2f} m, so the turbine sets stand {(c['levels_have']-c['levels_need'])*1000:.0f} mm under the lid. The floor structure for {c['top_weight_t']:.0f} t is an allowance, not a design.
-5. **Wall design.** {c['head_kpa']:.0f} kPa at the base puts {c['outer_hoop_kn_m']:,.0f} kN/m of hoop tension in the outer wall. The walls have no post-tensioning. The outer wall is {s['outer_wall_m']*1000:.0f} mm for its whole height with two layers of duplex stainless steel hoop bars, designed for strength and for the crack the liner can bridge. The inner wall is {s['inner_wall_m']*1000:.0f} mm, set by buckling with the creep of warm concrete. This departs from the durability factor of ACI 350 and needs the agreement of the checker and the authority. See [check 3](report.md#8-check-3-silo-walls) and the [reinforcement options](report.md#10-reinforcement-of-the-outer-wall-options) in the design report. The walls as first drawn were {wl['present']['outer']*1000:.0f} mm.
-6. **Air in the bore.** There is no general ventilation. The bore is surrounded by a store at {th.COLD:.0f} to {th.HOT:.0f} °C, so it will sit near that temperature. Check 5 finds about {th.C['inner']['heat']/1e3:.0f} kW coming through the inner wall with the bore held at {th.T['bore_air_c']:g} °C. Work inside needs cooled air or short shifts, and this is not designed.
-7. **Heat next to the pods.** Each turbine rejects about {c['turbine_heat_mw']:.0f} MW, mostly up the stack at {pw['exhaust_temperature_c']:.0f} °C. Insulation of the stacks and the turbine level above the pods and the store is not designed.
-8. **Cooler air path.** Three coolers stacked vertically discharge outward at {c['cooler_face_ms']:.1f} m/s. Recirculation between rows and between the two tiers has not been checked.
-9. **Lifts.** The films show the bare support rig lifted first, the diesel sets and day tanks landed individually later, and the turbine level lifted as an assembly. Crane selection, lift engineering and the removal route for a turbine or generator remain open.
-10. **Fuel.** {n(c['fuel_m3'])} m³ of propane runs the site for about {c['fuel_hours']:.0f} hours. Separation distances, bunding, the vaporiser and the resupply rate have not been checked. Fuel stored inside is limited to the day tanks, and the limit that applies has not been checked.
-11. **Power in the shaft.** {c['heat_mw']:.0f} MW passes down the steel shaft to {c['pods']} pods, {c['pod_kw']:.0f} kW each. The busbar, its cooling and the connection at each level are not designed.
-12. **Pod support.** The pod trusses, the shaft wall, the base of the shaft, the root connection, the hub and the drive of each level are sized in the [design report](report.md) for gravity load. Each level turns on a slewing ring with a motor of about {math.ceil(cn.C['drive']['power']/1e3*2)/2:g} kW. The support rig, its shaft connector and the wall mounts are still to be designed. The support rig holds the top of the shaft, so its steel is set on its wall mounts straight after the cage and before the first pod. The shaft wall is {st.inches(st.C['shaft']['chosen']['section']['wall_in'])} in, which keeps the movement of a pod tip to {cn.C['budget']['adopted']['total']*1000:.1f} mm against the {st.TIP['accumulated_mm']:g} mm allowed. Each pod is joined to its wall sleeve through a flexible section that takes ± {cn.C['flexible']['across']*1000:.0f} mm, for settlement and temperature.
-13. **Pod weight.** A pod weighs {lg['pod_t']:.1f} t with the frame as designed. The rack, CDU and coolant weights in it are allowances: NVIDIA has not published a shipping weight for this rack. The load is {lg['pods_per_truck']} pods a truck, side by side, because a {st.SPAN:.2f} m pod no longer fits twice along the deck.
-14. **Liner and fill.** The liner goes on from day {logistics.BY_KEY['coating']['start']}, when the youngest concrete is {lg['coat_age_min']} days old, and the fill starts on day {logistics.BY_KEY['water']['start']}. Most coatings ask for 28-day-old, dry concrete, so the liner system and its moisture limits need a supplier's check. The pod sleeves, frame conduits and the door blockout all pass through the liner and need detailing.
-15. **A lift a day.** {cfg.PROJECT['jumpform']['lifts_per_day']:g} lift a day is fast for a jumpform. Slower lifts lengthen the work before day 0 and leave the {logistics.DAYS} days after it unchanged.
-16. **Fuel line across the ring.** The propane and diesel lines run on the ground from the tanks to the wall and cross both ring lanes. They need to be buried or bridged there.
-17. **Heavy and oversize loads.** The {cfg.PROJECT['fuel']['tanks']} propane tanks are {cfg.PROJECT['fuel']['tank_diameter_m']:g} m wide and the turbine sets weigh {pw['set_weight_t']:g} t. Their permits, routes and the way each tank is jacked off its trailer are not designed.
-18. **The ground.** The silo weighs {fd.C['total']/1e6:,.0f} MN full, which is {fd.C['total']/fd.C['area']/1e3:.0f} kPa on its slab on average. The slab is {fd.C['drawn']:g} m thick and the ground is taken as {fd.F['design_ground']}, on which [check 4](report.md#11-check-4-foundation) finds about {fd.C['chosen']['settle']['outer']*1000:.0f} mm of settlement as the silo is loaded. There is no ground investigation: it has to confirm the ground, the settlement over time and the choice of a slab over piles.
+The 50 MW figure is the installed IT load. Two turbines supply 50 MW gross. A 6 MW utility intertie supplies the 4 MW auxiliary allowance at full IT load. Island operation is capped at 46 MW IT. The four diesels support at most 7 MW of priority IT with 3 MW reserved for essential plant. The controller uses the lower of the electrical and thermal limits.
+
+The [revision J assumption register](assumptions.md) gives the disposition of all 18 questions previously listed here. [Structural checks 7–10](report.md#7-checks-7-to-10-support-rig-shaft-connector-and-wall-mounts-design-loads) include the independent upper floor, the guided shaft collar and the wall seats. The IFC includes the buried fuel crossing, conversion plant and the individual rack positions.
 
 ## Fluid properties used
 

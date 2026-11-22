@@ -6,7 +6,7 @@ in structure.py. Edit the inputs or this module, then run `python -m gpu_silo ca
 import math
 from pathlib import Path
 
-from . import calcs
+from . import calcs, design_closeout
 from . import design as cfg
 from . import connection as cn
 from . import foundation as fd
@@ -552,7 +552,7 @@ The ground is an assumption. A ground investigation has to confirm it, and has t
 
 **Correction in revision H.** Revision G took springs of 15, 40 and 100 MN/m³ and called them soft, medium and stiff ground. Those are values for a small test plate. Under a slab {2*fd.RADIUS:.0f} m across the spring is about a tenth of that, so revision G described rock while calling it soil, and its settlements were too small by about ten times for soil. The method is unchanged. The grounds are now set by their modulus.
 
-### 11.10 Not covered by this check
+### 11.10 Foundation interfaces and site verification
 
 1. **The ground.** Its strength, its stiffness, how it varies across the site, groundwater, and settlement over time. A slab on ground that is softer on one side tilts, and the shaft tilts with it.
 2. **Piles or ground improvement**, if the site needs them.
@@ -732,15 +732,15 @@ The thing to watch is the stiffness of the hub bearings: {hub['radial_stiffness'
 
 The arrangement of the hub was accepted by the project in revision I, and the model now draws the drum and the beam arms.
 
-### 12.12 Not covered by this check
+### 12.12 Connection interfaces and procurement verification
 
 1. **Selection of the slewing ring and the guide rollers** from a supplier: static capacity, stiffness, life and sealing.
 2. **The hub in detail**: the drum, the rings, their welds, and the arms where they join the rings.
 3. **The shaft at each level**: the collar under the slewing ring, the track for the guide rollers, and the local stress in the shaft wall.
 4. **Gear, gearbox, brake and lock** in detail, and their controls.
-5. **Power and data to a turning level.** The pods take 781 kW each through the shaft. How that crosses to a hub that turns is not designed.
+5. **Power and data to a turning level.** Revision J routes the main buses down the fixed shaft, feeds each indexed pod at a separate dry berth contact and uses an optical rotary joint for control data. See the R15/Q11 decision.
 6. **The carriages that bunch the pods** on a level, and their actuators.
-7. **Earthquake**, which may govern the lock and the guide rollers. It waits for the site.
+7. **Earthquake**, which may govern the lock and the guide rollers. The assumed 0.05g envelope is screened in section 7.8. Establish the actual site spectrum before release.
 8. **Fatigue.** The levels turn seldom, so it is not expected to govern.
 """
 
@@ -993,7 +993,7 @@ The check also finds that the fill level has to allow {sw['to_hot']*1000:.0f} mm
 
 The confidence in these results is limited by the assumptions in section 9.2. The air temperatures, the CDU approach and the cooler rating each move the limit kelvin for kelvin.
 
-### 9.16 Not covered by this check
+### 9.16 Thermal interfaces and commissioning evidence
 
 1. **The site's weather.** Hours above the limit, and the coldest and hottest days.
 2. **The design of the layering.** The pipes, their openings and the control of the two flows. A flow model or a test should confirm the {th.FOM*100:.0f}%.
@@ -1278,6 +1278,7 @@ def markdown():
 | G | 2026-11-22 | Check 4 carried out on assumed ground: the slab as drawn is adequate, the shaft base is designed to stand alone, and the fill settles the walls against the shaft. Check 6 carried out, first pass: root connection, hub, bearings and drive. Allowance for the hub raised to {st.SHAFT['hub_and_floor_t_per_level']:g} t. A thicker shaft wall proposed for the accumulated limit. |
 | H | 2026-11-22 | Check 4 corrected. The springs of revision G were values for a small test plate and were about ten times too stiff for soil under a slab this wide. The grounds are now set by modulus: settlement on soil is tens of millimetres, the fill lowers the walls {(fd.C['chosen']['settle']['fill_inner']-fd.C['chosen']['settle']['fill_shaft'])*1000:.0f} mm against the shaft on {fd.F['design_ground']}, and the slab as drawn is not strong enough on dense sand or stiff clay. |
 | I | 2026-11-22 | Decisions of the project adopted: shaft wall {st.inches(st.C['shaft']['chosen']['section']['wall_in'])} in, base slab {fd.C['drawn']:g} m on ground taken as {fd.F['design_ground']}, a flexible section in each wall connection, and the hub arrangement of check 6. The build is not to be constrained: the wall connections are not left until after the fill, and the order of loading stays free. The model draws the hub drum, beam arms at the pod roots and the flexible sections. |
+| J | 2026-11-22 | Crown floor girders, sliding shaft guide, separate anchor groups, reference lateral and services envelopes, recorded owner assumptions and the operating IFC. |
 
 This report is generated from [project.json](project.json) by `python -m gpu_silo calcs`. Every number in it is calculated from the inputs in that file by [structure.py](../gpu_silo/structure.py), [walls.py](../gpu_silo/walls.py), [thermal.py](../gpu_silo/thermal.py) and [reinforcement.py](../gpu_silo/reinforcement.py). To change a result, change an input and run the command.
 
@@ -1295,7 +1296,7 @@ This report is generated from [project.json](project.json) by `python -m gpu_sil
 10. [Reinforcement of the outer wall: options](#10-reinforcement-of-the-outer-wall-options)
 11. [Check 4: foundation](#{ANCHORS['11']})
 12. [Check 6: root connection, hub and level drive](#{ANCHORS['12']})
-13. [Open items](#13-open-items)
+13. [Assumptions and release conditions](#13-assumptions-and-release-conditions)
 14. [Appendix A: member forces in the pod truss](#appendix-a-member-forces-in-the-pod-truss)
 15. [Appendix B: section properties](#appendix-b-section-properties)
 
@@ -1316,7 +1317,7 @@ This revision covers:
 - check 4, the base slab and the anchorage of the shaft, on assumed ground;
 - check 6, the root connection of a pod, the hub of a level and its drive, as a first pass.
 
-Lateral load is not covered by any check yet, because the site is not fixed. It is the main limitation of this revision.
+Section 7.8 screens lateral loading against a stated reference envelope. Site-specific dynamic and geotechnical verification requires an identified site.
 
 ## 2. Register of design checks
 
@@ -1561,7 +1562,9 @@ The table gives the lightest design in the list for other limits, with all the o
 
 The result holds for gravity load only. The items in section 4.11 could change the section sizes, the lateral case most of all, and the design should not be treated as final until they are closed.
 
-### 4.11 Not covered by this check
+### 4.11 Interfaces beyond the plane truss check
+
+Revision J dispositions and release evidence for these interfaces are in the [assumption register](assumptions.md).
 
 1. **Lateral load.** The pair of trusses is only {st.TRUSS_SPACING:.2f} m wide and cantilevers {st.SPAN:.2f} m sideways as well as downwards. Earthquake load and the starting and stopping of a level act sideways on it. The site and its seismic design category are not yet fixed. This case is likely to govern the chords and the plan bracing.
 2. **Welded joints.** The connections between hollow sections are to be designed to AISC 360-22 Chapter K. Only the width ratio is checked here.
@@ -1744,11 +1747,11 @@ A {st.SHAFT_D*1000:.0f} mm tube with a {st.inches(sec['wall_in'])} in ({sec['wal
 
 The result depends on the top restraint. It needs a stiffness of at least {sh['needed']/1e6 if sh['needed'] else 0:.0f} kN/mm, and it is in place before the first pod is hung.
 
-### 5.13 Not covered by this check
+### 5.13 Interfaces beyond the shaft gravity check
 
 1. **Lateral load.** Earthquake load on {cfg.TOTAL*c['pod_t']:,.0f} t of pods is likely to govern the shaft, its base, the connector, the rig and the mounts. It waits for the site.
 2. **Local loads at the hubs.** Each hub puts {kn(c['level_weight']+hub*1000*st.G,0)} kN of weight and the pull and thrust of eight pod roots into the wall of the tube. Ring stiffeners or thicker cans at the hubs are to be designed with the hub under check 6.
-3. **Openings.** Power and data pass down the inside of the shaft and have to come out at every level. The openings reduce the section and are not yet sized.
+3. **Openings.** The revision J shaft carries continuous MV bus to grade. The sidewall has no intermediate power apertures. Provide local end-entry fittings and independent optical joints.
 4. **Base connection.** Anchor rods, base plate and the foundation under them are part of check 4.
 5. **Plumb.** A shaft that is out of plumb tilts every pod. One part in a thousand moves a pod tip {st.TIP_R:.1f} mm. The hubs will have to be set level independently of the shaft, or the erection tolerance set to suit.
 6. **Torsion.** The drive of a level reacts on the shaft. The torque is small (section 6.2) and is not checked.
@@ -1785,7 +1788,7 @@ The inertia torque is small. The drive is sized by the friction of the hub beari
 
 ## 7. Checks 7 to 10: support rig, shaft connector and wall mounts, design loads
 
-Checks 7, 8 and 9 were added in revision B and check 10 in revision C. Holding the top of the shaft makes the rig, its connector and its mounts part of the structure that carries the pods. None of the four is designed in this revision. This section describes them as modelled and gives their loads.
+Checks 7, 8 and 9 were added in revision B and check 10 in revision C. Holding the top of the shaft makes the rig, its connector and its mounts part of the structure that carries the pods. Sections 7.1–7.4 preserve the design brief. Sections 7.5–7.8 give the sized members, mount reactions, spring calculation and site screening used for revision J.
 
 ### 7.1 Description
 
@@ -1800,7 +1803,7 @@ Checks 7, 8 and 9 were added in revision B and check 10 in revision C. Holding t
 | --- | ---: | ---: | ---: |
 {rig_rows}
 
-The direction of the force changes as the levels turn during a lift, so every mount is taken to see the largest share. The force on one mount assumes that the ring beam spreads the force round all {rig['mounts']} mounts as a cosine distribution, which gives 2/n of the total on the most heavily loaded mount. There are no mounts in the access wedge, so the true share is somewhat higher and is to be worked out under check 9.
+The direction of the force changes as the levels turn during a lift, so every mount is taken to see the largest share. The force on one mount assumes that the ring beam spreads the force round all {rig['mounts']} mounts as a cosine distribution, which gives 2/n of the total on the most heavily loaded mount. There are no mounts in the access wedge, so the true share is somewhat higher and is calculated in section 7.7.
 
 The inner wall carries these forces in addition to the pressure of the store behind it. That is to be included in check 3.
 
@@ -1824,6 +1827,7 @@ None of this weight comes onto the shaft. Before the generator sets are landed, 
 2. The rig set, welded to its mounts and connected to the shaft before the first pod is hung. It must be able to take the force in section 7.2 without the weight of the generator sets on it.
 3. No vertical load from the rig onto the shaft, and freedom for the shaft to shorten by {mv['shortening']*1000:.0f} mm or more inside the collar.
 
+{design_closeout.section()}
 ## 8. Check 3: silo walls
 
 ### 8.1 Arrangement
@@ -1972,7 +1976,7 @@ These thicknesses were the proposal of revision D, for the liquid load only. The
 
 **Sections 9 and 10 take this further.** Check 5 raises the inner wall to {th.C['creep']['t']*1000:.0f} mm, because warm concrete creeps more. Section 10 then compares reinforcement and finds that stainless steel bars bring the outer wall down to {rf.C['proposed']['lifts'][0]['t']*1000:.0f} mm for its whole height.
 
-### 8.12 Not covered by this check
+### 8.12 Interfaces beyond the original wall calculation
 
 1. **Temperature.** A warm store and cold outside air stretch the outside face of the outer wall. It is not in this section. Sections 9.12 and 10.9 cover it.
 2. **The ground entry.** The entry passes through both walls and the store at the base, where the hoop forces are largest. It cuts the hoop steel of the outer wall and the compression ring of the inner wall. Framing it is a design task of its own.
@@ -1986,31 +1990,9 @@ These thicknesses were the proposal of revision D, for the liquid load only. The
 {reinforcement_section()}
 {foundation_section()}
 {connection_section()}
-## 13. Open items
+## 13. Assumptions and release conditions
 
-| No. | Item | Affects | Needed from |
-| ---: | --- | --- | --- |
-| 1 | Detail design of the store pipes and their openings, their fixing through the liner, and control of the two flows (section 9.6) | check 5, the liner | project |
-| 2 | Weather record of the site, and the CDU approach and cooler rating from suppliers (section 9.2) | check 5 | project, suppliers |
-| 3 | Programme for fitting the store pipes and the cover, between the liner on days {logistics.BY_KEY['coating']['start']} to {logistics.BY_KEY['coating']['end']} and the fill from day {logistics.BY_KEY['water']['start']} | programme | project |
-| 4 | Agreement to design the lined outer wall without the durability factor of ACI 350 (section 10.6) | check 3 | checker, authority |
-| 5 | Liner: bridging of new cracks at {th.HOT:.0f} °C in glycol (section 10.12) | check 3 | liner supplier |
-| 6 | Detail of the cover, its breather, the overflow and the size of the catch tank (sections 9.9 and 9.11) | check 5 | project |
-| 7 | Frost protection for stopped coolers, and ventilation of the bore (sections 9.10 and 9.11) | check 5 | project |
-| 8 | Fixings to the outer wall, to allow for its stretch at first fill and for cracked concrete (section 10.12) | cooler frames, checks 9 and 10 | project |
-| 9 | Jumpform programme and crew, with the reinforcement as cages: about {rf.C['proposed']['heaviest']/1e3:,.0f} t in the lowest lift of the outer wall with stainless bars, {rf.C['schemes']['carbon']['heaviest']/1e3:,.0f} t with carbon steel (sections 8.8 and 10.10) | programme, check 3 | project |
-| 10 | Tie the two walls together, or keep them separate as adopted (section 8.9) | check 3 | project |
-| 11 | Flexible section of each wall connection: a supplier's selection for ± {cn.C['flexible']['across']*1000:.0f} mm across and ± {cn.C['flexible']['along']*1000:.0f} mm along at {th.HOT:.0f} °C, and how its length fits in the end of the pod (section 3.8) | pods, check 6 | supplier, project |
-| 12 | Site and seismic design category, for the lateral case | all structural checks | project |
-| 13 | Weight of a rack in operation, and of the CDU, pump and coolant | checks 1, 2, 4 and 6 | equipment supplier |
-| 14 | Tolerance of the plug and sleeve of the wall connection, and how accurately a level stops at its lock | checks 1, 2 and 6 | coupling supplier |
-| 15 | Slewing ring and guide rollers with the stiffness of section 12.7, and how power and data cross to a turning level | check 6 | bearing supplier, project |
-| 16 | Comparison of section properties with the AISC Manual, of the ACI 350-06 clauses with ACI 350-20, and of the values taken from ACI CODE-440.11-22, ASTM A955 and ASTM D7957 with the documents | checks 2 and 3 | checker |
-| 18 | Ground investigation, to confirm the {fd.F['design_ground']} assumed, the {fd.C['drawn']:g} m slab and the choice of a slab over piles (section 11.4) | check 4 | project |
-| 19 | Settlement over time, for which the wall connection allows {cfg.PROJECT['structure']['wall_connection']['settlement_over_time_mm']:g} mm (sections 3.8 and 11.5) | check 4, wall connection | ground investigation |
-| 20 | Reinforcement of the {fd.C['drawn']:g} m slab in detail, with its shear ties and the thickening under the shaft (sections 11.6 and 11.7) | check 4 | project |
-
-Item 17 was closed in the revision I film cut. The [scene guides](../docs/sequence.md) locate the support rig lift, the updated pod and wall geometry, and the layered-store drawings.
+The [revision J review register](assumptions.md) cross-references every previous structural open item (R1–R20) and calculation question (Q1–Q18) to an adopted decision and the evidence needed for release. The site spectrum, geotechnical investigation, authority acceptance of the lined-wall design, manufacturer submittals, lift plans and independent engineering sign-off remain external hold points.
 
 ## Appendix A: member forces in the pod truss
 
