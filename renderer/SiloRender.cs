@@ -60,6 +60,8 @@ class Data {
     public float CoolerFrameWidth,CoolerFrameHeight,CoolerFrameDepth,CoolLength,PumpLength,CoolerBack,CoolerMW;
     public int[] FrameOrder;public int[,] FrameTimes;public float[] FrameBase,FrameBearing;
     public float Crown,LiquidTop;
+    public int RigEnd,DieselSeated;
+    public float PodRiser,PodOffset,CoolerRiser,BottomMouth,TopMouth,Diffuser,DiffuserGap,CoolerReturnAngle,CoolerSuctionAngle;
     public Row[] Strip,Summary,StoreRows,FrameRows;
     static V Vec(BinaryReader r){return new V(r.ReadSingle(),r.ReadSingle(),r.ReadSingle());}
     static string Str(BinaryReader r){return System.Text.Encoding.UTF8.GetString(r.ReadBytes(r.ReadInt32()));}
@@ -86,7 +88,7 @@ class Data {
     }
     public Data(string file){
         using(var r=new BinaryReader(File.OpenRead(file))){
-            if (System.Text.Encoding.ASCII.GetString(r.ReadBytes(8))!="GSILO06\0") throw new InvalidDataException("Unknown scene");
+            if (System.Text.Encoding.ASCII.GetString(r.ReadBytes(8))!="GSILO07\0") throw new InvalidDataException("Unknown scene");
             int nm=r.ReadInt32(),nn=r.ReadInt32(),nf=r.ReadInt32(); Fps=r.ReadInt32();
             Outer=r.ReadSingle();OuterInside=r.ReadSingle();InnerOutside=r.ReadSingle();Inner=r.ReadSingle();
             Height=r.ReadSingle();Lift=r.ReadSingle();
@@ -96,6 +98,9 @@ class Data {
             LidBegin=r.ReadInt32();LidEnd=r.ReadInt32();
             SealBegin=r.ReadInt32();SealEnd=r.ReadInt32();OrbitBegin=r.ReadInt32();OrbitEnd=r.ReadInt32();
             Crown=r.ReadSingle();LiquidTop=r.ReadSingle();
+            RigEnd=r.ReadInt32();DieselSeated=r.ReadInt32();
+            PodRiser=r.ReadSingle();PodOffset=r.ReadSingle();CoolerRiser=r.ReadSingle();BottomMouth=r.ReadSingle();TopMouth=r.ReadSingle();
+            Diffuser=r.ReadSingle();DiffuserGap=r.ReadSingle();CoolerReturnAngle=r.ReadSingle();CoolerSuctionAngle=r.ReadSingle();
             Crew=r.ReadInt32();Repair=r.ReadInt32();
             Fault=r.ReadInt32();FaultLevel=r.ReadInt32();FaultBay=r.ReadInt32();
             Levels=r.ReadInt32(); Bays=r.ReadInt32(); Total=r.ReadInt32();
@@ -707,7 +712,7 @@ partial class Shot {
     }
     void PowerOverlay(Graphics g,int frame){
         int t=frame-d.Full;
-        int firstSeat=d.Pick1+d.PickDuration,secondSeat=d.Pick2+d.PickDuration;
+        int firstSeat=d.DieselSeated,secondSeat=d.Pick2+d.PickDuration;
         int count=t>=secondSeat?2:t>=firstSeat?1:0;
         bool vents=t>=d.VentBegin,done=t>=d.VentEnd,second=t>=d.Pick2;
         int elapsed=t-(second?d.Pick2:d.Pick1);
@@ -715,15 +720,14 @@ partial class Shot {
         g.FillRectangle(accent,x,33,25,3);
         Text(g,"POWER INSTALLATION",section,muted,x,46);
         Heading(g,"Power plant",x-2,73);
-        Text(g,"Diesel level, then turbine level",title2,muted,x,126);
+        Text(g,"Diesel sets, then turbine level",title2,muted,x,126);
         Rule(g,x,164,xr,164,cLine,1);
-        Text(g,"LEVELS SEATED",section,muted,x,182);
+        Text(g,"LEVELS EQUIPPED",section,muted,x,182);
         g.DrawString(count+" / 2",numbers,ink,new PointF(xr,169),rightText);
         for(int i=0;i<2;i++){g.FillRectangle(i<count?ink:light,x+101*i,212,97,5);}
         string phase=t>=d.LidEnd?"Silo closed":t>=d.LidBegin+8?"Lower the lid and its vents":done?"Rig the lid":vents?"Release the rigging":
             count==2?"Release the rigging":t>=firstSeat && !second?"Hook the turbine level":
-            elapsed<5?"Rig the level":elapsed<55?"Hoist above rim":elapsed<91?"Slew over bore":
-            second?"Seat the turbine sets":"Seat the diesel sets";
+            !second?"Land sets on the rig":elapsed<5?"Rig the level":elapsed<55?"Hoist above rim":elapsed<91?"Slew over bore":"Seat the turbine sets";
         Text(g,phase,strong,done?ink:accent,x,236);
         Text(g,"Turbine set",title2,muted,x,275);
         g.DrawString(d.PowerLength.ToString("0.0")+" x "+d.PowerWidth.ToString("0.0")+" m",mono,ink,new PointF(xr,275),rightText);
@@ -918,6 +922,10 @@ partial class Shot {
             g.ScaleTransform(Factor,Factor);
             g.SmoothingMode=SmoothingMode.AntiAlias;g.TextRenderingHint=TextRenderingHint.AntiAliasGridFit;
             g.FillRectangle(paper,0,0,UiLeft,H/Factor);
+            if(frame>=d.StoreStart && frame<(d.Short?d.Terminal:d.RigEnd)){
+                if(Ghosted(frame))ShellEdges(g);
+                CardOverlay(g,frame,d.Cards[d.Cards.Length-1]);ProgrammeTag(g,frame);DesignStrip(g,frame);return;
+            }
             if(d.Short && frame>=d.BuildEnd){ShortOverlay(g,frame);return;}
             if(frame>=d.Terminal && frame<d.FirstPod-8){TerminalOverlay(g,frame);ProgrammeTag(g,frame);DesignStrip(g,frame);return;}
             if(frame>=d.BuildEnd){

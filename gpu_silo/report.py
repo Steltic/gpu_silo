@@ -1728,7 +1728,7 @@ The shaft would not collapse, but the pods would be {free['movement']['lean_drop
 
 The programme was changed in revision C to prevent this. The steel of the support rig is fabricated on site on days {logistics.span('rigfab')[0]} to {logistics.span('rigfab')[1]}, the cage is lifted in on day {logistics.span('cage')[0]}, and the rig is set on its wall mounts and connected to the shaft on days {logistics.span('rig')[0]} to {logistics.span('rig')[1]}. The first pod is hung on day {logistics.span('pods')[0]}. The generator sets are landed on the rig on days {logistics.span('power')[0]} to {logistics.span('power')[1]}, with the turbine level and the lid. The programme check in [logistics.py](../gpu_silo/logistics.py) fails if the rig is not in before the pods.
 
-The films still show the rig arriving with the generator sets. They will be re-cut at the next render.
+Both films show the bare rig seated on its wall mounts before pod loading. The diesel sets and day tanks are lifted onto the rig after the pods.
 
 ### 5.11 Verification
 
@@ -2006,10 +2006,11 @@ These thicknesses were the proposal of revision D, for the liquid load only. The
 | 14 | Tolerance of the plug and sleeve of the wall connection, and how accurately a level stops at its lock | checks 1, 2 and 6 | coupling supplier |
 | 15 | Slewing ring and guide rollers with the stiffness of section 12.7, and how power and data cross to a turning level | check 6 | bearing supplier, project |
 | 16 | Comparison of section properties with the AISC Manual, of the ACI 350-06 clauses with ACI 350-20, and of the values taken from ACI CODE-440.11-22, ASTM A955 and ASTM D7957 with the documents | checks 2 and 3 | checker |
-| 17 | The films still show the support rig arriving with the generator sets, walls of {wc['present']['outer']*1000:.0f} mm, a store with no pipes, cover or overflow, flat arms at the pod roots and no flexible sections. The flow drawings in the long film show the store warm inside and cool outside: it is now layered, warm above cool. | animation | next render |
 | 18 | Ground investigation, to confirm the {fd.F['design_ground']} assumed, the {fd.C['drawn']:g} m slab and the choice of a slab over piles (section 11.4) | check 4 | project |
 | 19 | Settlement over time, for which the wall connection allows {cfg.PROJECT['structure']['wall_connection']['settlement_over_time_mm']:g} mm (sections 3.8 and 11.5) | check 4, wall connection | ground investigation |
 | 20 | Reinforcement of the {fd.C['drawn']:g} m slab in detail, with its shear ties and the thickening under the shaft (sections 11.6 and 11.7) | check 4 | project |
+
+Item 17 was closed in the revision I film cut. The [scene guides](../docs/sequence.md) locate the support rig lift, the updated pod and wall geometry, and the layered-store drawings.
 
 ## Appendix A: member forces in the pod truss
 

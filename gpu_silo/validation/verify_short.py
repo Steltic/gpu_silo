@@ -50,12 +50,14 @@ def check(p,doc,names,parents,get,points):
     first,last,_=logistics.span("water")
     assert last==logistics.DAYS and last-first+1>=14 and abs(p.liquid_level(p.FRAMES-1)-p.cfg.LIQUID_TOP)<.01
     assert counts["water"]==logistics.C["water_loads"]
-    # Power levels: deck steel and sets are fabricated on the ground before the picks, with no enclosure.
+    # The rig is fabricated before the early lift. Turbine fabrication and diesel staging come later.
     for j in (0,1):
         holder=names[f"Power level {j+1:02} | being fabricated"];shown=get(holder,"scale",[1,1,1])[:,0]
-        assert shown[base+a.FAB[0]]>.999 and shown[base+a.PICK_STARTS[j]]<.001 and a.FAB_DONE<=a.PICK_STARTS[j]
+        ready=p.clock.CAGE_END if j==0 else base+a.FAB_DONE
+        pick=p.clock.RIG_PICK if j==0 else base+a.PICK_STARTS[j]
+        assert shown[ready-1]>.999 and shown[ready:].max()<.001 and ready<=pick
         strips=[i for name,i in names.items() if name.startswith(f"Power level {j+1} | deck steel, strip")]
-        assert len(strips)>=4 and all(get(i,"scale",[1,1,1])[base+a.FAB_DONE-1,0]>.999 for i in strips)
+        assert len(strips)>=4 and all(get(i,"scale",[1,1,1])[ready-1,0]>.999 for i in strips)
         assert sum(1 for name in names if re.match(rf"^Power level {j+1:02} \| welder \d+$",name))==p.cfg.PROJECT["logistics"]["power_fabrication"]["welders"]
     assert sum(1 for name in names if re.match(r"^Diesel set \d+ \| delivery",name))>=p.cfg.PROJECT["diesel"]["sets"]
     # The dock becomes the control office after the last pod has gone in.

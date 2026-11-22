@@ -262,15 +262,34 @@ def main(path):
         # Each level has shoes below its ring beam. Those of the support rig still clear the crown of the cage.
         assert np.isclose(np.min(pts[:,2]),a.SEAT_Z-.14,atol=.02)
         assert a.power_base(p.CROWN,0)+a.SEAT_Z-.14>p.CROWN-.10
-        first=p.FILLED+a.PICK_STARTS[j]
+        first=p.clock.RIG_PICK if j==0 else p.FILLED+a.PICK_STARTS[j]
         landing=first+a.PICK_LENGTH
-        assert np.allclose(xyz[first],[a.PICK_SITES[j][0],a.GROUND,-a.PICK_SITES[j][1]],atol=.00003)
+        ground=a.DECK+.25 if j==0 else a.GROUND
+        assert np.allclose(xyz[first],[a.PICK_SITES[j][0],ground,-a.PICK_SITES[j][1]],atol=.00003)
         assert np.allclose(xyz[landing:],[0,a.power_base(p.CROWN,j),0],atol=.00003)
         assert abs(get(body,"rotation",[0])[-1,0]-a.POWER_YAW)<.00002
         while_crossing=(np.linalg.norm(xyz[:,[0,2]],axis=1)>1.e-4)&(np.linalg.norm(xyz[:,[0,2]],axis=1)<15.)
         assert np.min(xyz[while_crossing,1]+pts[:,2].min())>p.s.WALL_HEIGHT+2
         assert xyz[-1,1]+pts[:,2].min()>=p.CROWN-.10 and xyz[-1,1]+pts[:,2].max()<a.LID_Z
-        assert get(body,"scale",[1,1,1])[p.FILLED+(a.FAB_DONE-1 if short else 0),0]<.001
+        seen=get(body,"scale",[1,1,1])[:,0]
+        if j==0:
+            assert p.C+298 < first < landing < p.FIRST_POD and seen[first:].min()>.999
+            assert pts[:,2].max()<.1,"the early lift must contain only the support steel"
+        else:
+            assert seen[p.FILLED+(a.FAB_DONE-1 if short else 0)]<.001
+    hook=get(names["South crawler | retained hook block"],"translation",[0,0,0])
+    deck=get(names["Power level 01 | diesel deck assembly"],"translation",[0,0,0])
+    flight=slice(p.clock.RIG_PICK,p.clock.RIG_PICK+a.PICK_LENGTH+1)
+    assert np.allclose(hook[flight]-deck[flight],[0,a.APEX,0],atol=.001)
+    for i,(x,y,angle) in enumerate(a.DIESEL_LOADS):
+        name=f"Diesel set {i+1} | skid" if i<len(a.GEN_AT) else f"Diesel day tank {i-len(a.GEN_AT)+1} | tank and saddles"
+        body=names[name];xyz=get(body,"translation",[0,0,0])
+        first=p.FILLED+a.PICK_STARTS[0]+i*a.DIESEL_CYCLE;end=first+a.DIESEL_FLIGHT
+        cx,cy,_=a.turned(x,y)
+        assert np.allclose(xyz[first],[a.PICK_SITES[0][0]+cx,a.GROUND,-a.PICK_SITES[0][1]-cy],atol=.001)
+        assert np.allclose(xyz[end:],[cx,a.power_base(p.CROWN,0),-cy],atol=.001)
+        assert np.allclose(hook[first:end+1]-xyz[first:end+1],[0,a.diesel_apex(i),0],atol=.001)
+        assert get(body,"scale",[1,1,1])[p.FIRST_POD,0]<.001 and get(body,"scale",[1,1,1])[first:,0].min()>.999
     assert a.power_base(p.CROWN,1)-a.power_base(p.CROWN,0)>=a.GEN_H+a.DECK-1e-9
     assert a.power_base(p.CROWN,1)+a.SET_H<=a.LID_Z
     # Two turbine sets side by side clear the wall. The diesel sets clear each other, the wall and the crew's access wedge.
@@ -371,7 +390,7 @@ def main(path):
         check(p,doc,names,parents,get,points,ids,planar_overlap)
     print(f"{p.TOTAL} ground-fed {p.cfg.NAME} pods on {p.LEVELS} levels. All framed dimensions, CDU section colours and dock strokes passed.")
     print(f"Clear bore {2*p.s.RI:.2f} m. Steel cage radius {outer_r:.3f} m. Bunched inner-corner clearance {bunched_gap*1000:.1f} mm.")
-    print(f"Two {a.LENGTH:.2f} m power units seat at 90 degrees. Four vents stand through the lid to {p.s.WALL_HEIGHT+a.VENT_RISE:.2f} m.")
+    print(f"The bare rig seats before the first pod. The crawler lands {len(a.GEN_AT)} diesel sets and {len(a.DAY_TANKS)} day tanks on it after loading.")
     print((f"Both turbine sets stand open on their deck at {floor:.2f} m. " if short else f"Turbine set A's side folds to a work floor at {floor:.2f} m. ")+f"{len(a.GEN_AT)} diesel sets leave the access wedge clear. "
           f"The lid carries {len(a.EXHAUST_AT)} exhaust stacks to {p.s.WALL_HEIGHT+a.VENT_RISE:.1f} m.")
     print(f"Pod sleeves end in the store at radius {l.TANK_END:.2f} m. {fuel.COUNT} propane tanks at {fuel.FARM_R:g} m feed one gas line.")

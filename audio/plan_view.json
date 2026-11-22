@@ -2,46 +2,46 @@
   "voice": "am_eric",
   "model": "Kokoro v1.0",
   "sample_rate": 24000,
-  "duration": 31.512,
+  "duration": 31.436,
   "lines": [
     {
       "start": 0.0,
-      "end": 2.175,
+      "end": 2.165,
       "text": "This is the cooling loop, seen from above."
     },
     {
-      "start": 2.525,
-      "end": 6.389,
+      "start": 2.515,
+      "end": 6.379,
       "text": "Every 4SU pod carries its own CDU and pump at the wall end."
     },
     {
-      "start": 6.739,
-      "end": 11.138,
-      "text": "That pump sends hot water-glycol through the inner wall, where it disperses into the store."
+      "start": 6.729,
+      "end": 12.258,
+      "text": "Each CDU draws from the cool bottom layer and returns warm liquid to the top."
     },
     {
-      "start": 11.488,
-      "end": 15.037,
+      "start": 12.608,
+      "end": 16.157,
       "text": "64 pods put 50 MW of heat into the store this way."
     },
     {
-      "start": 15.387,
-      "end": 18.123,
+      "start": 16.507,
+      "end": 19.24,
       "text": "Outside, every dry cooler has a pump of its own."
     },
     {
-      "start": 18.473,
-      "end": 22.364,
-      "text": "It draws liquid out of the store, cools it, and returns it cold at the outer wall."
+      "start": 19.59,
+      "end": 23.291,
+      "text": "The coolers draw from the warm upper layer and return cooled liquid to the bottom."
     },
     {
-      "start": 22.714,
-      "end": 27.081,
-      "text": "The cold stream disperses as well. Nothing is piped straight from a cooler to a pod."
+      "start": 23.641,
+      "end": 27.005,
+      "text": "Diffuser plates spread the flow sideways to keep the layers apart."
     },
     {
-      "start": 27.431,
-      "end": 31.512,
+      "start": 27.355,
+      "end": 31.436,
       "text": "The store between them lets heat collection and heat rejection run independently."
     }
   ]

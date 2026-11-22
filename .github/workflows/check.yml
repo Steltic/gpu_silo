@@ -41,8 +41,8 @@ jobs:
             fonts-liberation fonts-inter fonts-dejavu-core
       - name: Render review stills from both films
         run: |
-          python -m gpu_silo stills 700 1700 3300 5600 7900 --output renders/stills/long
-          python -m gpu_silo stills --film short 640 1900 2800 3250 3900 4700 --output renders/stills/short
+          python -m gpu_silo stills 700 1040 1900 3500 5720 6380 8100 --output renders/stills/long
+          python -m gpu_silo stills --film short 640 1460 2100 3000 3450 4100 4935 --output renders/stills/short
       - uses: actions/upload-artifact@v4
         with:
           name: gpu-silo-stills
