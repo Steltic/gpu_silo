@@ -240,7 +240,7 @@
     "concrete": {
       "mixer_load_m3": 7.6,
       "pump_m3_per_hour": 45,
-      "slab_thickness_m": 1.0,
+      "slab_thickness_m": 2.0,
       "slab_overhang_m": 0.64,
       "reinforcement_kg_per_m3": 150,
       "bays": 2,
@@ -583,7 +583,9 @@
         100,
         250,
         1000
-      ]
+      ],
+      "adopted_wall_in": 2,
+      "adopted_basis": "Set by the project after check 6, to keep the accumulated movement of a pod tip within its limit with the root connection and the tilt of the hub."
     },
     "top_rig": {
       "wall_mounts": 16,
@@ -831,7 +833,7 @@
     },
     "foundation": {
       "basis": "Check 4. The site is not fixed: the stiffness of the ground is an assumption and three kinds of ground are carried through.",
-      "design_ground": "very dense gravel or hard clay",
+      "design_ground": "dense sand or stiff clay",
       "concrete_fc_mpa": 40,
       "fy_mpa": 420,
       "cover_mm": 75,
@@ -971,11 +973,19 @@
         "slewing_ring_t": 0.6,
         "drive_t": 0.25
       }
+    },
+    "wall_connection": {
+      "basis": "Decision of the project: each pod is joined to its wall sleeve through a section of flexible material that takes up the movements between them.",
+      "settlement_over_time_mm": 10,
+      "margin": 1.5,
+      "drawn_length_mm": 110,
+      "hose_bend_radius_mm": 600,
+      "round_to_mm": 5
     }
   },
   "design_checks": {
     "document": "GS-STR-001",
-    "revision": "H",
+    "revision": "I",
     "date": "2026-11-22",
     "status": "Preliminary, issued for review. Not checked. Not for construction.",
     "prepared_by": "Claude (Anthropic), for Steltic",
@@ -986,7 +996,7 @@
         "id": 1,
         "title": "Steel shaft",
         "scope": "Axial load, out-of-balance bending, shortening and lean of the central shaft, fixed at its base and held at its top",
-        "status": "Wall thickness sized for gravity load. For review.",
+        "status": "Wall thickness 2 in, set by the project after check 6. For review.",
         "section": "5"
       },
       {
@@ -1007,7 +1017,7 @@
         "id": 4,
         "title": "Foundation",
         "scope": "Base slab, bearing pressure, and the anchorage of the shaft base",
-        "status": "Slab and shaft base checked on three assumed grounds. Corrected in revision H. For review. The ground is not known.",
+        "status": "Slab 2.0 m on dense sand or stiff clay, adopted. Shaft base designed. For review. The ground is not known.",
         "section": "11"
       },
       {
@@ -1021,7 +1031,7 @@
         "id": 6,
         "title": "Pod-to-shaft connection and level drive",
         "scope": "Root connection of the pod, the hub at each level, and the capacity of the drive that turns a level on the fixed shaft",
-        "status": "First pass: root connection, hub, bearings and drive sized. A thicker shaft wall proposed. For review.",
+        "status": "First pass: root connection, hub, bearings and drive sized. Arrangement adopted. For review.",
         "section": "12"
       },
       {

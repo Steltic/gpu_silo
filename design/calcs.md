@@ -147,8 +147,8 @@ The side trusses are sized in the [design report](report.md#4-check-2-pod-truss)
 | **One pod, operating** | **8.93 t** | 4 racks × 1.6 t, 0.6 t of CDU and pump, 0.4 t of coolant and piping, frame and housing |
 | Moment of one pod about the shaft axis | 366 kN·m | centre of gravity 4.18 m from the axis |
 | Weight on the shaft, 64 pods | 5,605 kN | 572 t |
-| Shaft | 1160 mm diameter, 31.8 mm wall | fixed at the base and held at the top by the support rig. [Design report](report.md#5-check-1-central-shaft) |
-| Movement of a pod tip from the shaft | 4.7 mm | shortening and lean in the worst filling state; limit 5 mm |
+| Shaft | 1160 mm diameter, 50.8 mm wall | fixed at the base and held at the top by the support rig. [Design report](report.md#5-check-1-central-shaft) |
+| Movement of a pod tip from the shaft | 3.0 mm | shortening and lean in the worst filling state; limit 5 mm |
 | Sideways force at the top of the shaft | 119 kN | worst filling state, into the support rig and its 16 cast-in wall mounts |
 
 ## 6. Power
@@ -316,8 +316,8 @@ The faces of the store are sprayed with a liner before the fill, to keep the wat
 | **Mixers for one lift** | **25** | 7.6 m³ each, one every 10 minutes |
 | Pour time for one lift | 4.2 h | 45 m³ an hour through one pump |
 | Mixers for the walls | 250 | |
-| Base slab, before the walls | 542 m³, 72 mixers | 1 m thick, checked on assumed ground in [check 4](report.md#11-check-4-foundation) |
-| Reinforcement | 395 t, 19 trucks | 314 t in the walls from the design report, with 15% for laps, feet, ties and openings. The slab at 150 kg per m³ is an allowance. |
+| Base slab, before the walls | 1,085 m³, 143 mixers | 2 m thick, set by the project and checked in [check 4](report.md#11-check-4-foundation) |
+| Reinforcement | 477 t, 22 trucks | 314 t in the walls from the design report, with 15% for laps, feet, ties and openings. The slab at 150 kg per m³ is an allowance. |
 
 ### Crew on a typical lift
 
@@ -389,13 +389,13 @@ The walls take 10 days at 1 lift a day and are outside the 28 days. The pod cage
 9. **Lifts.** Each power level is shown lowered as one assembly. The crane, the lifting sequence and the removal route for a turbine or generator are not designed.
 10. **Fuel.** 913 m³ of propane runs the site for about 43 hours. Separation distances, bunding, the vaporiser and the resupply rate have not been checked. Fuel stored inside is limited to the day tanks, and the limit that applies has not been checked.
 11. **Power in the shaft.** 50 MW passes down the steel shaft to 64 pods, 781 kW each. The busbar, its cooling and the connection at each level are not designed.
-12. **Pod support.** The pod trusses, the shaft wall, the base of the shaft, the root connection, the hub and the drive of each level are sized in the [design report](report.md) for gravity load. Each level turns on a slewing ring with a motor of about 1.5 kW. The support rig, its shaft connector and the wall mounts are still to be designed. The support rig holds the top of the shaft, so its steel is set on its wall mounts straight after the cage and before the first pod. With the root connection and the tilt of the hub the movement of a pod tip adds up to 11.2 mm against the 10 mm allowed, so check 6 proposes a shaft wall of 1-3/4 in. It is not adopted yet.
+12. **Pod support.** The pod trusses, the shaft wall, the base of the shaft, the root connection, the hub and the drive of each level are sized in the [design report](report.md) for gravity load. Each level turns on a slewing ring with a motor of about 1.5 kW. The support rig, its shaft connector and the wall mounts are still to be designed. The support rig holds the top of the shaft, so its steel is set on its wall mounts straight after the cage and before the first pod. The shaft wall is 2 in, which keeps the movement of a pod tip to 9.5 mm against the 10 mm allowed. Each pod is joined to its wall sleeve through a flexible section that takes ± 25 mm, for settlement and temperature.
 13. **Pod weight.** A pod weighs 8.9 t with the frame as designed. The rack, CDU and coolant weights in it are allowances: NVIDIA has not published a shipping weight for this rack. The load is 2 pods a truck, side by side, because a 7.16 m pod no longer fits twice along the deck.
 14. **Liner and fill.** The liner goes on from day 11, when the youngest concrete is 11 days old, and the fill starts on day 15. Most coatings ask for 28-day-old, dry concrete, so the liner system and its moisture limits need a supplier's check. The pod sleeves, frame conduits and the door blockout all pass through the liner and need detailing.
 15. **A lift a day.** 1 lift a day is fast for a jumpform. Slower lifts lengthen the work before day 0 and leave the 28 days after it unchanged.
 16. **Fuel line across the ring.** The propane and diesel lines run on the ground from the tanks to the wall and cross both ring lanes. They need to be buried or bridged there.
 17. **Heavy and oversize loads.** The 8 propane tanks are 3 m wide and the turbine sets weigh 94.5 t. Their permits, routes and the way each tank is jacked off its trailer are not designed.
-18. **The ground.** The silo weighs 140 MN full, which is 257 kPa on its slab on average and more at the rim. [Check 4](report.md#11-check-4-foundation) finds that on soil the silo settles by tens of millimetres, and that filling the store settles the walls about 8 mm against the shaft on very dense gravel or hard clay. Whether it can stand on a slab or needs piles depends on the ground, and there is no ground investigation.
+18. **The ground.** The silo weighs 153 MN full, which is 282 kPa on its slab on average. The slab is 2 m thick and the ground is taken as dense sand or stiff clay, on which [check 4](report.md#11-check-4-foundation) finds about 69 mm of settlement as the silo is loaded. There is no ground investigation: it has to confirm the ground, the settlement over time and the choice of a slab over piles.
 
 ## Fluid properties used
 

@@ -409,9 +409,15 @@ def shaft_check(section, c, stiffness=None):
 
 def shaft_design(c):
     walls = [shaft_check(tube(size), c) for size in SHAFT["wall_sizes_in"]]
-    chosen = next((w for w in walls if w["passes"]), None)
-    if chosen is None:
+    lightest = next((w for w in walls if w["passes"]), None)
+    if lightest is None:
         raise ValueError("No wall thickness in structure.shaft meets the criteria. Add thicker plate, a larger shaft or relax the limit.")
+    chosen = lightest
+    if SHAFT.get("adopted_wall_in"):
+        # The project may set a thicker wall than the lightest that meets the shaft's own limits.
+        chosen = next(w for w in walls if w["section"]["wall_in"] == SHAFT["adopted_wall_in"])
+        if not chosen["passes"]:
+            raise ValueError("The wall thickness adopted in structure.shaft does not meet the criteria.")
     section = chosen["section"]
     limit = LIMIT
     free = shaft_check(section, c, 0)
@@ -424,7 +430,7 @@ def shaft_design(c):
             mid = math.sqrt(lo * hi)
             lo, hi = (mid, hi) if shaft_check(section, c, mid)["movement"]["total"] > limit else (lo, mid)
         needed = hi
-    return dict(walls=walls, chosen=chosen, free=free, springs=springs, needed=needed, limit=limit, length=SHAFT_TOP)
+    return dict(walls=walls, chosen=chosen, lightest=lightest, free=free, springs=springs, needed=needed, limit=limit, length=SHAFT_TOP)
 
 
 def rig_loads(c):

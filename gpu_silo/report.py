@@ -415,18 +415,19 @@ def foundation_section():
     ok = lambda o: o["shear_ok"] and o["punch"] <= o["punch_strength"]
     sand, rock = list(c["grounds"])[0], list(c["grounds"])[-1]
     differ = lambda o: (o["settle"]["fill_inner"] - o["settle"]["fill_shaft"]) * 1000
-    thick = next(o for o in c["options"] if abs(o["thickness"] - 2.0) < 1e-9)
+    thin = c["options"][0]
+    middle = list(c["grounds"])[1]
     wt = c["weights"]
     weight_rows = "\n".join(f"| {name} | {wt[key]/1e6:,.1f} |" for key, name in (
         ("liquid", "Liquid in the store"), ("walls", "The two walls"), ("slab", f"Base slab, {d['thickness']:.2f} m"), ("shaft", "Shaft, hubs and 64 pods"),
         ("coolers", "Coolers and their frames"), ("power", "The two power levels"), ("lid", "Lid"), ("cage", "Cage posts and decks"), ("floor", "Load on the floor of the bore")))
     ground_rows = "\n".join(
-        f"| {name.capitalize()} | {fd.MODULUS[name]/1e6:,.0f} | {fd.GROUND[name]/1e6:.1f} | {'Yes' if ok(c['as_drawn'][name]) else 'No'} | {g['thickness']:.2f} | {g['pressure']['least']/1e3:.0f} to {g['pressure']['most']/1e3:.0f} | "
-        f"{g['settle']['shaft']*1000:.0f} | {g['settle']['inner']*1000:.0f} | {g['settle']['outer']*1000:.0f} | **{(g['settle']['fill_inner']-g['settle']['fill_shaft'])*1000:.1f}** | {max(abs(v['moment']) for v in g['faces'].values())/1e3:,.0f} |"
-        for name, g in c["grounds"].items())
+        f"| {'**' if name == F['design_ground'] else ''}{name.capitalize()}{'**' if name == F['design_ground'] else ''} | {fd.MODULUS[name]/1e6:,.0f} | {fd.GROUND[name]/1e6:.1f} | {c['grounds'][name]['thickness']:.2f} | {g['pressure']['least']/1e3:.0f} to {g['pressure']['most']/1e3:.0f} | "
+        f"{g['settle']['shaft']*1000:.0f} | {g['settle']['inner']*1000:.0f} | {g['settle']['outer']*1000:.0f} | **{differ(g):.1f}** | {max(abs(v['moment']) for v in g['faces'].values())/1e3:,.0f} |"
+        for name, g in c["as_drawn"].items())
     option_rows = "\n".join(
         f"| {'**' if o is d else ''}{o['thickness']:.2f}{'**' if o is d else ''} | {o['faces']['radial','top']['moment']/1e3:,.0f} | {o['faces']['radial','bottom']['moment']/1e3:,.0f} | {o['vu']/1e3:,.0f} | {o['plain']/1e3:,.0f} | {o['tied']/1e3:,.0f} | "
-        f"{'Yes' if o['stirrups'] else 'No'} | {o['punch']/1e6:.1f} against {o['punch_strength']/1e6:.1f} | {(o['settle']['fill_inner']-o['settle']['fill_shaft'])*1000:.1f} | {'As drawn. Adequate.' if o is d else ''} |"
+        f"{'Yes' if o['stirrups'] else 'No'} | {o['punch']/1e6:.1f} against {o['punch_strength']/1e6:.1f} | {(o['settle']['fill_inner']-o['settle']['fill_shaft'])*1000:.1f} | {'Adopted' if o is d else '' if ok(o) else 'Not strong enough'} |"
         for o in c["options"])
     face_rows = "\n".join(
         f"| {way.capitalize()}, {face} | {v['moment']/1e3:+,.0f} | {v['area']*1e6:,.0f} | {v['bars']['layers']} layer of {v['bars']['bar']['name']} at {v['bars']['spacing']*1000:.0f} mm |"
@@ -439,9 +440,9 @@ def foundation_section():
 
 ### 11.1 Arrangement and basis
 
-The silo stands on a round base slab, {2*fd.RADIUS:.2f} m across, which is the outside of the wall and {cfg.PROJECT['logistics']['concrete']['slab_overhang_m']:g} m more all round. It is drawn {c['drawn']:.2f} m thick. The two walls are built into it and the shaft is anchored to its centre.
+The silo stands on a round base slab, {2*fd.RADIUS:.2f} m across, which is the outside of the wall and {cfg.PROJECT['logistics']['concrete']['slab_overhang_m']:g} m more all round. It is {c['drawn']:.2f} m thick, by decision of the project in revision I. The two walls are built into it and the shaft is anchored to its centre.
 
-The site is not fixed and there is no ground investigation. This check therefore does three things: it gives the loads that the ground has to carry, it sizes the slab on an assumed ground, and it designs the anchorage of the shaft, which does not depend on the ground. Every number is calculated by [foundation.py](../gpu_silo/foundation.py).
+The site is not fixed and there is no ground investigation. The project has said to assume {F['design_ground']}. This check gives the loads that the ground has to carry, checks the slab on that ground and on two stiffer ones, and designs the anchorage of the shaft, which does not depend on the ground. Every number is calculated by [foundation.py](../gpu_silo/foundation.py).
 
 | Assumption | Value | Note |
 | --- | ---: | --- |
@@ -469,29 +470,28 @@ The slab is a round plate on springs, loaded round the lines of the walls and th
 
 ### 11.4 Pressure on the ground and settlement
 
-Each kind of ground is given the thinnest slab in the list that is strong enough on it. The store is full.
+The slab is {c['drawn']:.2f} m thick and the store is full. The ground assumed is in bold.
 
-| Ground | Modulus, MPa | Spring, MN/m³ | Slab as drawn adequate | Slab needed, m | Pressure on the ground, kPa | Settlement of the shaft, mm | Inner wall, mm | Outer wall, mm | Filling lowers the inner wall more than the shaft by, mm | Largest moment, kN·m/m |
-| --- | ---: | ---: | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| Ground | Modulus, MPa | Spring, MN/m³ | Thinnest slab that is strong enough, m | Pressure on the ground, kPa | Settlement of the shaft, mm | Inner wall, mm | Outer wall, mm | Filling lowers the inner wall more than the shaft by, mm | Largest moment, kN·m/m |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
 {ground_rows}
 
 ![Settlement of the base slab](figures/foundation.svg)
 
-- **On soil the silo settles by tens of millimetres.** About {c['grounds'][sand]['settle']['outer']*1000:.0f} mm at the outer wall on {sand}, and about {d['settle']['outer']*1000:.0f} mm on {F['design_ground']}. Only on rock is it a few millimetres. These are the settlements as the load goes on. Clay goes on settling for years afterwards, which is not in these figures.
-- **The pressure on the ground is about {c['total']/c['area']/1e3:.0f} kPa on average and up to about {max(g['pressure']['most'] for g in c['grounds'].values())/1e3:.0f} kPa at the rim.** A slab this wide is unlikely to fail the ground in sand or gravel. In clay the strength of the ground has to be checked as well. In either, it is the settlement that decides whether the silo can stand on a slab or needs piles. This is the first question for the site, and is open item 18.
-- **The slab dishes the wrong way up.** The walls and the store are heavy and the bore is light, so the rim goes down more than the centre.
+- **On {F['design_ground']} the silo settles about {d['settle']['outer']*1000:.0f} mm**, as the load goes on. On {middle} it is about {c['as_drawn'][middle]['settle']['outer']*1000:.0f} mm and on {rock} about {c['as_drawn'][rock]['settle']['outer']*1000:.0f} mm. Clay goes on settling for years afterwards, which is not in these figures.
+- **The pressure on the ground is about {c['total']/c['area']/1e3:.0f} kPa on average and {d['pressure']['least']/1e3:.0f} to {d['pressure']['most']/1e3:.0f} kPa across the slab.** A slab this wide is unlikely to fail the ground in sand or gravel. In clay the strength of the ground has to be checked as well. In either, it is the settlement that decides whether the silo can stand on a slab or needs piles. This is the first question for the site, and is open item 18.
+- **The {c['drawn']:g} m slab goes down nearly level.** The walls and the store are heavy and the bore is light, so a thin slab lets the rim go down more than the centre. At {c['drawn']:g} m the difference across the slab is {(d['settle']['most']-d['settle']['least'])*1000:.0f} mm.
 
 ### 11.5 What settlement does to the pod tips
 
-The pods hang from the shaft at the centre of the slab. Their wall couplings are in the inner wall. When the store is filled the inner wall goes down more than the shaft, so **every wall sleeve drops against its pod tip: by about {differ(d):.0f} mm on {F['design_ground']}**, about {differ(c['grounds'][sand]):.0f} mm on {sand} and about {differ(c['grounds'][rock]):.0f} mm on {rock}. A thicker slab reduces it, to {differ(thick):.1f} mm at {thick['thickness']:g} m on {F['design_ground']} (section 11.6).
+The pods hang from the shaft at the centre of the slab. Their wall connections are in the inner wall. When the store is filled the inner wall goes down more than the shaft, so every wall sleeve drops against its pod tip. The programme loads the pods on days {logistics.BY_KEY['pods']['start']} to {logistics.BY_KEY['pods']['end']} and fills the store from day {logistics.BY_KEY['water']['start']}, so this happens after the pods are docked.
 
-On soil this is more than the {st.TIP['single_mm']:g} mm that any one part is allowed to move a pod tip, and it is not in the {st.TIP['accumulated_mm']:g} mm accumulated limit. The programme loads the pods on days {logistics.BY_KEY['pods']['start']} to {logistics.BY_KEY['pods']['end']} and fills the store from day {logistics.BY_KEY['water']['start']}, so as programmed it happens after the pods are docked. There are three ways to deal with it:
+Revision H proposed making the wall connections after the fill. The project decided against anything that constrains the build, and chose in revision I to deal with it in the structure:
 
-1. **Make the wall couplings after the store is full.** The pods are docked as programmed, and the service plugs are set and connected once the fill is complete. The fill settlement is then history. This costs nothing and is recommended.
-2. Give the coupling the travel to follow it.
-3. Found the silo on rock or piles, or thicken the slab, so that the walls and the shaft go down together.
+1. **A {c['drawn']:g} m slab.** It is stiff enough to take the walls and the shaft down nearly together. The fill lowers the wall **{differ(d):.1f} mm** against the shaft on {F['design_ground']}, where the {thin['thickness']:g} m slab first drawn gave {differ(thin):.1f} mm.
+2. **A flexible section in each wall connection**, which takes this movement and the others between a pod and the wall (section 3.8).
 
-Settlement that goes on after the fill, as the ground consolidates under a load that never comes off, cannot be dealt with by the first way. It depends on the ground and is open item 18.
+Settlement that goes on after the fill, as the ground consolidates under a load that never comes off, is given an allowance of {cfg.PROJECT['structure']['wall_connection']['settlement_over_time_mm']:g} mm in the flexible section. It depends on the ground and is open item 19.
 
 ### 11.6 Thickness, bending and shear
 
@@ -501,9 +501,9 @@ Settlement that goes on after the fill, as the ground consolidates under a load 
 
 Moments are unfactored. The table is for {F['design_ground']}. The shear is taken at the effective depth from the face of each wall, and the largest is on the {d['worst']['side']} of the {d['worst']['wall']}.
 
-**On {F['design_ground']} and on {rock} the slab as drawn, {c['drawn']:.2f} m thick, is strong enough**, with shear ties in a band each side of each wall. On {sand} it is not, and {c['grounds'][sand]['thickness']:.2f} m is needed. No thickness in the list does without ties, because a deep slab with little reinforcement is given a low shear strength (ACI 318-19 Section 22.5.5).
+**The slab is {c['drawn']:.2f} m thick.** On {F['design_ground']} the thinnest slab that is strong enough is {c['grounds'][F['design_ground']]['thickness']:.2f} m. The extra thickness is there for stiffness, to cut the settlement of the walls against the shaft. Shear ties are still needed in a band each side of each wall: no thickness in the list does without them, because a deep slab with little reinforcement is given a low shear strength (ACI 318-19 Section 22.5.5).
 
-Thickness does more for settlement than for strength. A {thick['thickness']:g} m slab is stiff enough to take the walls and the shaft down nearly together. Whether that is worth {(thick['thickness']-c['drawn'])*c['area']:,.0f} m³ more concrete depends on the ground and on how the wall couplings are made (section 11.5). The slab in the design file is not changed.
+A stiff slab attracts moment. The top bars over the bore are heavy as a result.
 
 Reinforcement of the {d['thickness']:.2f} m slab, by strength:
 
@@ -512,7 +512,7 @@ Reinforcement of the {d['thickness']:.2f} m slab, by strength:
 {face_rows}
 | Across the floor of the store, both faces together | tension {kn(d['tie'],0)} kN/m | {d['tie_area']*1e6:,.0f} | added to the radial bars between the walls |
 
-Softer ground gives larger moments, up to {max(abs(v['moment']) for v in c['grounds'][sand]['faces'].values())/1e3:,.0f} kN·m/m on {sand}, so the reinforcement is to be designed again once the ground is known.
+The reinforcement is to be designed again once the ground is known.
 
 ### 11.7 Base of the shaft
 
@@ -546,9 +546,9 @@ These are checked at every build by [foundation.py](../gpu_silo/foundation.py).
 
 ### 11.9 Conclusion
 
-The slab as drawn, {c['drawn']:.2f} m thick, is strong enough on {F['design_ground']} or on rock, with ordinary reinforcement and shear ties near the walls. On {sand} it has to be {c['grounds'][sand]['thickness']:.2f} m. The base of the shaft takes {b['n']} {b['bolt']} anchors and stands alone under the worst out-of-balance load.
+The slab is {c['drawn']:.2f} m thick, on ground taken as {F['design_ground']}. It is strong enough, with shear ties near the walls and heavy top bars. The silo weighs {c['total']/1e6:,.0f} MN full and settles about {d['settle']['outer']*1000:.0f} mm on that ground as it is loaded. Filling the store lowers the walls {differ(d):.1f} mm against the shaft, which the flexible section of each wall connection takes. The base of the shaft takes {b['n']} {b['bolt']} anchors and stands alone under the worst out-of-balance load.
 
-What the check cannot settle is the ground. The silo weighs {c['total']/1e6:,.0f} MN full. On soil it settles by tens of millimetres, and filling the store lowers the walls {differ(c['grounds'][rock]):.0f} to {max(differ(g) for g in c['grounds'].values()):.0f} mm against the shaft, depending on the ground. The wall couplings should be made after the fill, and a site on soil should be looked at for piles.
+The ground is an assumption. A ground investigation has to confirm it, and has to give the settlement over time, before the slab or the choice between a slab and piles is final.
 
 **Correction in revision H.** Revision G took springs of 15, 40 and 100 MN/m³ and called them soft, medium and stiff ground. Those are values for a small test plate. Under a slab {2*fd.RADIUS:.0f} m across the spring is about a tenth of that, so revision G described rock while calling it soil, and its settlements were too small by about ten times for soil. The method is unchanged. The grounds are now set by their modulus.
 
@@ -574,10 +574,11 @@ def connection_section():
         ("arms", f"{4*cfg.BAYS} arms with their lugs and stiffeners"), ("floor", "Access floor"), ("bearing", "Slewing ring"), ("drive", "Drive, brake and lock")))
     bearing_rows = "\n".join(f"| {case['name']} | {kn(case['moment'],0)} | {kn(case['radial'],0)} | {kn(case['roller'],0)} |" for case in hub["cases"])
     budget_rows = "\n".join(
-        f"| {'**' if r is budget['proposed'] else ''}{st.inches(r['wall']['section']['wall_in'])} in ({r['wall']['section']['wall']*1000:.1f} mm){'**' if r is budget['proposed'] else ''} | {budget['truss']*1000:.2f} | {r['shaft']*1000:.2f} | {budget['root']*1000:.1f} | {budget['hub']*1000:.1f} | "
-        f"{'**' if r is budget['proposed'] else ''}{r['total']*1000:.2f}{'**' if r is budget['proposed'] else ''} | {'Yes' if r['ok'] else 'No'} | {'as designed' if r['extra'] < .01 else format(r['extra'], '.0f')} |"
+        f"| {'**' if r is budget['adopted'] else ''}{st.inches(r['wall']['section']['wall_in'])} in ({r['wall']['section']['wall']*1000:.1f} mm){'**' if r is budget['adopted'] else ''} | {budget['truss']*1000:.2f} | {r['shaft']*1000:.2f} | {budget['root']*1000:.1f} | {budget['hub']*1000:.1f} | "
+        f"{'**' if r is budget['adopted'] else ''}{r['total']*1000:.2f}{'**' if r is budget['adopted'] else ''} | {'Yes' if r['ok'] else 'No'} | {'lightest' if r['extra'] < .01 else format(r['extra'], '.0f')} |"
         for r in budget["rows"])
-    p = budget["proposed"]
+    p = budget["adopted"]
+    fx = c["flexible"]
     return f"""## 12. Check 6: root connection, hub and level drive
 
 ### 12.1 Arrangement
@@ -677,7 +678,7 @@ A level that is part filled or bunched is out of balance. The moment goes into t
 
 **The stiffness of the hub bearings matters more than their strength.** A sideways give of 0.1 mm at each bearing moves the pod tips {0.2e-3/cn.DEPTH*st.TIP_R*1000:.1f} mm. The value above is a requirement for the bearing supplier, like the stiffness of the top restraint in check 1.
 
-If a level is filled in opposite pairs, no more than one pod is ever out of balance, and the moment is {hub['opposite']*100:.0f}% of the worst here. The film fills each level round in order. Changing that is open item 20.
+Filling a level in opposite pairs would cut the moment to {hub['opposite']*100:.0f}% of this. The project decided in revision I not to constrain the order of filling, so the worst case stands.
 
 ### 12.8 Drive of one level
 
@@ -705,15 +706,15 @@ The drive does not hold the level in position for docking. The lock does, with t
 
 ### 12.9 The limit on accumulated movement
 
-Section 3.7 left the choice of where to find room for the root connection to this check. Two allowances are now needed, {budget['root']*1000:g} mm for the root connection and {budget['hub']*1000:g} mm for the tilt of the hub. With the sizes as designed the total is {budget['now']*1000:.2f} mm against {st.TIP['accumulated_mm']:g} mm. The simplest place to find the room is the wall of the shaft:
+Section 3.7 left the choice of where to find room for the root connection to this check. Two allowances are needed, {budget['root']*1000:g} mm for the root connection and {budget['hub']*1000:g} mm for the tilt of the hub. The simplest place to find the room is the wall of the shaft:
 
 | Shaft wall | Truss, mm | Shaft, mm | Root connection, mm | Hub tilt, mm | Total, mm | Within {st.TIP['accumulated_mm']:g} mm | Extra steel, t |
 | --- | ---: | ---: | ---: | ---: | ---: | --- | ---: |
 {budget_rows}
 
-**A shaft wall of {st.inches(p['wall']['section']['wall_in'])} in is proposed**, in place of {st.inches(st.C['shaft']['chosen']['section']['wall_in'])} in. It adds {p['extra']:.0f} t of plate and brings the total to {p['total']*1000:.2f} mm. It is not adopted in this revision: the shaft in the design file is unchanged. This is open item 11.
+**The project set the shaft wall at {st.inches(p['wall']['section']['wall_in'])} in, in revision I.** The lightest wall that meets the shaft's own limits is {st.inches(st.C['shaft']['lightest']['section']['wall_in'])} in, and the thinnest that keeps the total within {st.TIP['accumulated_mm']:g} mm is {st.inches(budget['least']['wall']['section']['wall_in'])} in. The wall adopted adds {p['extra']:.0f} t of plate and brings the total to **{p['total']*1000:.2f} mm**.
 
-The settlement of section 11.5 is not in this total. It is dealt with by making the wall couplings after the store is filled.
+Settlement and temperature also move the wall sleeves against the pod tips. They are not in this total. The flexible section of each wall connection takes them (section 3.8).
 
 ### 12.10 Verification
 
@@ -727,7 +728,9 @@ The settlement of section 11.5 is not in this total. It is dealt with by making 
 
 The root of each truss is a {pin['d']*1000:.0f} mm pin in two {pin['t']*1000:.0f} mm lugs on a {arm['name']} arm, with a bearing block on a second arm below. It moves the pod tip {tip['total']*1000:.2f} mm. Each level turns on a slewing ring, steadied by guide rollers at the top of its hub, and is driven by a motor of about {math.ceil(drive['power']/1e3*2)/2:g} kW through a gear on the ring. The capacity of the drive is not a concern.
 
-Two things are. The bearings of the hub have to be stiff, {hub['radial_stiffness']/1e6:,.0f} kN/mm each, or a part-filled level tilts its pods out of reach of their couplings. And the limit of {st.TIP['accumulated_mm']:g} mm on accumulated movement needs a thicker shaft wall, {st.inches(p['wall']['section']['wall_in'])} in, to make room for the root connection and the hub.
+The thing to watch is the stiffness of the hub bearings: {hub['radial_stiffness']/1e6:,.0f} kN/mm each, or a part-filled level tilts its pods further than its allowance. With the shaft wall at {st.inches(p['wall']['section']['wall_in'])} in the accumulated movement of a pod tip is {p['total']*1000:.2f} mm against {st.TIP['accumulated_mm']:g} mm.
+
+The arrangement of the hub was accepted by the project in revision I, and the model now draws the drum and the beam arms.
 
 ### 12.12 Not covered by this check
 
@@ -968,7 +971,7 @@ The walls warm with the store. The shaft and the pods stand in the bore air. Fro
 | Bore radius shrinks under the liquid, top pod level | {sq[cfg.LEVELS]['elastic']*1000:.1f} mm at once, {sq[cfg.LEVELS]['creep']*1000:.1f} mm with creep | |
 | A pod grows in length | {mv['pod']*1000:.1f} mm | |
 
-These are the same size as the {st.TIP['single_mm']:g} mm and {st.TIP['accumulated_mm']:g} mm limits on the movement of a pod tip. The coupling between a pod and its wall sleeve has to take them. This adds to open item 14.
+These are the same size as the {st.TIP['single_mm']:g} mm and {st.TIP['accumulated_mm']:g} mm limits on the movement of a pod tip. The flexible section of each wall connection is sized for them (section 3.8).
 
 ### 9.14 Verification
 
@@ -1249,6 +1252,10 @@ def markdown():
                        f"{total*1000:.2f} | {(st.ACCUMULATED-total)*1000:.2f} | {'as designed' if extra < .01 else f'{extra:.0f}'} |")
     budget_rows = "\n".join(options)
     seq, unc, comp = cases["sequence"], cases["uncontrolled"], cases["complete"]
+    fx = cn.C["flexible"]
+    flex_rows = "\n".join(
+        "\n".join([f"| *{title}* | | |"] + [f"| {name} | {value*1000:.1f} | {where} |" for name, value, where in fx[key]] + [f"| Sum | **{sum(v for _, v, _ in fx[key])*1000:.1f}** | |"])
+        for key, title in (("down", "Tip lower than the sleeve"), ("up", "Tip higher than the sleeve"), ("closes", "Gap closes"), ("opens", "Gap opens")))
     return f"""# GPU Silo: structural design report
 
 | | |
@@ -1270,6 +1277,7 @@ def markdown():
 | F | 2026-11-22 | Decisions of the project adopted: outer wall {cfg.SILO['outer_wall_m']*1000:.0f} mm with stainless steel bars, inner wall {cfg.SILO['inner_wall_m']*1000:.0f} mm, the store layered, the CDU with a heat exchanger, and the assumed range of outside air. The store pipes, the cover and the overflow are in the model. |
 | G | 2026-11-22 | Check 4 carried out on assumed ground: the slab as drawn is adequate, the shaft base is designed to stand alone, and the fill settles the walls against the shaft. Check 6 carried out, first pass: root connection, hub, bearings and drive. Allowance for the hub raised to {st.SHAFT['hub_and_floor_t_per_level']:g} t. A thicker shaft wall proposed for the accumulated limit. |
 | H | 2026-11-22 | Check 4 corrected. The springs of revision G were values for a small test plate and were about ten times too stiff for soil under a slab this wide. The grounds are now set by modulus: settlement on soil is tens of millimetres, the fill lowers the walls {(fd.C['chosen']['settle']['fill_inner']-fd.C['chosen']['settle']['fill_shaft'])*1000:.0f} mm against the shaft on {fd.F['design_ground']}, and the slab as drawn is not strong enough on dense sand or stiff clay. |
+| I | 2026-11-22 | Decisions of the project adopted: shaft wall {st.inches(st.C['shaft']['chosen']['section']['wall_in'])} in, base slab {fd.C['drawn']:g} m on ground taken as {fd.F['design_ground']}, a flexible section in each wall connection, and the hub arrangement of check 6. The build is not to be constrained: the wall connections are not left until after the fill, and the order of loading stays free. The model draws the hub drum, beam arms at the pod roots and the flexible sections. |
 
 This report is generated from [project.json](project.json) by `python -m gpu_silo calcs`. Every number in it is calculated from the inputs in that file by [structure.py](../gpu_silo/structure.py), [walls.py](../gpu_silo/walls.py), [thermal.py](../gpu_silo/thermal.py) and [reinforcement.py](../gpu_silo/reinforcement.py). To change a result, change an input and run the command.
 
@@ -1417,18 +1425,31 @@ Where the accumulated limit stands with the parts designed so far:
 | Shaft, shortening as the store is filled plus lean in the worst filling state | {c['budget']['shaft']*1000:.2f} | {st.TIP['single_mm']:g} | section 5.7 |
 | Root connection, as designed | {cn.C['tip']['total']*1000:.2f}, with an allowance of {cn.C['budget']['root']*1000:g} | {st.TIP['single_mm']:g} | section 12.5 |
 | Tilt of the hub on its bearings | allowance of {cn.C['budget']['hub']*1000:g} | {st.TIP['single_mm']:g} | section 12.7 |
-| **Accumulated so far** | **{c['budget']['total']*1000:.2f}** | | limit {st.TIP['accumulated_mm']:g} mm |
-| **Left for the root connection and hub** | **{c['budget']['reserve']*1000:.2f}** | | |
 
-The truss and the shaft are each the lightest that meets its own {st.TIP['single_mm']:g} mm, and together they use {c['budget']['total']/c['budget']['limit']*100:.0f}% of the accumulated limit. That leaves {c['budget']['reserve']*1000:.1f} mm for the root connection, which section 6.1 shows is the part most able to move the tip. Check 6 will therefore need some of the allowance back. The table shows what that costs. Stiffening the one shaft is much cheaper than stiffening {cfg.TOTAL} trusses.
+The truss is the lightest that meets its own {st.TIP['single_mm']:g} mm. The shaft wall was first the lightest that met the shaft's own {st.TIP['single_mm']:g} mm, {st.inches(sh['lightest']['section']['wall_in'])} in, which left {(st.ACCUMULATED-c['budget']['truss']-sh['lightest']['movement']['total'])*1000:.1f} mm of the accumulated limit for the root connection and the hub. Check 6 found that they need {cn.C['budget']['need']*1000:.1f} mm. The project therefore set the shaft wall at {st.inches(ch['section']['wall_in'])} in, in revision I. Section 12.9 has the comparison of shaft walls.
 
-| Truss | Shaft wall, in | Truss, mm | Shaft, mm | Accumulated, mm | Left for check 6, mm | Extra steel, t |
-| --- | --- | ---: | ---: | ---: | ---: | ---: |
-{budget_rows}
+| | mm |
+| --- | ---: |
+| Truss, shaft, root connection and tilt of the hub | **{cn.C['budget']['adopted']['total']*1000:.2f}** |
+| Limit | {st.TIP['accumulated_mm']:g} |
 
-Check 6 has since been carried out. It needs {cn.C['budget']['need']*1000:.1f} mm for the root connection and the tilt of the hub, and proposes a shaft wall of {st.inches(cn.C['budget']['proposed']['wall']['section']['wall_in'])} in to make room (section 12.9). No size is changed in this revision. The choice is open item 11.
+### 3.8 The wall connection
 
-The settlement of the foundation as the store is filled also moves the wall sleeves against the pod tips, by about {(fd.C['chosen']['settle']['fill_inner']-fd.C['chosen']['settle']['fill_shaft'])*1000:.0f} mm on {fd.F['design_ground']}. Section 11.5 deals with it by making the wall couplings after the fill.
+Each pod is joined to its sleeve in the inner wall through **a section of flexible material**, by decision of the project in revision I. It takes up the movement between the pod, which hangs from the shaft, and the wall. Nothing in the build has to wait for the store to be filled, and the order in which pods are loaded is free.
+
+| Movement of the pod tip against its sleeve | mm | Where |
+| --- | ---: | --- |
+{flex_rows}
+
+| Requirement on the flexible section | Value | Basis |
+| --- | ---: | --- |
+| **Movement across the connection, up or down** | **± {fx['across']*1000:.0f} mm** | the larger sum above, times {cfg.PROJECT['structure']['wall_connection']['margin']:g} |
+| **Movement along the connection** | **± {fx['along']*1000:.0f} mm** | the same |
+| Flexible length needed | about {round(fx['length']*100)*10} mm | hose makers' rule for a sideways offset, with a bending radius of {cfg.PROJECT['structure']['wall_connection']['hose_bend_radius_mm']} mm. To be confirmed by a supplier. |
+| Gap between the pod tip and the wall | {cfg.POD['tip_clearance_m']*1000:.0f} mm | so the flexible length runs back into the end of the pod, behind the plug |
+| Liquid | {fx['temperature']:.0f} °C, {fx['pressure']/1000:.0f} kPa of head at the lowest level, and the pressure of the pump | |
+
+The limits of {st.TIP['single_mm']:g} mm and {st.TIP['accumulated_mm']:g} mm in section 3.7 still apply to the structure. Settlement and temperature are outside them and are taken by the flexible section. The power and data connections of a pod pass through the shaft, not the wall, and are not affected.
 
 ## 4. Check 2: pod truss
 
@@ -1630,7 +1651,7 @@ The shaft is analysed as a beam, fixed at the foundation and held in position at
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | --- |
 {wall_rows}
 
-**Selected: {st.SHAFT_D*1000:.0f} mm outside diameter × {st.inches(sec['wall_in'])} in ({sec['wall']*1000:.1f} mm) wall.** The movement limit governs. Strength would be met by the thinnest plate in the list.
+**Selected: {st.SHAFT_D*1000:.0f} mm outside diameter × {st.inches(sec['wall_in'])} in ({sec['wall']*1000:.1f} mm) wall.** The lightest wall that meets the shaft's own limits is {st.inches(sh['lightest']['section']['wall_in'])} in, where the movement limit governs. The project set {st.inches(sec['wall_in'])} in after check 6, to keep the accumulated movement of a pod tip within {st.TIP['accumulated_mm']:g} mm (section 12.9). Strength would be met by the thinnest plate in the list.
 
 | Property of the selected tube | Value |
 | --- | ---: |
@@ -1979,16 +2000,16 @@ These thicknesses were the proposal of revision D, for the liquid load only. The
 | 8 | Fixings to the outer wall, to allow for its stretch at first fill and for cracked concrete (section 10.12) | cooler frames, checks 9 and 10 | project |
 | 9 | Jumpform programme and crew, with the reinforcement as cages: about {rf.C['proposed']['heaviest']/1e3:,.0f} t in the lowest lift of the outer wall with stainless bars, {rf.C['schemes']['carbon']['heaviest']/1e3:,.0f} t with carbon steel (sections 8.8 and 10.10) | programme, check 3 | project |
 | 10 | Tie the two walls together, or keep them separate as adopted (section 8.9) | check 3 | project |
-| 11 | Thicken the shaft wall to {st.inches(cn.C['budget']['proposed']['wall']['section']['wall_in'])} in, to bring the root connection and the tilt of the hub within the {st.TIP['accumulated_mm']:g} mm accumulated limit (section 12.9) | checks 1, 4 and 6, the shaft | project |
+| 11 | Flexible section of each wall connection: a supplier's selection for ± {cn.C['flexible']['across']*1000:.0f} mm across and ± {cn.C['flexible']['along']*1000:.0f} mm along at {th.HOT:.0f} °C, and how its length fits in the end of the pod (section 3.8) | pods, check 6 | supplier, project |
 | 12 | Site and seismic design category, for the lateral case | all structural checks | project |
 | 13 | Weight of a rack in operation, and of the CDU, pump and coolant | checks 1, 2, 4 and 6 | equipment supplier |
-| 14 | Tolerance of the wall coupling, to confirm the limits on tip movement, with the movements of the walls in section 9.13 | checks 1, 2 and 6 | coupling supplier |
+| 14 | Tolerance of the plug and sleeve of the wall connection, and how accurately a level stops at its lock | checks 1, 2 and 6 | coupling supplier |
 | 15 | Slewing ring and guide rollers with the stiffness of section 12.7, and how power and data cross to a turning level | check 6 | bearing supplier, project |
 | 16 | Comparison of section properties with the AISC Manual, of the ACI 350-06 clauses with ACI 350-20, and of the values taken from ACI CODE-440.11-22, ASTM A955 and ASTM D7957 with the documents | checks 2 and 3 | checker |
-| 17 | The films still show the support rig arriving with the generator sets, walls of {wc['present']['outer']*1000:.0f} mm, and a store with no pipes, cover or overflow | animation | next render |
-| 18 | Ground investigation. The silo weighs {fd.C['total']/1e6:,.0f} MN and settles by tens of millimetres on soil (section 11.4). Slab or piles, slab thickness, and settlement over time. | check 4 | project |
-| 19 | Make the wall couplings after the store is filled, so that the settlement of the fill is not a movement of the pod tips (section 11.5) | programme, check 4 | project |
-| 20 | Fill each level in opposite pairs, which cuts the out-of-balance moment on a hub to {cn.C['hub']['opposite']*100:.0f}% (section 12.7) | check 6, animation | project |
+| 17 | The films still show the support rig arriving with the generator sets, walls of {wc['present']['outer']*1000:.0f} mm, a store with no pipes, cover or overflow, flat arms at the pod roots and no flexible sections. The flow drawings in the long film show the store warm inside and cool outside: it is now layered, warm above cool. | animation | next render |
+| 18 | Ground investigation, to confirm the {fd.F['design_ground']} assumed, the {fd.C['drawn']:g} m slab and the choice of a slab over piles (section 11.4) | check 4 | project |
+| 19 | Settlement over time, for which the wall connection allows {cfg.PROJECT['structure']['wall_connection']['settlement_over_time_mm']:g} mm (sections 3.8 and 11.5) | check 4, wall connection | ground investigation |
+| 20 | Reinforcement of the {fd.C['drawn']:g} m slab in detail, with its shear ties and the thickening under the shaft (sections 11.6 and 11.7) | check 4 | project |
 
 ## Appendix A: member forces in the pod truss
 

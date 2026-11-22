@@ -15,7 +15,7 @@ The animation is the working drawing for this project. Design decisions are made
 | GPU racks | 256 × NVIDIA Vera Rubin NVL72, 195 kW each |
 | 4SU pods | 64, eight per level on eight levels, 2.77 m apart vertically. Each is 7.16 m long and 8.93 t: 5 m of racks at the shaft end and a 2.16 m CDU and pump section out to the wall. |
 | Pod structure | Two welded side trusses, HSS6×3×3/16 chords and HSS2×2×3/16 web, cantilevering from the shaft. Tip deflection 4.9 mm against a 5 mm limit. [Design report](design/report.md) |
-| Central shaft | 1.16 m diameter steel tube with a 1-1/4 in (31.8 mm) wall, fixed to the foundation and held at its top by the support rig under the diesel level, through 16 plates cast into the inner wall. The levels turn on it. 0.62 m of access round it. |
+| Central shaft | 1.16 m diameter steel tube with a 2 in (50.8 mm) wall, fixed to the foundation and held at its top by the support rig under the diesel level, through 16 plates cast into the inner wall. The levels turn on it. 0.62 m of access round it. |
 | CDUs and CDU pumps | 64 + 64, one of each per pod |
 | Liquid heat load | 50 MW |
 | Silo | 25 m outside, 17 m inside, 32 m high. Outer wall 400 mm with stainless steel hoop bars, inner wall 500 mm, no post-tensioning. |

@@ -2,20 +2,20 @@
 <rect width="760" height="720.0" fill="#ffffff"/>
 <text x="20" y="26" font-size="15" fill="#22303a" font-weight="bold">Figure 8. The hub of one level and the root of one truss</text>
 <text x="20" y="45" fill="#6b7780">Section on one side of the shaft, as designed in check 6. Forces are for one truss, unfactored.</text>
-<rect x="219.6" y="60.5" width="6.3" height="629.5" fill="#8fa3a1" stroke="#22303a" stroke-width="1"/>
+<rect x="215.8" y="60.5" width="10.2" height="629.5" fill="#8fa3a1" stroke="#22303a" stroke-width="1"/>
 <line x1="110.0" y1="60.5" x2="110.0" y2="690.0" stroke="#6b7780" stroke-width="1" stroke-dasharray="10 4 2 4"/>
 <text x="116.0" y="74.5" fill="#6b7780">axis</text>
-<text x="213.6" y="321.3" fill="#22303a" text-anchor="end">shaft</text>
+<text x="209.8" y="321.3" fill="#22303a" text-anchor="end">shaft</text>
 <rect x="226.0" y="640.0" width="42.0" height="12.0" fill="#8fa3a1" stroke="#22303a" stroke-width="1"/>
 <rect x="232.0" y="608.0" width="32.0" height="20.0" fill="#d7b46a" stroke="#22303a" stroke-width="1"/>
-<text x="213.6" y="638.0" fill="#22303a" text-anchor="end">collar on the shaft</text>
-<text x="213.6" y="602.0" fill="#8a6a1c" text-anchor="end">slewing ring with gear</text>
+<text x="209.8" y="638.0" fill="#22303a" text-anchor="end">collar on the shaft</text>
+<text x="209.8" y="602.0" fill="#8a6a1c" text-anchor="end">slewing ring with gear</text>
 <rect x="220.0" y="596.0" width="48.0" height="8.0" fill="#5f7a78" stroke="#22303a" stroke-width="1"/>
 <rect x="220.0" y="146.5" width="48.0" height="8.0" fill="#5f7a78" stroke="#22303a" stroke-width="1"/>
 <rect x="248.0" y="150.5" width="4" height="449.5" fill="#5f7a78"/>
 <text x="260.0" y="321.3" fill="#22303a">hub drum</text>
 <circle cx="235.0" cy="150.5" r="8" fill="#d7b46a" stroke="#22303a" stroke-width="1"/>
-<text x="213.6" y="154.5" fill="#8a6a1c" text-anchor="end">guide rollers on the shaft</text>
+<text x="209.8" y="154.5" fill="#8a6a1c" text-anchor="end">guide rollers on the shaft</text>
 <rect x="268.0" y="124.8" width="82.0" height="51.4" fill="#c7cdca" stroke="#22303a" stroke-width="1"/>
 <text x="309.0" y="191.2" fill="#22303a" text-anchor="middle">top arm, W10×45</text>
 <rect x="268.0" y="574.3" width="82.0" height="51.4" fill="#c7cdca" stroke="#22303a" stroke-width="1"/>

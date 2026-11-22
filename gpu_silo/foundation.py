@@ -266,9 +266,9 @@ def compute():
     table = {name: [design(t, name) for t in F["thickness_options_m"]] for name in GROUND}
     grounds = {name: least(options) for name, options in table.items()}
     options = table[F["design_ground"]]
-    chosen = grounds[F["design_ground"]]
     drawn = cfg.PROJECT["logistics"]["concrete"]["slab_thickness_m"]
     as_drawn = {name: next(o for o in options_ if abs(o["thickness"] - drawn) < 1e-9) for name, options_ in table.items()}
+    chosen = as_drawn[F["design_ground"]]                      # the slab in the design file, on the ground the project assumes
     weights = dict(walls=(T_OUT * 2 * math.pi * R_OUTER + T_IN * 2 * math.pi * R_INNER) * walls.HEIGHT * GAMMA_C,
                    liquid=L["liquid"][2] * math.pi * (WET[1]**2 - WET[0]**2), slab=chosen["thickness"] * GAMMA_C * math.pi * RADIUS**2,
                    floor=L["floor"][2] * math.pi * cfg.BORE_R**2, **L["totals"])

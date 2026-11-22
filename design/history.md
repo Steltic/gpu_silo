@@ -213,6 +213,14 @@ These were needed to draw the decisions. Each one is an input in [project.json](
 | 2026-11-22 | Slewing ring friction 0.006, 1.5 for starting, shaft out of plumb by 2 mm in a metre, service factor 2. | Typical values for a first estimate of the drive. | `structure.level_drive` |
 | 2026-11-22 | The hub and floor allowance on the shaft is 4 t a level. Before: 3 t. | The estimate from check 6 is 3.9 t. | `structure.shaft` |
 | 2026-11-22 | The shaft wall stays 1-1/4 in in the design file. | The 1-3/4 in wall is a proposal for the project. | [Report 12.9](report.md#129-the-limit-on-accumulated-movement) |
+| 2026-11-22 | The shaft wall is 2 in. Before: 1-1/4 in. | Set by the project after check 6, so that the pod tips stay within 10 mm with the root connection and the tilt of the hub. | `structure.shaft.adopted_wall_in`, [Report 12.9](report.md#129-the-limit-on-accumulated-movement) |
+| 2026-11-22 | The base slab is 2.0 m thick, on ground taken as dense sand or stiff clay. Before: 1.0 m, with very dense gravel or hard clay for design. | Set by the project. The thick slab takes the walls and the shaft down nearly together. | `logistics.concrete`, `structure.foundation` |
+| 2026-11-22 | The build is not constrained: the wall connections are not left until after the fill, and the pods may be loaded in any order. | Decision of the project. The proposals of revisions G and H are withdrawn. | [Report 11.5](report.md#115-what-settlement-does-to-the-pod-tips) |
+| 2026-11-22 | Each pod is joined to its wall sleeve through a section of flexible material. | Decision of the project, to take up settlement and temperature without constraining the build. | [Report 3.8](report.md#38-the-wall-connection) |
+| 2026-11-22 | The flexible section is sized for 1.5 times the larger sum of movements, rounded up to 5 mm, with 10 mm allowed for settlement over time. | A margin for what is not known, mainly the ground. | `structure.wall_connection` |
+| 2026-11-22 | The flexible length is estimated with a hose bending radius of 600 mm. | A typical value for this size of hose. It shows that the length does not fit in the 140 mm gap and has to run into the pod. | `structure.wall_connection` |
+| 2026-11-22 | The model draws the flexible section as a bellows on the plug, in the gap. | A marker for it. Its real length and place in the pod are to be designed. | [services.py](../gpu_silo/services.py) |
+| 2026-11-22 | The hub arrangement of check 6 is accepted. The model draws a drum round the shaft at each level and a beam arm, top and bottom, for each truss. | Decision of the project. The arms are kept inside the width of a pod so that bunched pods still pass. | [pod_scene.py](../gpu_silo/pod_scene.py), [cargo.py](../gpu_silo/cargo.py) |
 
 ## Open questions
 

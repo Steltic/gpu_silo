@@ -96,6 +96,9 @@ def moving_parts(face=POD_FACE):
     barrel(slide,0,WALL_FACE-face,.064,"94bdb8")
     # A visible shoulder identifies the latch even at small screen sizes.
     barrel(slide,.065,.090,.086,"cba46e")
+    # The flexible section that takes up movement between the pod and the wall, drawn as a bellows.
+    for k in range(4):
+        barrel(slide,.008+k*.014,.016+k*.014,.080,"2e3a3d")
     barrel(slide,.124,WALL_FACE-face,.085,"4d9b8e")
     lamp=s.Mesh("Service connected | status lamp")
     lamp.material=6
