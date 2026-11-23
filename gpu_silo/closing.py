@@ -42,7 +42,7 @@ ROOF=(LINE+104,LINE+128)
 DROP=(LINE+128,LINE+150)
 FUEL_END=DROP[1]+(36 if film.SHORT else 64)
 if film.SHORT:
-    # The closing scene: plan and section side by side, with no voice-over.
+    # The short film ends on its narrated plan and section.
     PLAN=clock.ORBIT_DONE+20
     PLAN_FRAMES=456
     SECTION=PLAN+PLAN_FRAMES

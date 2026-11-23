@@ -12,7 +12,9 @@ The pod scenes show the 0.62 m access space around the shaft, the 7.16 m trussed
 
 ## The build: silo_short
 
-[Play the chaptered movie](../../../releases/latest/download/silo_short.mp4). 3:34, silent. Day 0 is the day the last wall lift is poured. A tag at the top of each scene gives its days in the 28-day programme and a running count of trucks. The film shows a sample of the trucks and the counters scale to the full number of loads. Activities that overlap pod loading are shown as cuts away from it.
+[Play the narrated short film](../../../releases/download/short-film-2026-11-23/silo_short.mp4). The 4:22 cut has 23 chapters and selectable English captions. Day 0 is the last wall pour. The counters track the 28-day programme and scale the sample of truck movements to the full number of loads.
+
+The four narrated IFC studies are also available as a [48-second reel](../../../releases/download/short-film-2026-11-23/IFC_highlights.mp4) and as individual clips in the [short film release](../../../releases/tag/short-film-2026-11-23).
 
 | Start | Programme | What to watch |
 | ---: | --- | --- |
@@ -24,17 +26,21 @@ The pod scenes show the 0.62 m access space around the shaft, the 7.16 m trussed
 | 1:21 | Days 6 to 17 | The first 4SU spirals up and docks. The store is dry. The south crawler hangs the cooler frames while pods keep loading. A frame disappears from the cutaway once it is seated on the side facing the camera. |
 | 1:37 | Days 8 to 11 | Cut to the fuel farm. Heavy-haul trucks bring the eight propane tanks and the diesel tank, each is jacked off its trailer and lowered to the pad. |
 | 1:48 | | Back to the pods and the cooler frames. |
-| 1:52 | Days 11 to 14 | Cut to the store. Four stages hang in the gap between the walls and rise together, and the sprayers on them coat both faces. The liner is drawn as a tinted film climbing the walls. The panel gives the system, the area and the time. |
+| 1:52 | Days 11 to 14 | A tinted liner traces both faces of the store. The cutaway holds on the lining as it rises. |
 | 2:00 | Days 9 to 18 | Cut to the laydown. The diesel sets and day tanks are staged on the pad. Welders assemble the turbine deck and the two turbine sets arrive on heavy-haul trailers. |
 | 2:10 | | The last pods dock. |
 | 2:12 | Days 19 to 21 | The crane lifts the four diesel sets and two day tanks onto the seated rig, one load at a time. Water tankers start cycling through the three bays of the water drive and the level in the store begins to rise. |
 | 2:24 | | The turbine level follows: two in-line 25 MW sets with no enclosure. |
 | 2:32 | | The crawler lowers the lid with its stacks and inlet houses, then drives off. |
 | 2:38 | Days 16 to 26 | Propane transports unload at the lay-by. The propane and diesel lines cross under the ring road, up the wall, across the lid and down to the power levels. |
-| 2:46 | Days 24 to 27 | The receiving dock is walled, then roofed panel by panel, and becomes the control office. |
-| 2:53 | Day 28 | The concrete turns solid. A full orbit of the finished silo with the design basis and the 28-day programme as a bar chart. The tankers keep running and the store reaches the rim at the end of the orbit. |
-| 3:15 | | Plan and section side by side, with no voice. The plan shows one pod level and the lower tier of cooler frames. The section shows pod supply from the lower layer and return to the upper layer. Coolers take from the upper layer and return to the lower layer. The section also shows power down the shaft, propane and diesel. |
-| 3:34 | | End. |
+| 2:46 | Days 24 to 27 | One receiving lane becomes a glazed operations room with three dual-monitor consoles, a video wall and equipment cabinets. The adjacent service lane retains access to the rail. |
+| 2:53 | IFC detail | The steel shaft, its 24 base anchors, four guide arms and sliding collar. |
+| 3:05 | IFC detail | Four rack envelopes, twin trusses, a CDU and a pump separate and return to their installed positions. |
+| 3:17 | IFC detail | The screen clears. One dry cooler and its pump draw out, then return to the carrier. |
+| 3:29 | IFC detail | The acoustic enclosures lift away, exposing the turbine sets and the independent rails and ring beneath them. |
+| 3:41 | Day 28 | A close view of the labelled STARLINK terminal leads into a full blue-hour orbit. A red line marks the satellite link during the sweep. |
+| 4:03 | | The narrated plan and section trace the cold supply, warm return and dry-cooler circuits. |
+| 4:22 | | End. |
 
 ## The full presentation: GPU_Silo
 

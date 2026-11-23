@@ -1,4 +1,4 @@
-"""Rebuild the animated GLB and the 720p movie from this project."""
+"""Rebuild the animated GLB and the selected presentation movie."""
 import os
 import shutil
 import subprocess
@@ -22,7 +22,7 @@ NARRATION = Path(__file__).resolve().parents[1] / "audio" / "plan_view.flac"
 
 MOVIE = film.OUTPUT + ".mp4"
 MODEL = film.OUTPUT + ".glb"
-SOURCES = ("SiloRender.cs", "CoolerFrameRender.cs", "DesignRender.cs", "FlowRender.cs")
+SOURCES = ("SiloRender.cs", "CoolerFrameRender.cs", "DesignRender.cs", "FlowRender.cs", "ShortStudio.cs")
 
 
 def short_chapters():
@@ -47,7 +47,8 @@ def short_chapters():
              (full + p.plant.PICK_STARTS[1], "Turbine level | two open in-line 25 MW gas turbine sets"),
              (full + clock.LID[0], "Lower the lid with its exhaust stacks and air inlet houses"),
              (full + clock.LINES, "Propane transports fill the tanks | fuel lines run to the power levels"),
-             (full + closing.FUEL_END, "The receiving dock is walled and roofed as the control office"),
+             (full + closing.FUEL_END, "Convert one receiving lane into the control room"),
+             *[(full+clock.DETAIL_START+i*clock.DETAIL_LENGTH, "IFC detail | "+title) for i,title in enumerate(shortfilm.short_reels.TITLES)],
              (full + clock.SOLID_BEGIN, f"Finished silo on day {logistics.DAYS} | design basis, programme and 360-degree sweep"),
              (full + closing.PLAN, "Plan and section side by side | how the cooling loop, power and fuel work")]
     if any(a[0] >= b[0] for a, b in zip(marks, marks[1:])):
@@ -124,10 +125,11 @@ def compile_renderer(source,target):
 
 
 def encode(renderer,scene,video,begin,end):
+    width,height=(1920,1080) if film.SHORT else (cfg.MOVIE['width_px'],cfg.MOVIE['height_px'])
     command=["ffmpeg","-hide_banner","-loglevel","error","-nostats","-y","-f","rawvideo",
         "-pix_fmt","bgr0","-video_size","1920x1080","-framerate",str(p.FPS),"-i","pipe:0",
-        "-an","-vf",f"scale={cfg.MOVIE['width_px']}:{cfg.MOVIE['height_px']}:flags=lanczos:out_color_matrix=bt709,format=yuv420p",
-        "-c:v","libx264","-preset","fast","-crf","22","-maxrate","1800k","-bufsize","3600k","-colorspace","bt709",
+        "-an","-vf",f"scale={width}:{height}:flags=lanczos:out_color_matrix=bt709,format=yuv420p",
+        "-c:v","libx264","-preset","fast","-crf","19" if film.SHORT else "22","-maxrate","7200k" if film.SHORT else "1800k","-bufsize","14400k" if film.SHORT else "3600k","-colorspace","bt709",
         "-color_primaries","bt709","-color_trc","bt709","-video_track_timescale","12288",str(video)]
     run=subprocess.Popen([*renderer,str(scene),"stream",str(begin),str(end)],stdout=subprocess.PIPE)
     write=subprocess.Popen(command,stdin=run.stdout)
@@ -155,6 +157,17 @@ def render(renderer,scene,out,work,jobs):
     sound=["-i",str(NARRATION),"-filter_complex",
            f"[2:a]aresample=48000,adelay={start}:all=1,apad=whole_dur={p.FRAMES/p.FPS:.6f},pan=stereo|c0=c0|c1=c0[voice]",
            "-map","[voice]","-c:a","aac","-b:a","128k"] if NARRATION.is_file() and not film.SHORT else []
+    if film.SHORT:
+        from . import short_voice
+        subtitles=work/"short.srt";short_voice.subtitles(subtitles)
+        subprocess.run(["ffmpeg","-hide_banner","-loglevel","error","-y","-f","concat","-safe","0","-i",str(playlist),
+            "-f","ffmetadata","-i",str(metadata),"-i",str(short_voice.AUDIO),"-i",str(subtitles),
+            "-map","0:v:0","-map","2:a:0","-map","3:s:0","-map_metadata","1","-map_chapters","1",
+            "-c:v","copy","-c:a","aac","-b:a","128k","-ar","48000","-c:s","mov_text","-metadata:s:s:0","language=eng",
+            "-metadata:s:a:0","language=eng","-disposition:s:0","0","-enc_time_base:s","1:1000",
+            "-video_track_timescale","24000","-movie_timescale","1000",
+            "-t",f"{p.FRAMES/p.FPS:.6f}","-movflags","+faststart",str(out)],check=True)
+        return
     subprocess.run(["ffmpeg","-hide_banner","-loglevel","error","-y","-f","concat","-safe","0","-i",str(playlist),
         "-f","ffmetadata","-i",str(metadata),*sound[:2],"-map","0:v:0",*sound[2:],"-map_metadata","1","-map_chapters","1",
         "-c:v","copy","-video_track_timescale","12288","-t",f"{p.FRAMES/p.FPS:.6f}","-movflags","+faststart",str(out)],check=True)
@@ -165,8 +178,8 @@ def stills(output,ticks,scene_data=None):
     output=Path(output).resolve();output.mkdir(parents=True,exist_ok=True)
     source=Path(__file__).resolve().parents[1]/"renderer"
     with tempfile.TemporaryDirectory(prefix="silo-",dir=output) as tmp:
-        work=Path(tmp);data=work/"scene.bin"
-        p.render_data(p.build(),data)
+        work=Path(tmp);data=Path(scene_data) if scene_data is not None else work/"scene.bin"
+        if scene_data is None:p.render_data(p.build(),data)
         renderer=compile_renderer(source,work/"SiloRender.exe")
         subprocess.run([*renderer,str(data),"frame",str(output),*map(str,ticks)],check=True)
 

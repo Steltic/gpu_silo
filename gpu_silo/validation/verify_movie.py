@@ -14,7 +14,7 @@ def check(path):
     video, = [stream for stream in info["streams"] if stream["codec_type"] == "video"]
     frames = pod_scene.FRAMES
     assert video["codec_name"] == "h264" and video["pix_fmt"] == "yuv420p"
-    assert (video["width"], video["height"]) == (design.MOVIE["width_px"], design.MOVIE["height_px"])
+    assert (video["width"], video["height"]) == ((1920,1080) if film.SHORT else (design.MOVIE["width_px"],design.MOVIE["height_px"]))
     assert int(video["nb_frames"]) == frames and video["r_frame_rate"] == f"{pod_scene.FPS}/1"
     assert abs(float(video["duration"]) - frames / pod_scene.FPS) < .001
     chapters = info["chapters"]
@@ -24,7 +24,22 @@ def check(path):
     sound = [stream for stream in info["streams"] if stream["codec_type"] == "audio"]
     voice = ""
     if film.SHORT:
-        assert not sound, "the short film has no sound track"
+        from .. import short_voice, short_reels
+        marks=render_project.short_chapters()
+        assert len(chapters)==len(marks)
+        for chapter,(frame,title) in zip(chapters,marks):
+            assert abs(float(chapter["start_time"])-frame/pod_scene.FPS)<.002
+            assert chapter["tags"]["title"]==design.display(title)
+        assert len(sound)==1 and sound[0]["codec_name"]=="aac" and abs(float(sound[0]["duration"])-frames/pod_scene.FPS)<.1
+        assert any(s["codec_name"]=="mov_text" for s in info["streams"])
+        assert all(any(title in c["tags"]["title"] for c in chapters) for title in short_reels.TITLES)
+        import numpy as np
+        raw=subprocess.check_output(["ffmpeg","-v","error","-i",str(path),"-map","0:a:0","-ac","1","-ar","8000","-f","f32le","-"])
+        wave=np.frombuffer(raw,dtype="<f4")
+        for cue in json.loads(short_voice.TIMINGS.read_text(encoding="utf-8"))["lines"]:
+            window=wave[round(cue["start"]*8000):round(cue["end"]*8000)]
+            assert np.sqrt(np.mean(window*window))>.012, cue
+        voice=", timed narration and selectable captions"
     elif render_project.NARRATION.is_file():
         assert len(sound) == 1 and sound[0]["codec_name"] == "aac", "the narration track is missing"
         assert abs(float(sound[0]["duration"]) - frames / pod_scene.FPS) < .1

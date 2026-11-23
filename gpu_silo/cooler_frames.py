@@ -263,13 +263,16 @@ def cooler_mesh():
     return m
 
 
-def pump_mesh():
+def pump_mesh(detail=False):
     m=mesh("Cooler pump unit | solid grey housing")
     color=D["pump_colour"].lstrip("#")
     half=PUMP_L/2-.08
     closed(m,COOL_X0+.25,-half,COOL_X1-.35,half,.16,COOL_H-.34,color)
     closed(m,COOL_X0+.12,-half-.03,COOL_X1-.22,half+.03,.02,.16,STRUCT)
     services.pipe(m,(COOL_X0+.02,0,COOL_H*.67),(COOL_X0+.26,0,COOL_H*.67),.13,"8f9796",n=10)
+    if detail:
+        from . import short_art
+        short_art.pump_detail(m,COOL_X0+.25,COOL_X1-.35,half,COOL_H-.34)
     return m
 
 
@@ -486,7 +489,14 @@ def add(scene,node,p):
         return [(0,values[0])]+[(a+k,v) for k,v in p.flat_keys(values)]
     apron=track_mesh()
     node(apron.name,scene.mesh(apron),"Site works")
-    steel=scene.mesh(frame_mesh());cooler=scene.mesh(cooler_mesh());pump=scene.mesh(pump_mesh())
+    steel=scene.mesh(frame_mesh());cooler=scene.mesh(cooler_mesh());pump=scene.mesh(pump_mesh(scene.short_presentation))
+    if scene.short_presentation:
+        from . import short_art
+        vanes=short_art.material("Dry cooler | translucent discharge separators",short_art.SEPARATOR)
+        for row in range(ROWS):
+            z=(row+1)*ROW-.1
+            short_art.quad(vanes,[(DEPTH,-6,z),(DEPTH+1,-6,z),(DEPTH+1,6,z),(DEPTH,6,z)],"92b0af")
+        vane_mesh=scene.mesh(vanes)
     screen=scene.mesh(screen_mesh())
     slings=scene.mesh(sling_mesh());dunnage=scene.mesh(dunnage_mesh())
     plate=scene.mesh(embed_plate());struts=scene.mesh(strut_mesh());sleeve=scene.mesh(sleeve_mesh())
@@ -503,6 +513,8 @@ def add(scene,node,p):
         root=node(label+f" | {ROWS} dry coolers, {ROWS} pumps and steel",-1,"Dry cooler frames",ang=bearing,tracks=tracks)
         node(label+" | steel frame",steel,"Cooler frames",root)
         mesh_screen=node(label+" | mesh screen",screen,"Cooler screens",root)
+        if scene.short_presentation:
+            node(label+" | discharge separators",vane_mesh,"Discharge separators",root)
         coolers=[];pumps=[]
         for row in range(ROWS):
             z=row*ROW+.15

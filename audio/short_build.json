@@ -1,0 +1,126 @@
+{
+  "voice": "am_eric",
+  "rate": 24000,
+  "lines": [
+    {
+      "start": 1.1,
+      "end": 5.909,
+      "text": "The first concrete lift sets out two walls. The space between them will become the cooling store."
+    },
+    {
+      "start": 10.0,
+      "end": 16.549,
+      "text": "Beside the pour, welders assemble the steel cage a level at a time. Building it here keeps the bore open while the walls rise."
+    },
+    {
+      "start": 26.0,
+      "end": 32.583,
+      "text": "The crane stacks each completed level on the last. Eight levels will carry sixty-four pods around a single central shaft."
+    },
+    {
+      "start": 42.6,
+      "end": 47.855,
+      "text": "Two crawlers lift the assembled cage and lower it into the bore. Watch the outer ring clear the concrete."
+    },
+    {
+      "start": 56.3,
+      "end": 61.7,
+      "text": "The bare support rig lands first. Its sliding collar braces the shaft before the first pod arrives."
+    },
+    {
+      "start": 68.2,
+      "end": 74.381,
+      "text": "Two pods arrive per truck. The gantry lifts one onto the rail, leaving the other receiving lane free for the next delivery."
+    },
+    {
+      "start": 81.8,
+      "end": 88.081,
+      "text": "Inside the bore, a pod rises and rotates into its berth. Its wall-end connections bring the cooling circuit online."
+    },
+    {
+      "start": 91.0,
+      "end": 94.331,
+      "text": "Outside, the crane hangs the cooler frames on cast-in wall seats."
+    },
+    {
+      "start": 98.1,
+      "end": 104.369,
+      "text": "The propane vessels arrive on separate transporters. They will fuel the turbines that supply normal operating power."
+    },
+    {
+      "start": 113.0,
+      "end": 116.618,
+      "text": "The tinted surface traces the liner up both walls of the cooling store."
+    },
+    {
+      "start": 121.2,
+      "end": 125.291,
+      "text": "On the laydown pad, crews prepare the power decks and stage the machines for the lift."
+    },
+    {
+      "start": 133.3,
+      "end": 139.243,
+      "text": "Four diesel sets land on the lower rig. They are reserved for emergencies. Water deliveries begin filling the store."
+    },
+    {
+      "start": 144.8,
+      "end": 148.384,
+      "text": "The two gas turbine sets occupy their own deck above the diesels."
+    },
+    {
+      "start": 153.1,
+      "end": 156.204,
+      "text": "The removable lid carries the air inlets and exhaust stacks."
+    },
+    {
+      "start": 159.3,
+      "end": 162.846,
+      "text": "Fuel lines run from the tanks, beneath the road and up to the machines."
+    },
+    {
+      "start": 166.3,
+      "end": 171.587,
+      "text": "One receiving lane becomes a glazed control room. The other stays open for pod exchanges."
+    },
+    {
+      "start": 173.133,
+      "end": 180.322,
+      "text": "At the centre, twenty-four anchors hold the steel shaft at its base. Four arms locate the collar above. The shaft can still slide vertically."
+    },
+    {
+      "start": 185.133,
+      "end": 192.363,
+      "text": "One 4SU pod carries four racks between two trusses. At the wall end, the coolant distribution unit and pump travel with the pod."
+    },
+    {
+      "start": 197.133,
+      "end": 204.251,
+      "text": "Each frame holds three dry coolers. Here one coil and its pump pull clear. The fan bank discharges outward, away from the silo."
+    },
+    {
+      "start": 209.133,
+      "end": 216.38,
+      "text": "Lift the acoustic covers and the two generator sets come into view. Four rail girders carry their loads to the open ring and the wall seats."
+    },
+    {
+      "start": 224.308,
+      "end": 232.044,
+      "text": "At handover, two turbines supply the site. The operator can distribute up to forty-six megawatts of computing load across the installed racks."
+    },
+    {
+      "start": 235.208,
+      "end": 239.216,
+      "text": "On the silo roof, the red line marks the Starlink antenna's satellite link."
+    },
+    {
+      "start": 243.742,
+      "end": 248.246,
+      "text": "In plan, the pods draw cool liquid from the bottom of the store and return it warm at the top."
+    },
+    {
+      "start": 253.142,
+      "end": 259.861,
+      "text": "The dry coolers take heat from the top layer and return cooled liquid below. The section follows both circuits through the silo."
+    }
+  ]
+}

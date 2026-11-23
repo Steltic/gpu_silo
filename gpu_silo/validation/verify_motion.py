@@ -427,7 +427,10 @@ def walkways_and_fuel(p,a,doc,names,parents,get,points,ids,planar_overlap,roof,f
     for level in range(1,p.LEVELS+1):
         z=p.level_z(level);ring=cage[(np.abs(cage[:,2]-(z-.09))<.002)]
         radii=np.linalg.norm(ring[:,:2],axis=1)
-        assert radii.min()<p.SHAFT+.25 and p.INNER-.2<radii[radii<p.INNER].max()<p.INNER, "walkway ring missing"
+        if short:
+            assert not np.any((radii>p.SHAFT+.21)&(radii<p.INNER)), "shaft walkway visible in build cut"
+        else:
+            assert radii.min()<p.SHAFT+.25 and p.INNER-.2<radii[radii<p.INNER].max()<p.INNER, "walkway ring missing"
     # The access round the shaft is the width given in the design file, and the pod roots still clear each other when bunched.
     assert abs(p.INNER-p.SHAFT-p.cfg.STORE["shaft_access_m"])<1e-9 and p.crew.PLATE_IN>p.INNER
     assert p.calcs.C["root_gap_packed"]>0 and p.calcs.C["root_gap_lane"]>0,"the pod roots touch: widen the access round the shaft"

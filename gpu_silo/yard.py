@@ -290,7 +290,15 @@ def office_roof():
 def office(scene,node,dock,p):
     """Near the end of the build the dock is walled and roofed and becomes the control office."""
     begin=p.FILLED+clock.OFFICE[0];stand=64
-    node("Control office | walls",scene.mesh(office_walls()),"Control office",dock,
+    if scene.short_presentation:
+        from . import short_control
+        walls,glass,consoles,screens=short_control.meshes(OFFICE_X,OFFICE_Y,LANE_Y,OFFICE_H,box)
+        for part,when in ((consoles,begin+5),(screens,begin+15),(glass,begin+32)):
+            node(part.name,scene.mesh(part),"Control room fitout",dock,
+                 tracks={"scale":[(0,OFF),(when-.02,OFF),(when,ON)]})
+    else:
+        walls=office_walls()
+    node("Control office | walls",scene.mesh(walls),"Control office",dock,
          tracks={"scale":[(0,OFF),(begin-.02,OFF)]+[(begin+k,(1.,1.,max(.01,s.step(0,stand,k)))) for k in range(stand+1)]})
     roof=scene.mesh(office_roof());width=(OFFICE_X[1]-OFFICE_X[0])/ROOF_PANELS
     for k in range(ROOF_PANELS):

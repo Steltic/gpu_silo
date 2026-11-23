@@ -323,7 +323,7 @@ def racks(m,assembly,pod,n,world,zone):
 
 
 def operation(m):
-    scene=pod_scene.build()
+    scene=pod_scene.build(for_bim=True)
     floors=[completion.floor(level) for level in (0,1)]
     transforms=[]
     pod_assemblies={}
