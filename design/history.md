@@ -6,6 +6,8 @@ Add a dated entry when a choice changes. Say what the viewer should see, the dim
 
 ### Short build film · 23 November 2026
 
+At the owner's request the opening inspection view ends at 0:10. From frame 240 the inner and outer walls, form gangs and jumpform decks show the full circumference at the current pour height. The open top and ground-level receiving doorway follow the construction sequence. The cage lift brings back the interior view.
+
 The owner retained the 26.28 m diameter, 2.00 m raft and selected an industrial daylight build, narrated IFC component studies and a blue-hour exterior orbit. The short film hides the portal head reinforcement and shaft-side walkways, shows the liner without its work stages at 1:56 and uses translucent cooler discharge separators at 2:25. The control consoles, detailed equipment casings and labelled roof terminal are presentation additions. The issued revision K exchange supplies the geometry and product IDs for the four studies.
 
 ### Revision K · 23 November 2026

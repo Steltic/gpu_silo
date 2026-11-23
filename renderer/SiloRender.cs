@@ -50,6 +50,7 @@ class Data {
     public Mesh[] Meshes;public Node[] Nodes;public Frame[] Frames;public int Fps;
     public float Outer,OuterInside,InnerOutside,Inner,Height,Lift;
     public int Count,LastPour,Closed,RevealEnd;
+    public int FormsOff { get { return (LastPour+RevealEnd)/2; } }
     public int BuildEnd,Ghost,FirstPod,Full,Fast,Pick1,Pick2,PickDuration,VentBegin,VentEnd,LidBegin,LidEnd;
     public int SealBegin,SealEnd,OrbitBegin,OrbitEnd;
     public int Crew,Repair,Fault,FaultLevel,FaultBay;
@@ -1010,9 +1011,8 @@ partial class Shot {
             if(frame>25)StorePlan(g);
             UtilityReadouts(g,f,true,frame);
             if(frame>=4 && frame<12 || frame>=106 && frame<123)DetailPanel(g,frame,false,true);
-            if(frame>=12 && frame<=105 || frame>=196 && frame<=259)EmbedPanel(g,frame);
+            if(frame>=12 && frame<=105 || frame>=196 && frame<=259 && frame<d.Closed)EmbedPanel(g,frame);
             if(frame>=123 && frame<=190)DetailPanel(g,frame,true,false);
-            // The crossfade clearly signals the return to the full cylinder.
             bool full=frame>=d.Closed;
             string view=full?"FULL WALLS":"CUTAWAY VIEW";
             int labelW=full?101:122;
@@ -1027,7 +1027,7 @@ partial class Shot {
             }
             Text(g,view,section,ink,UiLeft+49,29);
             Dimensions(g,frame);
-            if(frame<d.Closed)CrewPanel(g,frame);
+            if(frame<d.FormsOff)CrewPanel(g,frame);
             ProgrammeTag(g,frame);
             DesignStrip(g,frame);
         }
@@ -1219,7 +1219,7 @@ partial class Shot {
         focal=H*.5/Math.Tan(f.Fov*Math.PI/360);centerX=(W+Left)*.5;centerY=H*.515;
         shadowHeight=f.End?f.Height:Math.Min(d.Height+1,Math.Max(f.Height,d.Lift*f.Lift));
         if(frame>d.LastPour+2 && frame<d.RevealEnd){
-            WorldFrame(d.Closed-1);Array.Copy(pixels,alternate,pixels.Length);WorldFrame(d.Closed);
+            WorldFrame(d.FormsOff-1);Array.Copy(pixels,alternate,pixels.Length);WorldFrame(d.FormsOff);
             double t=(frame-d.LastPour-2.0)/(d.RevealEnd-d.LastPour-2.0);
             t=t*t*(3-2*t);
             for(int i=0;i<pixels.Length;i++)pixels[i]=MixColor(alternate[i],pixels[i],t);

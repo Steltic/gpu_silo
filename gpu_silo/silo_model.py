@@ -41,6 +41,8 @@ RI = RO_INNER - INNER_THICKNESS
 COUNT = round(WALL_HEIGHT / LIFT)
 assert math.isclose(COUNT * LIFT, WALL_HEIGHT) and RI > 0
 LAST_POUR = INTRO + SLOW_CYCLE + (COUNT - 1) * FAST_CYCLE
+FORMS_OFF = LAST_POUR + REVEAL // 2
+SHORT_WALL_CLOSE = 10 * FPS
 FRAMES = LAST_POUR + REVEAL + HOLD
 
 
@@ -438,8 +440,9 @@ def keys(values):
     return result
 
 
-def build():
+def build(*, wall_close_frame=FORMS_OFF):
     scene=Scene()
+    scene.wall_close_frame=wall_close_frame
     fields,details=build_land()
     scene.node(fields.name,scene.mesh(fields),"Landscape")
     scene.node(details.name,scene.mesh(details),"Landscape")
@@ -464,7 +467,7 @@ def build():
                 scales=[]
                 for i,(active,fill,_,__,___) in enumerate(states):
                     h = 1 if active>k else fill if active==k else 0
-                    on = 1 if not piece or i>=LAST_POUR+REVEAL//2 else 0
+                    on = 1 if not piece or i>=wall_close_frame else 0
                     scales.append((on,on,on*h))
                 name=f"{wall} wall | lift {k+1:02d}"+(" | cutaway insert" if piece else "")
                 scene.node(name,groundmesh if k==0 else mesh,f"{wall} concrete wall",translation=(0,0,k*LIFT),
@@ -477,7 +480,8 @@ def build():
         mesh=scene.mesh(form_mesh(label+" panels",r,sense,deck))
         for j in range(SECTORS):
             hidden=range(SECTORS-7,SECTORS-1) if label.startswith("Outer") else range(SECTORS-5,SECTORS-2)
-            if j in hidden:
+            inspection_panel=j in hidden
+            if inspection_panel and wall_close_frame>=FORMS_OFF:
                 continue
             angle=(j+.5)*WIDTH
             c,s=math.cos(angle),math.sin(angle)
@@ -485,7 +489,7 @@ def build():
             for i,(k,_,opening,jump,__) in enumerate(states):
                 dist=sense*.145*opening
                 trans.append((c*dist,s*dist,LIFT*(k+jump)))
-                on=0 if i>=LAST_POUR+REVEAL//2 else 1
+                on=int(i<FORMS_OFF and (not inspection_panel or i>=wall_close_frame))
                 scales.append((on,on,on))
             scene.node(f"{label} | gang {j+1:02d}",mesh,label,angle=angle,
                        tracks={"translation":keys(trans),"scale":keys(scales)})

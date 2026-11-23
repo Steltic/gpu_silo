@@ -486,8 +486,9 @@ def flat_keys(values,tol=.000015):
 
 
 def build(*, for_bim=False):
-    scene=s.build()
-    scene.short_presentation = film.SHORT and not for_bim
+    short_presentation = film.SHORT and not for_bim
+    scene=s.build(wall_close_frame=s.SHORT_WALL_CLOSE if short_presentation else s.FORMS_OFF)
+    scene.short_presentation = short_presentation
     site.ground(scene)
     services.perforate_concrete(scene)
     scene.project_info=dict(clearBore_m=2*s.RI,podLength_m=POD_L,podWidth_m=POD_W,podHeight_m=POD_H,
@@ -502,6 +503,9 @@ def build(*, for_bim=False):
         thermalStore_m3=calcs.C["tank_m3"],thermalStore_USgal=calcs.C["tank_gal"],
         heatRejection_MW=calcs.C["reject_mw"],
         technicalScope="Geometric concept animation; no load or tolerance design.")
+    if short_presentation:
+        scene.project_info.update(constructionFullWalls_s=scene.wall_close_frame/FPS,
+            note="The construction inspection sectors close at ten seconds. Each wall then rises lift by lift until the cage lift.")
     crew.recess_floor(scene)
     scene.camera=[construction_camera(i) for i in range(FRAMES)]
     scene.states=[lift_state(i) for i in range(FRAMES)]
@@ -691,7 +695,7 @@ def render_data(scene,path):
         file.write(b"GSILO07\0")
         ints(len(scene.meshes),len(scene.nodes),FRAMES,FPS)
         floats(s.RO,s.RI_OUTER,s.RO_INNER,s.RI,s.WALL_HEIGHT,s.LIFT)
-        ints(s.COUNT,s.LAST_POUR,s.LAST_POUR+s.REVEAL//2,s.LAST_POUR+s.REVEAL,
+        ints(s.COUNT,s.LAST_POUR,scene.wall_close_frame,s.LAST_POUR+s.REVEAL,
              C,PORTAL_VIEW,FIRST_POD,FILLED,SPEED_FRAME)
         ints(*plant.PICK_STARTS,plant.PICK_LENGTH,plant.VENT_START,plant.VENT_END,*plant.LID)
         ints(care.SOLID_BEGIN,care.SOLID_END,care.ORBIT,care.ORBIT_DONE)
