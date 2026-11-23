@@ -160,6 +160,7 @@ def render(renderer,scene,out,work,jobs):
     if film.SHORT:
         from . import short_voice
         subtitles=work/"short.srt";short_voice.subtitles(subtitles)
+        # Use milliseconds for the chapter track when combining video, 48 kHz audio and timed text.
         subprocess.run(["ffmpeg","-hide_banner","-loglevel","error","-y","-f","concat","-safe","0","-i",str(playlist),
             "-f","ffmetadata","-i",str(metadata),"-i",str(short_voice.AUDIO),"-i",str(subtitles),
             "-map","0:v:0","-map","2:a:0","-map","3:s:0","-map_metadata","1","-map_chapters","1",

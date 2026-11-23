@@ -1,7 +1,7 @@
 """Object-level excerpts from the issued IFC for the narrated build film.
 
 Refresh the small offline mesh cache with python -m gpu_silo.short_reels PATH/TO/GPU_Silo.ifc.
-The source coordinate system, product tags and IFC GlobalIds are retained in the cache.
+The cache stores each group in assembly-local coordinates with its IFC product tags and GlobalIds.
 """
 import gzip
 import hashlib
