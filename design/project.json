@@ -21,9 +21,17 @@
       "end_margin_deg": 5, "live_load_kpa": 2.5, "machinery_factor": 1.15,
       "collar_travel_mm": 25, "guide_pad_m": [0.20, 0.30, 0.015],
       "pad_modulus_mpa": 90, "guide_play_mm": 0.20, "wall_seat_stiffness_kn_mm": 120,
-      "seat_studs": 8, "stud_diameter_mm": 32, "stud_embed_m": 0.32,
+      "pad_pressure_limit_mpa": 25,
+      "seat_studs": 8, "stud_diameter_mm": 32, "stud_embed_m": 0.40,
       "stud_fu_mpa": 450, "anchor_rebar_mm": 32, "shoe_eccentricity_m": 0.20,
-      "plate_thickness_m": 0.04, "roof_curb_m": 0.75
+      "plate_thickness_m": 0.04, "roof_curb_m": 0.75,
+      "key_width_projection_thickness_m": [0.52, 0.12, 0.06],
+      "closure_weld_width_height_leg_m": [0.40, 0.44, 0.016],
+      "stud_columns_m": [-0.20, 0.20], "stud_rows_m": [-0.32, -0.10, 0.10, 0.32],
+      "stud_head_diameter_mm": 64, "stud_head_thickness_mm": 15,
+      "hairpin_near_leg_offsets_m": [-0.28, -0.08, 0.08, 0.28],
+      "hairpin_leg_depths_m": [0.215, 0.405], "hairpin_tangent_offset_m": 0.24,
+      "hairpin_top_m": 0.52, "hairpin_tail_below_seat_m": 1.80
     },
     "services": {
       "facility_aux_mw": 4.0, "grid_import_mw": 6.0, "bus_kv": 13.8,
@@ -42,6 +50,8 @@
     "rack_model": "NVIDIA Vera Rubin NVL72",
     "racks_per_pod": 4,
     "liquid_heat_per_rack_kw": 195.3125,
+    "normal_it_limit_mw": 46.0,
+    "reference_spare_kw": 2.0,
     "cdus_per_pod": 1,
     "pumps_per_cdu": 1
   },
@@ -1020,10 +1030,10 @@
   },
   "design_checks": {
     "document": "GS-STR-001",
-    "revision": "J",
-    "date": "2026-11-22",
+    "revision": "K",
+    "date": "2026-11-23",
     "status": "Preliminary, issued for review. Not checked. Not for construction.",
-    "prepared_by": "Revisions A–I by Claude (Anthropic), revision J by Codex for Steltic",
+    "prepared_by": "Revisions A–I by Claude (Anthropic), revisions J–K by Codex for Steltic",
     "checked_by": "Not yet checked",
     "approved_by": "Not yet approved",
     "register": [
@@ -1073,28 +1083,28 @@
         "id": 7,
         "title": "Top support rig",
         "scope": "The steel rig at the crown that carries the diesel generator sets and holds the top of the shaft. Set on its mounts straight after the cage.",
-        "status": "Fabricated rail and open ring sized at actual mount positions. Coordination design for review.",
+        "status": "Rail and open ring checked for bare, partial and full equipment loading on the revision J basis. Supplier skid reactions and vibration review pending.",
         "section": "7"
       },
       {
         "id": 8,
         "title": "Shaft-top connector",
         "scope": "The connector that puts the horizontal force from the top of the shaft into the support rig",
-        "status": "Sliding collar, four arms, pad pressure and stiffness checked for the assumed envelope.",
+        "status": "Four-arm guide checked for directional clearance, stiffness, pad bearing and free stroke. Installed pad properties, play and sliding action need verification.",
         "section": "7"
       },
       {
         "id": 9,
         "title": "Cast-in wall mounts",
         "scope": "The mounts cast into the inner wall that carry the support rig, and the wall locally",
-        "status": "Cast-in rig plates, positive keys and developed anchor reinforcement sized for review.",
+        "status": "Rig seat reactions, stud-row demand, key and anchor-bar detailing checked on the assumed wall. Cracked-concrete load transfer and joint detail require independent review.",
         "section": "7"
       },
       {
         "id": 10,
         "title": "Turbine level mounts and cast-in anchors",
         "scope": "The turbine level's own mounts and the anchors cast into the inner wall for them",
-        "status": "Independent turbine rail, ring, seats and anchor groups sized for review.",
+        "status": "Independent turbine floor and its anchor groups checked for staged loading. Machine dynamics and local wall anchorage require verification.",
         "section": "7"
       }
     ]

@@ -3,9 +3,9 @@
 | | |
 | --- | --- |
 | Document | GS-STR-001 |
-| Revision | J, 2026-11-22 |
+| Revision | K, 2026-11-23 |
 | Status | Preliminary, issued for review. Not checked. Not for construction. |
-| Prepared by | Revisions A–I by Claude (Anthropic), revision J by Codex for Steltic |
+| Prepared by | Revisions A–I by Claude (Anthropic), revisions J–K by Codex for Steltic |
 | Checked by | Not yet checked |
 | Approved by | Not yet approved |
 
@@ -21,8 +21,9 @@
 | H | 2026-11-22 | Check 4 corrected. The springs of revision G were values for a small test plate and were about ten times too stiff for soil under a slab this wide. The grounds are now set by modulus: settlement on soil is tens of millimetres, the fill lowers the walls 3 mm against the shaft on dense sand or stiff clay, and the slab as drawn is not strong enough on dense sand or stiff clay. |
 | I | 2026-11-22 | Decisions of the project adopted: shaft wall 2 in, base slab 2 m on ground taken as dense sand or stiff clay, a flexible section in each wall connection, and the hub arrangement of check 6. The build is not to be constrained: the wall connections are not left until after the fill, and the order of loading stays free. The model draws the hub drum, beam arms at the pod roots and the flexible sections. |
 | J | 2026-11-22 | Crown floor girders, sliding shaft guide, separate anchor groups, reference lateral and services envelopes, recorded owner assumptions and the operating IFC. |
+| K | 2026-11-23 | Checks 7–10 verified on the revision J loading basis. Added erection combinations, directional guide play, individual stud and closure weld checks, and revised the crown anchor bars for clearance and development. |
 
-This report is generated from [project.json](project.json) by `python -m gpu_silo calcs`. Every number in it is calculated from the inputs in that file by [structure.py](../gpu_silo/structure.py), [walls.py](../gpu_silo/walls.py), [thermal.py](../gpu_silo/thermal.py) and [reinforcement.py](../gpu_silo/reinforcement.py). To change a result, change an input and run the command.
+This report is generated from [project.json](project.json) by `python -m gpu_silo calcs`. Section 2 reads the numbered checks from `design_checks.register`. Sections 7.5–7.8 use the [coordination calculations](../gpu_silo/completion.py) and the [crown anchorage detail](../gpu_silo/crown_detail.py).
 
 ## Contents
 
@@ -71,10 +72,10 @@ Section 7.8 screens lateral loading against a stated reference envelope. Site-sp
 | 4 | Foundation | Base slab, bearing pressure, and the anchorage of the shaft base | Slab 2.0 m on dense sand or stiff clay, adopted. Shaft base designed. For review. The ground is not known. | [Section 11](#11-check-4-foundation) |
 | 5 | Heat balance of the store | Water-glycol temperatures, mixing and ride-through in the store | First pass complete. The store is layered: pipes, cover and overflow are in the model. For review. | [Section 9](#9-check-5-heat-balance-of-the-store) |
 | 6 | Pod-to-shaft connection and level drive | Root connection of the pod, the hub at each level, and the capacity of the drive that turns a level on the fixed shaft | First pass: root connection, hub, bearings and drive sized. Arrangement adopted. For review. | [Section 12](#12-check-6-root-connection-hub-and-level-drive) |
-| 7 | Top support rig | The steel rig at the crown that carries the diesel generator sets and holds the top of the shaft. Set on its mounts straight after the cage. | Fabricated rail and open ring sized at actual mount positions. Coordination design for review. | [Section 7](#7-checks-7-to-10-support-rig-shaft-connector-and-wall-mounts-design-loads) |
-| 8 | Shaft-top connector | The connector that puts the horizontal force from the top of the shaft into the support rig | Sliding collar, four arms, pad pressure and stiffness checked for the assumed envelope. | [Section 7](#7-checks-7-to-10-support-rig-shaft-connector-and-wall-mounts-design-loads) |
-| 9 | Cast-in wall mounts | The mounts cast into the inner wall that carry the support rig, and the wall locally | Cast-in rig plates, positive keys and developed anchor reinforcement sized for review. | [Section 7](#7-checks-7-to-10-support-rig-shaft-connector-and-wall-mounts-design-loads) |
-| 10 | Turbine level mounts and cast-in anchors | The turbine level's own mounts and the anchors cast into the inner wall for them | Independent turbine rail, ring, seats and anchor groups sized for review. | [Section 7](#7-checks-7-to-10-support-rig-shaft-connector-and-wall-mounts-design-loads) |
+| 7 | Top support rig | The steel rig at the crown that carries the diesel generator sets and holds the top of the shaft. Set on its mounts straight after the cage. | Rail and open ring checked for bare, partial and full equipment loading on the revision J basis. Supplier skid reactions and vibration review pending. | [Section 7](#7-checks-7-to-10-support-rig-shaft-connector-and-wall-mounts-design-loads) |
+| 8 | Shaft-top connector | The connector that puts the horizontal force from the top of the shaft into the support rig | Four-arm guide checked for directional clearance, stiffness, pad bearing and free stroke. Installed pad properties, play and sliding action need verification. | [Section 7](#7-checks-7-to-10-support-rig-shaft-connector-and-wall-mounts-design-loads) |
+| 9 | Cast-in wall mounts | The mounts cast into the inner wall that carry the support rig, and the wall locally | Rig seat reactions, stud-row demand, key and anchor-bar detailing checked on the assumed wall. Cracked-concrete load transfer and joint detail require independent review. | [Section 7](#7-checks-7-to-10-support-rig-shaft-connector-and-wall-mounts-design-loads) |
+| 10 | Turbine level mounts and cast-in anchors | The turbine level's own mounts and the anchors cast into the inner wall for them | Independent turbine floor and its anchor groups checked for staged loading. Machine dynamics and local wall anchorage require verification. | [Section 7](#7-checks-7-to-10-support-rig-shaft-connector-and-wall-mounts-design-loads) |
 
 ## 3. Basis of design
 
@@ -584,7 +585,7 @@ The inertia torque is small. The drive is sized by the friction of the hub beari
 
 ## 7. Checks 7 to 10: support rig, shaft connector and wall mounts, design loads
 
-Checks 7, 8 and 9 were added in revision B and check 10 in revision C. Holding the top of the shaft makes the rig, its connector and its mounts part of the structure that carries the pods. Sections 7.1–7.4 preserve the design brief. Sections 7.5–7.8 give the sized members, mount reactions, spring calculation and site screening used for revision J.
+Checks 7, 8 and 9 were added in revision B and check 10 in revision C. Holding the top of the shaft makes the rig, its connector and its mounts part of the structure that carries the pods. Sections 7.1–7.4 preserve the design brief. Sections 7.5–7.8 give the crown checks and site screening on the revision J reference loads. Revision K verifies the staged floors, shaft guide and two separate groups of wall seats.
 
 ### 7.1 Description
 
@@ -595,7 +596,7 @@ Checks 7, 8 and 9 were added in revision B and check 10 in revision C. Holding t
 
 ### 7.2 Loads from the shaft on the rig, its connector and its mounts
 
-| Loading state | Sideways force at the top of the shaft, kN | Factored, kN | Largest force on one mount, kN |
+| Loading state | Shaft service force, kN | Factored shaft force, kN | Ideal full-ring service share per governing mount, kN |
 | --- | ---: | ---: | ---: |
 | Store complete, every level at the storage pitch | 0 | 0 | 0 |
 | Worst state of the filling sequence: 7 levels full and bunched, 5 pods on the next | 119 | 167 | 15 |
@@ -636,22 +637,49 @@ Each machine bears on fabricated box girders spanning to the open perimeter ring
 
 The modeled 480 × 580 × 35 × 25 mm ring is discontinuous at the service wedge. Girders finish on the supported arc. The span limit is L/300. Provide transverse diaphragms at rail ends, skid feet and collar arms, 20 mm seat stiffeners, continuously welded box seams and positively restrained resilient machine mounts. The allowance above the primary steel takeoff covers diaphragms, shoes, decking, gratings and fittings. Obtain equipment foot reactions, operating frequencies and a floor modal analysis before releasing either deck. Raising the bolted lid by 0.75 m gives 0.78 m nominal access above the turbine skid envelope.
 
+The staged check superposes each machine or full day tank on the bare floor at its assumed skid centre. Every subset balances the applied gravity load and every individual seat stays within its fully loaded vertical envelope. The 120 t floor allowance and 2.5 kPa live load apply at each stage. The bare lower rig also braces the shaft before delivery of the diesels.
+
+| Floor | Equipment combinations | Bare peak, kN | Highest with one item, kN | Fully loaded peak, kN | Governing seat numbers | Lowest estimated loaded rail frequency, Hz |
+| --- | ---: | ---: | ---: | ---: | --- | ---: |
+| Diesel | 64 | 382 | 510 | 684 | 05, 12 | 3.26 |
+| Turbine | 4 | 409 | 909 | 909 | 03, 14 | 2.59 |
+
+All three reaction columns are factored. The indicated frequency uses a simply supported rail with a sine-shaped first mode, its share of the floor and live mass, and each machine mass at its own position. A resonance assessment needs the coupled floor, bearings, machine isolators, vendor forcing spectra and permissible vibration at the feet. [Steel design basis](https://www.aisc.org/aisc/publications/current-standards/aisc-360)
+
 ### 7.6 Check 8 · Shaft-top guide
 
 Four 280 × 380 × 20 × 16 mm box arms connect the split collar to the ring. Use four replaceable 200 × 300 × 15 mm preadjusted sliding pads, 0.20 mm maximum installed lateral play and ±25 mm unobstructed vertical travel. The rig has no vertical shaft seat. Mechanical stops lie outside the operating travel. Require pad service-temperature compressive capacity ≥25 MPa. Bounded pressure is 14.6 MPa. Design shaft force is 877 kN including the assumed acceleration and the uncontrolled loading envelope. A single arm carrying that force has 4,911 kN compression resistance at the adopted pin-ended length.
 
-Pad compression, axial arms, in-plane ring bending and the wall seats are springs in series. Their directional stiffnesses are 360, 1198, 824, 842 kN/mm. The effective secant stiffness **including guide play** is 150.2 kN/mm at the uncontrolled service reaction, against 16 kN/mm required. Prove the assumed installed seat/pad stiffness and release of axial motion after welding. Do not load the first pod until the bare rig is seated and the guide engaged.
+Pad compression, one arm per engaged axis, in-plane ring bending and the wall seats are springs in series. Their stiffnesses are 360, 599, 824, 842 kN/mm. With two orthogonal pad pairs, the greatest free lateral movement before engagement is √2 times the per-pad play, or 0.283 mm. The conservative secant stiffness is **108.5 kN/mm** at the governing nonzero service load in §7.2 and 128.9 kN/mm at the uncontrolled fill load. Both exceed the required 16 kN/mm. The section 5 shaft shortening is 1.76 mm, within the specified minimum 2 mm free stroke and the modeled ±25 mm travel. Verify pad modulus, play after welding, friction and free axial movement over the site settlement and temperature range. Engage the guide before hanging the first pod.
 
 ### 7.7 Checks 9 and 10 · Cast-in support groups
 
 For the actual mount bearings, the lateral reaction in a radial seat of direction n is nᵀ(Σ n nᵀ)⁻¹H. The greatest share over all load directions is **14.18%**. The rig takes the factored shaft force and its own horizontal inertia. The upper mounts carry turbine floor inertia. The gravity envelope from §7.5 governs the most heavily loaded seats.
 
-| Group | Peak vertical, kN | Peak horizontal, kN | Eccentric tension / resistance, kN | Bearing key force / resistance, kN | Combined bar utilisation | Weld force / resistance, kN |
+| Group | Peak vertical, kN | Peak horizontal, kN | Eccentric tension / resistance, kN | Key bearing / resistance, kN | Group bar utilisation | Peak weld line load / resistance, kN/m |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| Rig | 684 | 152 | 366 / 1,013 | 684 / 1,724 | 0.70 | 776 / 5,587 |
-| Turbine | 909 | 38 | 322 / 1,013 | 909 / 1,724 | 0.77 | 965 / 5,587 |
+| Rig | 684 | 152 | 400 / 1,013 | 684 / 1,724 | 0.73 | 775 / 2,494 |
+| Turbine | 909 | 38 | 367 / 1,013 | 909 / 1,724 | 0.81 | 948 / 2,494 |
 
-Each 600 × 950 × 40 mm flush plate has eight 32 mm headed studs embedded 320 mm and a 520 × 120 mm bearing key. A 200 mm eccentricity over a 640 mm lever arm adds tension. Four developed two-legged 32 mm anchor hairpins transfer splitting and shear to both wall reinforcement mats. The tension resistance is the lesser of four engaged studs and four developed bar legs. Shear uses eight legs, with linear tension/shear interaction. A 16 mm effective-leg perimeter fillet transfers the shoe force. Cast plates stay flush with the wall. The lifted assembly retains at least 50 mm radial clearance. Fit and weld separate closure plates only after each floor has landed. The numerical checks depend on a fully developed reinforced load path in cracked concrete. Verify local strut bearing, edge distances, confinement, pryout, weld access, lift-joint proximity and anchorage development on the final detail before casting.
+Each 600 × 950 × 40 mm flush plate has eight 32 mm headed studs and a bearing key. The group calculation uses four legs in tension and eight in shear. An additional check puts direct outward load into the four upper studs, distributes the moment from the 200 mm eccentricity in proportion to their distance above the lowest row, and combines the most loaded bar leg with its share of vertical shear. It assumes a rigid plate and an engaged lower compression toe. The key acts as a 60 mm thick cantilever with uniform underside bearing. The closure weld check uses direct shear plus the peak tension from direct force and eccentric bending on a 400 × 440 mm effective weld perimeter, with a 16 mm fillet leg.
+
+| Group | Governing stud tension / resistance, kN | Key root moment / elastic resistance, kN·m | Governing bar-leg tension and shear utilisation |
+| --- | ---: | ---: | ---: |
+| Diesel | 113 / 271 | 41.0 / 96.9 | 0.78 |
+| Turbine | 109 / 271 | 54.6 / 96.9 | 0.88 |
+
+The stud tips now reach 400 mm behind the bore surface. Subtracting the recessed plate and the head thickness gives 345 mm of effective embedment for the concrete check. The tension demand sums the row forces. For the two upper rows, the cracked-concrete breakout resistance uses their projected group area, the eccentricity of the tension resultant, normal-weight concrete and a 0.70 resistance factor. Single-head pullout uses the net head bearing area. The positive key carries gravity shear. These figures assume an uninterrupted concrete failure surface with clearance to free edges and other embeds.
+
+| Group | Upper-row tension / concrete breakout resistance, kN | Peak stud tension / head pullout resistance, kN | Clear projection to nearest nominal lift joint / adjacent group, m |
+| --- | ---: | ---: | ---: |
+| Diesel | 400 / 519 | 113 / 676 | 0.30 / 1.50 |
+| Turbine | 367 / 513 | 109 / 676 | 0.52 / 1.50 |
+
+The revision J bar paths passed through the bearing key and two stud lines. The revised four U-bars per seat bend above the anchor group and run behind the key. The minimum calculated clearances are 39 mm to the key, 32 mm to a conservative stud-head envelope, and 64 mm to the wall face. The inside bend diameter is 274 mm for a minimum 8 bar diameters.
+
+For a conservative length check, measure the straight tail below the lowest stud and a further 1.5 times the full stud tip depth. This gives **880 mm available against 693 mm required** for a straight Grade 420 bar. The calculation uses ACI 318M-19 §25.4.2.4, normal-weight concrete, uncoated vertical bars, no confinement credit, and the lesser of centre cover and half the leg spacing (80 mm). The IFC and both films use the same bar layout. [ACI 318-19, chapters 17 and 25](https://www.concrete.org/Portals/0/Files/PDF/Previews/318-19_preview.pdf)
+
+The wall detail relies on anchor reinforcement that intercepts the actual cracking surface and develops on both sides. The tail check covers the outside length. The lower bar tails cross a nominal construction joint and need continuity into the preceding lift. Verify the local compression strut and splitting resistance around the key, steel engagement inside the failure surface, actual edge distances, lift-joint transfer, connections into both wall mats, plate prying and weld access. Any shear assigned to the studs requires a corresponding concrete shear breakout, pryout and combined-load check. Survey fit after landing and before welding the closure. These conditions apply separately to the lower and upper groups.
 
 ### 7.8 Site envelope and secondary checks
 
@@ -669,7 +697,7 @@ Each 600 × 950 × 40 mm flush plate has eight 32 mm headed studs embedded 320 m
 | Pod / cooler branch velocity | 1.66 / 1.60 m/s | At 125 / 200 mm internal diameter |
 | Pod / cooler calculated pump input | 8.2 / 23.5 kW | Design head 30 / 35 m at 75% efficiency |
 | Normal auxiliary subtotal / allowance | 3.78 / 4 MW | 1.23 MW pumps, 30 × 45 kW fans, 0.40 MW other services including HVAC and 1.6% electrical losses |
-| Normal / island / diesel-only IT limit | 50 / 46 / 7 MW | Thermal dispatch can require a lower limit |
+| Installed rack design / normal IT ceiling / emergency priority IT | 50 / 46 / 7 MW | Operator selects the rack mix. Turbine output and cooling can reduce normal IT. Diesels serve declared emergencies |
 | Two main buses / each transformer primary | 1101 A each / 275 A | 1,600 / 400 A at 13.8 kV |
 | Pod branch current / example cable drop | 475 A / 0.30% | 630 A plug, 120 m example, two parallel conductors per phase, 0.060 Ω/km each. Verify actual grouped ampacity and impedance |
 | Layered, all coolers off | 76.0 min gross, 74.4 min with 2% displacement allowance | 60 min target from a fully charged store |

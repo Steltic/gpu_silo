@@ -2,7 +2,9 @@
 
 There are two films. [silo_short](#the-build-silo_short) is the build in programme order. [GPU_Silo](#the-full-presentation-gpu_silo) is the longer presentation. They share one model and one design file and are not kept in step.
 
-## Revision I on screen
+## Changes visible on screen
+
+Revision K shows the 46 MW normal IT ceiling and leaves the active rack mix to the operator. The two power floors retain separate mounts. Their shared model now includes the revised longer studs and bent anchor bars.
 
 The rig lift follows the cage in both films. The amber collar, arms and shoes are visible as the bare steel seats on the cast-in wall plates. The four diesel sets and two day tanks arrive after pod loading.
 
@@ -65,11 +67,11 @@ Day 0 is the day the last wall lift is poured. The film shows a sample of the tr
 | 3:21 | Days 8 to 18 | The fuel farm, 66 m from the silo. Eight heavy-haul trucks come round the ring, each drives into its slot, the tank is jacked off the trailer and lowered to the pad, and the truck leaves by the road out of the back. The diesel tank arrives on a flatbed. |
 | 3:36 | | Propane transports pull into the two-bay lay-by beside the tank header and unload. The propane line and the smaller diesel line cross under the ring road, up the outside wall, across the lid and down to the power levels. The panel gives the stored volumes and the run times, and the tag counts the 26 propane loads. |
 | 3:44 | | Plan view, narrated. Riser pairs connect the CDUs and the dry coolers to the two layers. Pods draw cool liquid from the bottom and return warm liquid to the top. Coolers draw from the top and return to the bottom. |
-| 4:19 | | Section. Power runs down the fixed shaft to grade transformers, then up the exterior bay risers to the docked 4SUs. The section follows the pipes from their diffuser plates at the top and bottom of the store to the pods and coolers. Propane runs from the tanks up the wall to the turbines, and diesel follows it to the backup sets. |
-| 4:45 | In service | The replacement scene, a cutaway again. A fault is flagged on 4SU 021, Level 6. Neighbouring pods clear the vertical lane. |
-| 4:59 | | The camera pulls back. While the faulty pod comes out through the door, the crawler returns and lowers cooler frame 09 to the ground. |
-| 5:05 | | One 2 MW cooler is drawn out of the frame and set down, and a replacement is lifted into its bay. |
-| 5:12 | | The replacement 4SU enters at grade. The crawler hangs the frame on its seats and the pipe spools are remade. |
-| 5:33 | | All 64 service positions reconnect. |
+| 4:20 | | Section. Power runs down the fixed shaft to grade transformers, then up the exterior bay risers to the docked 4SUs. The section follows the pipes from their diffuser plates at the top and bottom of the store to the pods and coolers. Propane runs from the tanks up the wall to the turbines, and diesel follows it to the backup sets. |
+| 4:46 | In service | The replacement scene, a cutaway again. A fault is flagged on 4SU 021, Level 6. Neighbouring pods clear the vertical lane. |
+| 5:00 | | The camera pulls back. While the faulty pod comes out through the door, the crawler returns and lowers cooler frame 09 to the ground. |
+| 5:06 | | One 2 MW cooler is drawn out of the frame and set down, and a replacement is lifted into its bay. |
+| 5:13 | | The replacement 4SU enters at grade. The crawler hangs the frame on its seats and the pipe spools are remade. |
+| 5:34 | | All 64 service positions reconnect. |
 | 5:36 | | The concrete turns solid for a last view of the finished silo. |
-| 5:42 | | End. |
+| 5:43 | | End. |

@@ -136,7 +136,8 @@ def deck_components(level):
             b,h,_,_ = d["guide_arm_box_m"]
             s.bar(m,s.polar(COLLAR,a,-DECK/2),s.polar(r-d["ring_box_m"][0]/2,a,-DECK/2),b,HOLD,h)
             yield "IfcMember", m
-    for i,a in enumerate(mount_angles(),1):
+    count = TURBINE_MOUNTS if level else RIG["wall_mounts"]
+    for i,a in enumerate(mount_angles(count),1):
         m = mesh(f"Bearing shoe {i:02}")
         shoes(m,[a])
         yield "IfcDiscreteAccessory", m
@@ -170,14 +171,16 @@ def shoes(m,angles):
 def mount_plate():
     """A plate cast into the inner wall, flush with the bore, with studs back into the concrete. Local x points out through the wall."""
     m=mesh("Power level | cast-in wall plate and studs")
-    t = completion.D["plate_thickness_m"]
-    depth = completion.D["stud_embed_m"]
+    d = completion.D
+    t = d["plate_thickness_m"]
+    depth = d["stud_embed_m"]
     closed(m,.0,-PLATE_W/2,t,PLATE_W/2,-.45,PLATE_H-.45,HOLD)
-    closed(m,t,-.26,t+.12,.26,-.28,-.22,STRUCT)
-    for y in (-.20,.20):
-        for z in (-.32,-.10,.10,.32):
-            services.pipe(m,(t,y,z),(depth,y,z),completion.D["stud_diameter_mm"]/2000,STRUCT,n=10)
-            services.pipe(m,(depth-.015,y,z),(depth,y,z),.032,STRUCT,n=10)
+    width,projection,thickness = d["key_width_projection_thickness_m"]
+    closed(m,t,-width/2,t+projection,width/2,-.25-thickness/2,-.25+thickness/2,STRUCT)
+    for y in d["stud_columns_m"]:
+        for z in d["stud_rows_m"]:
+            services.pipe(m,(t,y,z),(depth,y,z),d["stud_diameter_mm"]/2000,STRUCT,n=10)
+            services.pipe(m,(depth-d["stud_head_thickness_mm"]/1000,y,z),(depth,y,z),d["stud_head_diameter_mm"]/2000,STRUCT,n=10)
     return m
 
 

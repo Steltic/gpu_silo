@@ -53,7 +53,8 @@ class Model:
                        Precision=1e-6,WorldCoordinateSystem=self.origin)
         self.body=self.e("IfcGeometricRepresentationSubContext",ContextIdentifier="Body",ContextType="Model",
                          ParentContext=context,TargetView="MODEL_VIEW")
-        proj=self.e("IfcProject",GlobalId=gid("project"),Name="GPU Silo",Phase="Revision J | design review",
+        revision=cfg.PROJECT["design_checks"]["revision"]
+        proj=self.e("IfcProject",GlobalId=gid("project"),Name="GPU Silo",Phase=f"Revision {revision} | design review",
                     RepresentationContexts=[context],UnitsInContext=self.e("IfcUnitAssignment",Units=units))
         self.site=self.spatial("IfcSite","Site",None)
         self.building=self.spatial("IfcBuilding","GPU Silo",self.site)
@@ -66,9 +67,10 @@ class Model:
             b=self.spatial("IfcBuildingStorey",key,self.building,z)
             self.children[self.building].append(b)
             self.storeys[key]=(b,z)
-        self.props(proj,"Basis",{"Revision":"J","Issue":"Preliminary design for coordination and review",
+        self.props(proj,"Basis",{"Revision":revision,"Issue":"Preliminary design for coordination and review",
                    "Coordinates":"Local metres, shaft centre (0,0), raft top Z=0; site unsurveyed",
-                   "Register":"design/assumptions.md","Racks":cfg.RACKS,"Pods":cfg.TOTAL})
+                   "Register":"design/report.md#2-register-of-design-checks","Racks":cfg.RACKS,"Pods":cfg.TOTAL,
+                   "NormalITLimitMW":cfg.CLUSTER["normal_it_limit_mw"],"RackAssignment":"Operator selected"})
 
     def point(self,p):
         return self.e("IfcCartesianPoint",Coordinates=tuple(float(x) for x in p))
@@ -171,7 +173,7 @@ class Model:
         h.file_description.description=("GPU Silo multidisciplinary coordination model",)
         h.file_name.name=path.name
         h.file_name.author=("Steltic GPU Silo project",)
-        h.file_name.originating_system="GPU Silo revision J / IfcOpenShell"
+        h.file_name.originating_system=f"GPU Silo revision {cfg.PROJECT['design_checks']['revision']} / IfcOpenShell"
         path.parent.mkdir(parents=True,exist_ok=True)
         self.file.write(str(path))
 
@@ -322,6 +324,7 @@ def racks(m,assembly,pod,n,world,zone):
 
 def operation(m):
     scene=pod_scene.build()
+    floors=[completion.floor(level) for level in (0,1)]
     transforms=[]
     pod_assemblies={}
     for i,n in enumerate(scene.nodes):
@@ -358,13 +361,20 @@ def operation(m):
             kind="IfcTank" if "tank" in name else "IfcElectricGenerator"
             zone="Turbines" if "Turbine set" in name else "Diesel"
             mat,system="Equipment","Power generation"
-            if kind=="IfcElectricGenerator":props["NameplateMW"]=cfg.POWER["module_output_mw"] if zone=="Turbines" else cfg.PROJECT["diesel"]["set_output_mw"]
+            if kind=="IfcElectricGenerator":
+                props["NameplateMW"]=cfg.POWER["module_output_mw"] if zone=="Turbines" else cfg.PROJECT["diesel"]["set_output_mw"]
+                props["Duty"]="Normal supply" if zone=="Turbines" else "Emergency only"
         elif group=="Fuel storage":
             kind="IfcTank" if "tank" in name.lower() and "pad" not in name else "IfcDistributionChamberElement" if "unloading" in name and "gravel" not in name else "IfcSlab"
             zone,mat,system="Site","Equipment","Fuel"
         elif group in GROUPS:
             kind,mat,zone,system=GROUPS[group]
-            if group=="Rig mounts" and name.startswith("Turbine"):zone="Turbines"
+            if group=="Rig mounts":
+                upper=int(name.startswith("Turbine"))
+                zone="Turbines" if upper else "Diesel"
+                seat=int(re.search(r"mount (\d+)",name).group(1))
+                props.update(DesignCheck=10 if upper else 9,SeatNumber=seat,
+                             FactoredVerticalKN=float(1.6*floors[upper]["all_mounts"][seat-1]))
             if group=="Control office" and "roof" in name:kind="IfcRoof"
             if group=="Dry coolers":props["NominalMW"]=cfg.COOL["cooler_capacity_mw"]
         else:continue
@@ -373,8 +383,10 @@ def operation(m):
     for j,zone in enumerate(("Diesel","Turbines")):
         world=pose((0,0,plant.power_base(cfg.CROWN,j)),plant.POWER_YAW)
         for kind,part in plant.deck_components(j):
+            guide=part.name.startswith(("Sliding shaft collar","Collar drag arm"))
             m.product(zone+"/"+part.name,kind,zone+" – "+part.name,zone,"Structural steel",
-                      m.mesh((zone,part.name),part,(1,1,1),"Structural steel"),world)
+                      m.mesh((zone,part.name),part,(1,1,1),"Structural steel"),world,
+                      props={"DesignCheck":10 if j else 8 if guide else 7})
     # The presentation cuts away the turbine enclosures. The BIM has both closed.
     for j,side in enumerate((-1,1)):
         l,w,h=plant.SET_L,plant.SET_W,plant.SET_H

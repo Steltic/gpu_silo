@@ -32,6 +32,13 @@ def compute():
     c["rack_kw"] = cl["liquid_heat_per_rack_kw"]
     c["pod_kw"] = c["rack_kw"] * cl["racks_per_pod"]
     c["heat_mw"] = c["racks"] * c["rack_kw"] / 1000
+    spare_kw = cl["reference_spare_kw"]
+    cap_kw = 1000*cl["normal_it_limit_mw"]
+    if not 0 <= spare_kw < c["rack_kw"] or cap_kw < c["racks"]*spare_kw:
+        raise ValueError("The reference rack assignment needs a valid active and standby power budget")
+    c["reference_active"] = min(c["racks"],math.floor((cap_kw-c["racks"]*spare_kw)/(c["rack_kw"]-spare_kw)))
+    c["reference_spare"] = c["racks"]-c["reference_active"]
+    c["reference_it_mw"] = (c["reference_active"]*c["rack_kw"]+c["reference_spare"]*spare_kw)/1000
     # Silo and thermal store
     ro, ri = cfg.OUTSIDE_R, cfg.BORE_R
     c["tank_r_out"] = ro - silo["outer_wall_m"]
@@ -213,7 +220,7 @@ def strip():
     """Five figures kept on screen for the whole film."""
     return [(n(C["racks"]), f"{cfg.CLUSTER['rack_model'].split()[-1]} racks"),
             (n(C["pods"]), f"{cfg.NAME} pods"),
-            (n(C["heat_mw"]) + " MW", "liquid heat"),
+            (n(cfg.CLUSTER["normal_it_limit_mw"]) + " MW", "normal IT limit"),
             (f"{C['coolers']} × {cfg.COOL['cooler_capacity_mw']:g} MW", "dry coolers"),
             (n(C["tank_gal"] / 1e6, 2) + " M gal", "water-glycol")]
 
@@ -228,7 +235,7 @@ def summary():
         ("Per level", f"{cfg.BAYS} on {cfg.LEVELS} levels"),
         ("Pod length", f"{C['pod_length']:.2f} m"),
         ("CDUs and pumps", f"{C['cdus']} + {C['cdu_pumps']}"),
-        ("Liquid heat load", f"{C['heat_mw']:.0f} MW"),
+        ("Normal IT limit", f"{cfg.CLUSTER['normal_it_limit_mw']:g} MW"),
         ("SILO", ""),
         ("Outside / inside", f"{s['outside_diameter_m']:g} / {s['inside_diameter_m']:g} m"),
         ("Height", f"{s['height_m']:g} m"),
@@ -536,7 +543,7 @@ The backup covers black start, controls, the cooling plant and about a fifth of 
 
 ## 10. Operating limits and coordination decisions
 
-The 50 MW figure is the installed IT load. Two turbines supply 50 MW gross. A 6 MW utility intertie supplies the 4 MW auxiliary allowance at full IT load. Island operation is capped at 46 MW IT. The four diesels support at most 7 MW of priority IT with 3 MW reserved for essential plant. The controller uses the lower of the electrical and thermal limits.
+The plant and thermal store are sized against {c['heat_mw']:g} MW of installed racks. Normal metered IT is capped at {cfg.CLUSTER['normal_it_limit_mw']:g} MW, subject to available turbine power after auxiliaries and available cooling. The operator chooses the rack mix. For example, {c['reference_active']} full-power racks and {c['reference_spare']} spares at {cfg.CLUSTER['reference_spare_kw']:g} kW each draw {c['reference_it_mw']:.3f} MW. Normal operation requires zero grid import. The four diesels supply the essential bus only during emergencies, with 3 MW reserved for essential plant and up to 7 MW for priority IT.
 
 The [revision J assumption register](assumptions.md) gives the disposition of all 18 questions previously listed here. [Structural checks 7–10](report.md#7-checks-7-to-10-support-rig-shaft-connector-and-wall-mounts-design-loads) include the independent upper floor, the guided shaft collar and the wall seats. The IFC includes the buried fuel crossing, conversion plant and the individual rack positions.
 

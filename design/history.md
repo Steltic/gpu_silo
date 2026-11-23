@@ -4,9 +4,11 @@ Add a dated entry when a choice changes. Say what the viewer should see, the dim
 
 ## Decisions
 
-### Operating brief · 23 November 2026
+### Revision K · 23 November 2026
 
-The owner set 46 MW as the normal IT ceiling, with the turbines carrying routine demand and the diesels reserved for emergencies. All 256 rack positions are available. Running 235 at the design rating with 21 spare is one valid assignment. Operators can spread power across a different number of racks to suit their workloads and the available cooling. The films and IFC issued with revision J document the earlier operating case. [Reference calculation and remaining tasks](assumptions.md#operating-choice-after-revision-j)
+Checks 7–10 cover the diesel support rig, shaft guide, rig wall mounts and independent turbine floor. The revised anchor bars pass behind the bearing keys, clear the studs and extend below the assumed failure surface. The headed studs reach 400 mm behind the bore. Select either generator storey in the IFC to inspect individual seat reactions and reinforcement. The short film shows the bare support rig at 0:56 and the two power levels landing from 2:12. [Calculations and release assumptions](report.md#75-checks-7-and-10--independent-gravity-floors)
+
+The owner set 46 MW as the normal IT ceiling, with the turbines carrying routine demand and the diesels reserved for emergencies. All 256 rack positions are available. Running 235 at the design rating with 21 spare is one valid assignment. Operators can spread power across a different number of racks to suit their workloads and the available cooling. The reference cooling design retains the installed 50 MW rack basis. [Reference calculation](assumptions.md#operating-choice-after-revision-j)
 
 ### Revision J · 22 November 2026
 

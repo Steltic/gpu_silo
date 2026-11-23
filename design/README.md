@@ -4,7 +4,7 @@ The movie shows the current design. [Project inputs](project.json) are versioned
 
 ## System
 
-Revision J accommodates 256 NVIDIA Vera Rubin NVL72 racks in 64 pods of four, with 50 MW of installed rack capacity on the project basis. The owner specifies a 46 MW normal IT ceiling and leaves the active rack count and individual caps to the operator. [Operating choice](assumptions.md#operating-choice-after-revision-j)
+The silo accommodates 256 NVIDIA Vera Rubin NVL72 racks in 64 pods of four, with 50 MW of installed rack capacity on the project basis. The owner specifies a 46 MW normal IT ceiling and leaves the active rack count and individual caps to the operator. [Operating choice](assumptions.md#operating-choice-after-revision-j)
 
 | Side | Equipment | Path |
 | --- | --- | --- |
@@ -14,7 +14,7 @@ Revision J accommodates 256 NVIDIA Vera Rubin NVL72 racks in 64 pods of four, wi
 
 Central control manages CDU pump speed, dry cooler fan speed and staging, and cooler pump staging against store temperature and total heat load.
 
-The review register links the original item numbers to the evidence still needed from designers, suppliers and the site team. [Remaining tasks](assumptions.md#remaining-tasks)
+Section 2 of the structural report lists the design checks and their status. Revision K verifies checks 7–10 against the revision J loads and carries the revised anchor detailing into both films and the IFC. The assumption register records the evidence still needed from designers, suppliers and the site team. [Register of design checks](report.md#2-register-of-design-checks) · [Assumptions and release evidence](assumptions.md)
 
 ## Current decisions
 

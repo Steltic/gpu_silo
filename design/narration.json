@@ -17,8 +17,8 @@
         "show": "Each CDU draws from the cool bottom layer and returns warm liquid to the top."
       },
       {
-        "say": "Sixty-four pods put fifty megawatts of heat into the store this way.",
-        "show": "64 pods put 50 MW of heat into the store this way."
+        "say": "Operators can spread up to forty-six megawatts of computing load across the racks.",
+        "show": "The operator selects the rack mix within the 46 MW IT limit."
       },
       {
         "say": "Outside, every dry cooler has a pump of its own.",
