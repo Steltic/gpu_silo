@@ -10,7 +10,9 @@ There are two films. **silo_short** shows the build in programme order and nothi
 
 The animation is the working drawing for this project. Design decisions are made by looking at it, and every dimension in it comes from one file, [design/project.json](design/project.json). The repository holds that file, the [calculations](design/calcs.md) generated from it, the [decisions](design/README.md) and the code that turns them into the film. Anyone can propose a design idea and see it rendered.
 
-| Design basis | Value |
+The normal operating brief is 46 MW IT on the turbines, with diesels reserved for emergencies. One reference case runs 235 racks at full power and holds 21 spare. Operators can choose another mix within the available power and cooling. The table and published models describe revision J. [Operating choice and remaining tasks](design/assumptions.md#operating-choice-after-revision-j)
+
+| Released revision J design basis | Value |
 | --- | ---: |
 | GPU racks | 256 × NVIDIA Vera Rubin NVL72, 195 kW each |
 | 4SU pods | 64, eight per level on eight levels, 2.77 m apart vertically. Each is 7.16 m long and 8.93 t: 5 m of racks at the shaft end and a 2.16 m CDU and pump section out to the wall. |
@@ -29,7 +31,7 @@ The animation is the working drawing for this project. Design decisions are made
 | Store liner | 2 mm spray-applied polyurea on both faces of the store, 4,448 m², sprayed from four stages on days 11 to 14 |
 | Programme | Walls in 10 daily lifts by a crew of 22 while the pod cage is built beside them a level a day, then 28 days to handover. The support rig is set on days 4 and 5 to hold the top of the shaft before the first pod. Water goes in last, on days 15 to 28. Commissioning is by others after day 28. |
 
-The [revision J review register](design/assumptions.md) records the disposition of every open design item and identifies the site data, supplier tests and approvals needed for construction. The [design report](design/report.md) gives the floor, shaft guide, wall anchor and foundation calculations. The [IFC4 model](../../releases/latest/download/GPU_Silo.ifc) can be filtered by storey, system or equipment tag.
+The next design task is to reconcile the pod berth voltage with the rack power shelf. The review register lists the remaining electrical, site, cooling, structural and construction checks. [Remaining tasks](design/assumptions.md#remaining-tasks) · [Design report](design/report.md) · [IFC4 model by storey, system and equipment tag](../../releases/latest/download/GPU_Silo.ifc)
 
 ### Find it in the short film (silo_short)
 

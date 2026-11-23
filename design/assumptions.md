@@ -6,6 +6,40 @@ Revision J is a coordinated design for an unnamed site. The project has supplied
 
 The R numbers refer to the original structural report §13, including its previously closed R17. Q numbers refer to the original design calculations §10. Checks 7–10 and the calculated operating limits are in the [structural report, §7](report.md#7-checks-7-to-10-support-rig-shaft-connector-and-wall-mounts-design-loads). Source dimensions and numerical checks are in [project.json](project.json) and [completion.py](../gpu_silo/completion.py).
 
+## Operating choice after revision J
+
+On 23 November 2026 the owner set a **46 MW normal IT ceiling** for turbine operation. The two turbines are assumed to provide 50 MW together at site conditions, with 4 MW reserved for plant services. Available turbine output and cooling can lower the IT ceiling. Routine operation requires zero grid import and the diesels serve declared emergencies.
+
+All 256 rack positions are installed. At the project's 195.3125 kW full-rack assumption, **235 at full power and 21 spare** draw 45.898 MW before standby loads. At an assumed 2 kW per spare the total is **45.940 MW**. Each operator chooses the number of working racks and their power limits for the workload. All 256 can share that same rack budget at about 179.45 kW each. Include standby and any separately metered IT in the 46 MW limit. Confirm whole-rack AC input and standby draw on the selected hardware. The issued revision J calculations, films and IFC document the previous 50 MW IT / 6 MW intertie case.
+
+## Remaining tasks
+
+The register below gives the adopted reference assumptions for R1–R20 and Q1–Q18. The following work still needs evidence or detailed design. The pod electrical interface is the first desk check. The site investigation can proceed in parallel.
+
+| Work | Next deliverable | Register items |
+| --- | --- | --- |
+| Pod power, docking and handling | Draw the supply path from berth to rack power shelf. Obtain rack wet weights, foot loads and centres of gravity, bearing load/stiffness curves and cartridge travel. Check the isolation sequence and pressure-test the selected docking hardware. | R11, R13, R14, R15, Q11, Q12, Q13 |
+| Site and foundation | Obtain coordinates, boreholes, groundwater, wind, flood level and seismic spectrum. Use these to check settlement, uplift, tank sloshing, raft and anchors for empty and full conditions. | R12, R18, R19, R20, Q18 |
+| Cooling and store | Obtain pump, fan, coil and CDU curves and local weather. Check inlet recirculation, cold-layer temperature, freeze protection, bore ventilation and overflow. Witness flow balance and charged-store discharge. | R1, R2, R6, R7, Q1, Q2, Q6, Q7, Q8 |
+| Walls and structural connections | Detail the entry opening, movement joints, cooler seats and steel connections. Qualify the liner through hot-glycol immersion and cyclic crack testing. Submit the lined-wall durability basis for independent and authority review. | R4, R5, R8, R10, R16, Q5, Q12 |
+| Generation, emergency transfer and fuel | Obtain site-rated turbine output. Check switchgear protection, UPS autonomy and staged emergency pickup. Confirm vaporisation capacity, containment, fire separation, delivery route and fuel supply. | Q3, Q4, Q10, Q16, Q17 |
+| Construction and lifts | Trial the first wall lift, verify coating cure and sign off before filling. Check turbine removal clearance. Obtain crane charts at the actual radius, ground reactions, engineered lift points and an approved lift plan. | R3, R9, R17, Q4, Q9, Q14, Q15 |
+
+### First desk check — pod supply voltage
+
+Revision J brings 13.8 kV down the shaft to eight grade-mounted transformers. Each supplies 1,000 V to a 630 A pod contact. The NVIDIA DGX Vera Rubin NVL72 power shelf takes **415–480 V AC**. For that hardware a direct connection to the drawn berth exceeds the published input range. Record the selected supplier and shelf data before choosing where to convert the voltage. [Revision J electrical components](../gpu_silo/components.py) · [NVIDIA power shelves](https://docs.nvidia.com/dgx/dgxvr-user-guide/hardware.html#power-shelves)
+
+Four full racks in one pod represent 781.25 kW on the project basis. At 0.95 power factor, their three-phase current is about **475 A at 1,000 V** or **989 A at 480 V**, before local losses or other pod loads.
+
+| Concept supply path for one pod | What determines feasibility |
+| --- | --- |
+| 13.8/0.48 kV transformer at grade → protected 480 V feeder(s) → interlocked berth contact(s) → individually protected rack feeds → shelves | The four racks exceed the existing single 630 A contact rating. Size the contacts and conductors for the selected supply arrangement and check voltage drop over the full run. |
+| 13.8/1.0 kV transformer at grade → protected 1,000 V feeder and interlocked berth contact → 1.0/0.48 kV transformer on the pod → secondary protection and rack feeds → shelves | Obtain transformer mass, losses, footprint and working clearances. Recheck the moving pod, cooling allowance and contact duty including conversion losses. |
+
+The rack and switchgear suppliers must confirm the selected shelf, input whips and connector ratings. The electrical designer can then release a single-line drawing with isolation, fault duty, earthing and protection coordination.
+
+## Revision J register
+
 | Original items | Adopted design and consequence | Evidence to obtain before release |
 | --- | --- | --- |
 | R1, Q1 · Store hydraulics | Keep 18 supply/return pairs with 400 mm OD risers, 10 mm walls and 1.20 m diffusers. Branches have 125 mm clear bore at each pod and 200 mm at each cooler. Meter both headers, use differential-pressure-controlled pumps, balancing and isolation valves, non-return valves, low-point drains and automatic high-point air release. Flood and vent before enabling a pump. Allow 30 m head per pod and 35 m per cooler. Use a 60 min no-cooler target. The layered calculation gives 76.0 min initially at 51.25 MW, subject to a charged store. | Witness full-flow balancing, pump NPSH and supplier curves. Demonstrate the 90% stratification factor using the vertical temperature string during a discharge test. |

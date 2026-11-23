@@ -4,6 +4,10 @@ Add a dated entry when a choice changes. Say what the viewer should see, the dim
 
 ## Decisions
 
+### Operating brief · 23 November 2026
+
+The owner set 46 MW as the normal IT ceiling, with the turbines carrying routine demand and the diesels reserved for emergencies. All 256 rack positions are available. Running 235 at the design rating with 21 spare is one valid assignment. Operators can spread power across a different number of racks to suit their workloads and the available cooling. The films and IFC issued with revision J document the earlier operating case. [Reference calculation and remaining tasks](assumptions.md#operating-choice-after-revision-j)
+
 ### Revision J · 22 November 2026
 
 The crown now has fabricated box girders, separate diesel and turbine bearing groups, field-fit shoes and a guided shaft collar. A 0.75 m curb raises the lid. The revision replaces the 38 t deck allowance with a 120 t ceiling per deck and records the equipment loads at their actual positions. The early rig pick is visible at 0:56 in the short film. The revised fuel crossing, cooling baffles and power distribution are visible in the closing construction and section views at 3:15 short and 4:19 long.
