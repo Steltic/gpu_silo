@@ -12,15 +12,16 @@ The pod scenes show the 0.62 m access space around the shaft, the 7.16 m trussed
 
 ## The build: silo_short
 
-[Play the narrated short film](../../../releases/download/short-film-2026-11-23/silo_short.mp4). The 4:22 cut has 23 chapters and selectable English captions. Day 0 is the last wall pour. The counters track the 28-day programme and scale the sample of truck movements to the full number of loads.
+[Play the narrated short film](../../../releases/download/short-film-2026-11-23-v2/silo_short.mp4). The 4:22 cut has 23 chapters and selectable English captions. Day 0 is the last wall pour. The counters track the 28-day programme and scale the sample of truck movements to the full number of loads.
 
-The four narrated IFC studies are also available as a [48-second reel](../../../releases/download/short-film-2026-11-23/IFC_highlights.mp4) and as individual clips in the [short film release](../../../releases/tag/short-film-2026-11-23).
+The four narrated IFC studies are also available as a [48-second reel](../../../releases/download/short-film-2026-11-23-v2/IFC_highlights.mp4) and as individual clips in the [short film release](../../../releases/tag/short-film-2026-11-23-v2).
 
 | Start | Programme | What to watch |
 | ---: | --- | --- |
 | 0:00 | Days -9 to 0 | The first lift at working speed: the forms, the placing boom, truck mixers at the pump and a crew of 22. |
 | 0:06 | | Nine more lifts, one a day. Beside the silo the pod cage goes up at the same pace. Each day three flatbeds stop in the stopping lane with steel, eight sectors appear on the pad and are welded together by four welders, the south crawler lifts the module onto the stack and it is welded on. Eight pod levels and then the crown. The tag counts mixers and cage modules. |
-| 0:42 | Day 3 | Two crawlers lift the finished cage from where it was built and lower it into the 17 m bore. From here the concrete is fully see-through, and so is everything in or on the walls. Frame steel and the first coolers arrive. |
+| 0:10 | | The inspection sectors close. Both walls, the form panels and the climbing decks now show their full circumference as each lift is poured. |
+| 0:42 | Day 3 | Two crawlers pick the finished cage. As the cage moves toward the 17 m bore, the concrete fades to an outline so the landing is visible. Frame steel and the first coolers arrive. |
 | 0:56 | Days 4 to 5 | The retained crawler lowers the bare support rig. Its collar slips over the shaft and its shoes seat at the wall plates. |
 | 1:07 | Day 6 | The receiving dock. Trucks back in with two 4SU pods each and the gantry lifts them onto the rail. |
 | 1:21 | Days 6 to 17 | The first 4SU spirals up and docks. The store is dry. The south crawler hangs the cooler frames while pods keep loading. A frame disappears from the cutaway once it is seated on the side facing the camera. |

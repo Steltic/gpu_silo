@@ -8,6 +8,24 @@ def check(p,doc,names,parents,get,points):
     from .. import cagebuild,coating,film,logistics,shortfilm
     a=p.plant;clock=p.clock;closing=p.closing
     assert film.SHORT and doc["extras"].get("film")=="short"
+    # At ten seconds the missing wall sectors join the lift at its current pour height.
+    close=10*p.FPS
+    assert doc["extras"]["constructionFullWalls_s"]==10
+    for wall in ("Inner","Outer"):
+        for lift in range(1,p.s.COUNT+1):
+            name=f"{wall} wall | lift {lift:02}"
+            body=get(names[name],"scale",[1,1,1])
+            insert=get(names[name+" | cutaway insert"],"scale",[1,1,1])
+            assert not np.any(insert[:close]) and np.allclose(insert[close:p.C],body[close:p.C],atol=.0001),name
+    for face in ("Outer wall - exterior","Outer wall - gap face","Inner wall - gap face","Inner wall - interior"):
+        gangs=[get(names[f"{face} | gang {n:02}"],"scale",[1,1,1])[:,0] for n in range(1,p.s.SECTORS+1)]
+        assert any(scale[close-1]<.001 for scale in gangs)
+        assert all(np.all(scale[close:p.s.FORMS_OFF]>.999) for scale in gangs),face
+    for part in ("decks, rails and jacks","trailing platforms","starter bars"):
+        name="Jumpform | "+part
+        section=get(names[name],"scale",[1,1,1])[:,0]
+        full=get(names[name+" | full ring"],"scale",[1,1,1])[:,0]
+        assert section[close-1]>.999 and section[close]<.001 and full[close-1]<.001 and full[close]>.999,name
     # Nothing from the service scenes is in this film.
     for name in names:
         assert not re.search(r"Replacement pod|bronze before fault|Service crew|hinged side|Access platform",name),name

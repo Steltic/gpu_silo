@@ -18,6 +18,7 @@ POUR = s.LIFT - 1.06       # pour deck, a rail height below the top of the form
 TRAIL = -2.26              # trailing platform, hung below for patching and anchor recovery
 OUTER_OPEN = (255., 345.)  # bearings left open in the film so the walls can be seen in section
 INNER_OPEN = (285., 330.)
+FULL_RING = (360., 360.)
 DECK, RAIL, STEEL, JACK, BAR = "8f8064", "e2bd76", "566b64", "c8563c", "7a5a45"
 MAST_TOP = 3.4
 REACH = (s.RO_INNER + s.RI_OUTER) / 2
@@ -45,24 +46,24 @@ def handrail(m, radius, z, open_span, step=7.5):
             s.bar(m, s.polar(radius, a, z + h), s.polar(radius, b, z + h), .04, RAIL)
 
 
-def climbing_mesh():
+def climbing_mesh(outer=OUTER_OPEN, inner=INNER_OPEN):
     m = s.Mesh("Jumpform | pour decks, climbing rails, jacks and ladders")
     m.material = 3
     # Pour decks outside the outer wall, inside the inner wall and across the gap between them.
-    arc(m, s.RO + .13, s.RO + 1.18, POUR - .08, POUR, OUTER_OPEN, DECK)
-    arc(m, s.RI - .95, s.RI - .13, POUR - .08, POUR, INNER_OPEN, DECK, n=30)
-    arc(m, s.RO_INNER + .13, s.RI_OUTER - .13, POUR - .08, POUR, OUTER_OPEN, "9a8a6c")
-    handrail(m, s.RO + 1.12, POUR, OUTER_OPEN)
-    handrail(m, s.RI - .89, POUR, INNER_OPEN, 10)
+    arc(m, s.RO + .13, s.RO + 1.18, POUR - .08, POUR, outer, DECK)
+    arc(m, s.RI - .95, s.RI - .13, POUR - .08, POUR, inner, DECK, n=30)
+    arc(m, s.RO_INNER + .13, s.RI_OUTER - .13, POUR - .08, POUR, outer, "9a8a6c")
+    handrail(m, s.RO + 1.12, POUR, outer)
+    handrail(m, s.RI - .89, POUR, inner, 10)
     # Brackets under the decks, climbing rails anchored to the lift below and a jack on each rail.
-    for radius, sense, span, step in ((s.RO, 1, OUTER_OPEN, 15.), (s.RI, -1, INNER_OPEN, 15.)):
+    for radius, sense, span, step in ((s.RO, 1, outer, 15.), (s.RI, -1, inner, 15.)):
         for a in bearings(span, step):
             s.bar(m, s.polar(radius + sense * .2, a, POUR - 1.15), s.polar(radius + sense * 1.08, a, POUR - .1), .07, STEEL)
             s.bar(m, s.polar(radius + sense * .24, a, TRAIL - .2), s.polar(radius + sense * .24, a, s.LIFT + .45), .13, "465a5e", .11)
             s.bar(m, s.polar(radius + sense * .40, a, .45), s.polar(radius + sense * .40, a, 1.55), .12, JACK)
             s.bar(m, s.polar(radius + sense * .17, a, -.55), s.polar(radius + sense * .32, a, -.55), .22, "d4af6b", .22)
     # Beams carry the gap deck between the two inner form faces.
-    for a in bearings(OUTER_OPEN, 15.):
+    for a in bearings(outer, 15.):
         s.bar(m, s.polar(s.RO_INNER + .1, a, POUR - .16), s.polar(s.RI_OUTER - .1, a, POUR - .16), .10, STEEL, .14)
     # Ladders from the working platform to the pour deck.
     for degrees in (10., 242.):
@@ -77,23 +78,23 @@ def climbing_mesh():
     return m
 
 
-def trailing_mesh():
+def trailing_mesh(outer=OUTER_OPEN, inner=INNER_OPEN):
     m = s.Mesh("Jumpform | trailing platforms hung below the forms")
     m.material = 3
-    arc(m, s.RO + .13, s.RO + .98, TRAIL - .07, TRAIL, OUTER_OPEN, DECK)
-    arc(m, s.RI - .80, s.RI - .13, TRAIL - .07, TRAIL, INNER_OPEN, DECK, n=30)
-    handrail(m, s.RO + .93, TRAIL, OUTER_OPEN, 15)
-    handrail(m, s.RI - .75, TRAIL, INNER_OPEN, 15)
-    for radius, sense, span in ((s.RO, 1, OUTER_OPEN), (s.RI, -1, INNER_OPEN)):
+    arc(m, s.RO + .13, s.RO + .98, TRAIL - .07, TRAIL, outer, DECK)
+    arc(m, s.RI - .80, s.RI - .13, TRAIL - .07, TRAIL, inner, DECK, n=30)
+    handrail(m, s.RO + .93, TRAIL, outer, 15)
+    handrail(m, s.RI - .75, TRAIL, inner, 15)
+    for radius, sense, span in ((s.RO, 1, outer), (s.RI, -1, inner)):
         for a in bearings(span, 15.):
             s.bar(m, s.polar(radius + sense * .9, a, TRAIL), s.polar(radius + sense * .9, a, MAIN - .1), .05, STEEL)
     return m
 
 
-def rebar_mesh():
+def rebar_mesh(outer_span=OUTER_OPEN, inner_span=INNER_OPEN):
     m = s.Mesh("Jumpform | starter bars and hoops above the pour")
     m.material = 3
-    for inner, outer, span in ((s.RI_OUTER, s.RO, OUTER_OPEN), (s.RI, s.RO_INNER, INNER_OPEN)):
+    for inner, outer, span in ((s.RI_OUTER, s.RO, outer_span), (s.RI, s.RO_INNER, inner_span)):
         for layer in (inner + .06, outer - .06):
             count = round((span[0] - span[1] + 360) / 360 * s.TAU * layer / .7)
             first, last = math.radians(span[1] - 360), math.radians(span[0])
@@ -180,17 +181,24 @@ def stations():
 def install(scene, node, p):
     frames = s.FRAMES
     states = [s.sequence(i) for i in range(frames)]
-    ends = s.LAST_POUR + s.REVEAL // 2
+    ends = s.FORMS_OFF
     rise = [(0, 0, s.LIFT * (k + jump)) for k, _, _, jump, _ in states]
     seen = [(0, ON), (ends - .02, ON), (ends, OFF)]
     climb = node("Jumpform | climbing assembly", -1, "Jumpform", tracks={"translation": s.keys(rise), "scale": seen})
-    node("Jumpform | decks, rails and jacks", scene.mesh(climbing_mesh()), "Jumpform", climb)
+    def ring_detail(name, make, first, last):
+        close=scene.wall_close_frame
+        for begin,end,outer,inner,suffix in (
+                (first,min(close,last),OUTER_OPEN,INNER_OPEN,""),
+                (max(first,close),last,FULL_RING,FULL_RING," | full ring")):
+            if begin>=end:continue
+            scale=[(0,OFF),(begin-.02,OFF),(begin,ON)] if begin else [(0,ON)]
+            if end<ends:scale.extend([(end-.02,ON),(end,OFF)])
+            node(name+suffix,scene.mesh(make(outer,inner)),"Jumpform",climb,tracks={"scale":scale})
+    ring_detail("Jumpform | decks, rails and jacks",climbing_mesh,0,ends)
     first_jump = next(i for i, state in enumerate(states) if state[0] >= 1)
-    node("Jumpform | trailing platforms", scene.mesh(trailing_mesh()), "Jumpform", climb,
-         tracks={"scale": [(0, OFF), (first_jump - .02, OFF), (first_jump, ON)]})
+    ring_detail("Jumpform | trailing platforms",trailing_mesh,first_jump,ends)
     last_lift = next(i for i, state in enumerate(states) if state[0] == s.COUNT - 1)
-    node("Jumpform | starter bars", scene.mesh(rebar_mesh()), "Jumpform", climb,
-         tracks={"scale": [(0, ON), (last_lift - .02, ON), (last_lift, OFF)]})
+    ring_detail("Jumpform | starter bars",rebar_mesh,0,last_lift)
     # Placing boom on a mast at the silo axis. The pump line comes in through the ground opening.
     node("Placing boom | centre mast", scene.mesh(mast_mesh()), "Jumpform",
          tracks={"scale": s.keys([(1, 1, rise[i][2] + s.LIFT + MAST_TOP) for i in range(ends)]) + [(ends, OFF)]})
