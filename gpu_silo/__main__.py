@@ -22,7 +22,7 @@ def main():
     still.add_argument("--output", type=Path, default=Path("renders/stills"))
     voice = commands.add_parser("narrate", help="record the narration again after editing design/narration.json")
     voice.add_argument("--models", type=Path, required=True, help="folder holding the Kokoro model and voices files")
-    for command in (build, check, still):
+    for command in (build, check, still, voice):
         command.add_argument("--film", choices=("long", "short"), default="long",
                              help="long is the full presentation, short is the build only (silo_short)")
     args = parser.parse_args()
@@ -39,6 +39,10 @@ def main():
         import os
         os.environ["GPU_SILO_FILM"] = "short"
     if args.command == "narrate":
+        if args.film=="short":
+            from . import short_voice
+            short_voice.record(args.models)
+            return
         from . import narrate
         path, seconds = narrate.record(args.models)
         print(f"{path} ({seconds:.1f} s)")

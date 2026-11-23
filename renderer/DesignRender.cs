@@ -26,13 +26,26 @@ partial class Shot {
     void ShortOverlay(Graphics g,int frame) {
         int kind=3,card=0;
         foreach(Scene scene in d.Scenes)if(frame>=scene.First && frame<scene.Last){kind=scene.Kind;card=scene.Card;}
+        if(kind==12){
+            CardOverlay(g,frame,d.Cards[card]);
+            ProductLeaders(g,frame,card-3);
+            Rule(g,UiLeft+24,646,1254,646,Color.FromArgb(111,145,148),1);
+            using(var pale=new SolidBrush(Color.FromArgb(202,223,220))){
+                g.DrawString("ISSUED MODEL  /  REVISION K",section,pale,new PointF(UiLeft+25,660),leftText);
+                g.DrawString("IFC4     ·     Exploded distances for illustration",monoSmall,pale,new PointF(1254,659),rightText);
+            }
+            return;
+        }
         if(Ghosted(frame))ShellEdges(g);
         if(kind==2)TerminalOverlay(g,frame);
         else if(kind==4)CoolerFrameOverlay(g,frame);
         else if(kind==5)FuelOverlay(g,frame);
         else if(kind==6)CardOverlay(g,frame,d.Cards[card]);
         else if(kind==8)PowerOverlay(g,frame);
-        else if(kind==11){DesignOverlay(g,frame);ProgrammeChart(g);}
+        else if(kind==11){
+            DesignOverlay(g,frame);
+            if(frame>d.Full+d.OrbitBegin+288 && frame<d.Full+d.OrbitBegin+397)ProgrammeChart(g);
+        }
         else StorageOverlay(g,frame);
         ProgrammeTag(g,frame);
         if(kind!=11)DesignStrip(g,frame);
@@ -51,7 +64,7 @@ partial class Shot {
         g.DrawString(card.Steps[now].Text,strong,now==card.Steps.Length-1?ink:accent,new PointF(x,206),leftText);
         Rule(g,x,262,xr,262,cLine,1);
         Rows(g,card.Rows,x,xr,282,27);
-        UtilityReadouts(g,d.Frames[frame],false,frame);
+        if(!studio)UtilityReadouts(g,d.Frames[frame],false,frame);
     }
 
     // Where the scene falls in the 28-day programme, with the running truck counts.

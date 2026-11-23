@@ -288,7 +288,7 @@ def cage_bounds():
     return cuts+[CROWN+.2]
 
 
-def cage_parts(include_shaft=True):
+def cage_parts(include_shaft=True, include_walkways=True):
     """The cage as it is built: a module for each pod level and one for the crown. Together they are the whole cage."""
     cuts=cage_bounds()
     parts=[newsteel(f"Steel module | level {k+1:02}" if k<LEVELS else "Steel module | crown and hoist beams") for k in range(CAGE_TOP)]
@@ -323,12 +323,13 @@ def cage_parts(include_shaft=True):
         z=level_z(level);m=parts[level-1]
         # A walkway ring between the shaft and the pod roots lets people pass from sector to sector.
         # It sits just under the pods, with a gangway out to each wedge deck.
-        annulus(m,SHAFT+.22,INNER-.04,z-.13,z-.09,"cfd3c8",n=40)
-        annulus(m,INNER-.12,INNER-.04,z-.20,z-.06,STEEL,n=40)
-        annulus(m,INNER-.12,INNER-.08,z+.95,z+1.0,"ddb477",n=40)
+        if include_walkways:
+            annulus(m,SHAFT+.22,INNER-.04,z-.13,z-.09,"cfd3c8",n=40)
+            annulus(m,INNER-.12,INNER-.04,z-.20,z-.06,STEEL,n=40)
+            annulus(m,INNER-.12,INNER-.08,z+.95,z+1.0,"ddb477",n=40)
         for j in range(BAYS):
             a=ENTRY+j*UNIFORM
-            if level>1 or j:
+            if include_walkways and (level>1 or j):
                 # The gangway starts where the pods on either side stand far enough apart to pass between them.
                 clear=(.43+cargo.FRAME_WIDTH/2*math.cos(UNIFORM/2))/math.sin(UNIFORM/2)
                 s.bar(m,s.polar(max(INNER-.1,clear),a,z-.11),s.polar(crew.PLATE_IN-.06,a,z-.11),.80,"cfd3c8",.04)
@@ -365,9 +366,9 @@ def cage_parts(include_shaft=True):
     return parts
 
 
-def cage_mesh():
+def cage_mesh(include_walkways=True):
     m=newsteel("Steel module | shaft, bearings, rim girders and braced columns")
-    for part in cage_parts():m.tris.extend(part.tris)
+    for part in cage_parts(include_walkways=include_walkways):m.tris.extend(part.tris)
     return m
 
 
@@ -484,8 +485,9 @@ def flat_keys(values,tol=.000015):
     return res
 
 
-def build():
+def build(*, for_bim=False):
     scene=s.build()
+    scene.short_presentation = film.SHORT and not for_bim
     site.ground(scene)
     services.perforate_concrete(scene)
     scene.project_info=dict(clearBore_m=2*s.RI,podLength_m=POD_L,podWidth_m=POD_W,podHeight_m=POD_H,
@@ -544,7 +546,7 @@ def build():
     # This single parent carries the entire empty module during both crane picks.
     rack=node("Preassembled steel store",-1,"Rotating pod store",tracks={
         'translation':flat_keys([rack_pose(f) for f in range(FRAMES)]),'scale':show(cagebuild.swap() if film.SHORT else STEEL_START)})
-    m=cage_mesh();node(m.name,mesh(m),"Structure",rack)
+    m=cage_mesh(include_walkways=not scene.short_presentation);node(m.name,mesh(m),"Structure",rack)
     for sign in (-1,1):
         base=(-11.5,sign*19.3,0)
         tr=[rack_pose(f) for f in range(FRAMES)]
@@ -665,6 +667,8 @@ def build():
     if film.SHORT:
         scene.counts["cage"]=cagebuild.install(scene,node,sys.modules[__name__])
         coating.install(scene,node,sys.modules[__name__])
+        if scene.short_presentation:
+            shortfilm.short_reels.install(scene,node,sys.modules[__name__])
     else:
         crew.install(scene,node,sys.modules[__name__],FILLED+care.CREW)
         care.install(scene,node,sys.modules[__name__])
@@ -767,6 +771,11 @@ def render_data(scene,path):
             if node['group']=="Crew decks":typ=6
             if node['group']=="Replacement pod":typ=7
             if node['group']=="Silo lid":typ=16
+            if node['group']=="IFC studio":typ=19
+            if node['group'].startswith("Detail locator "):typ=30+int(node['group'][-1])
+            if node['group']=="Signal beam":typ=20
+            if node['group']=="Roof communications":typ=22
+            if node['group']=="Discharge separators":typ=21
             if node['group'] in ("Cast-in conduits","Door blockout","Cooler embeds","Cooler conduits"):typ=18
             if film.SHORT and node['group']=="Frame anchors":typ=18
             if node['group']=="Crew poses":typ=9

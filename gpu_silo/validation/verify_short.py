@@ -43,7 +43,28 @@ def check(p,doc,names,parents,get,points):
     assert abs(size[base+coating.RISE[1],1]-p.s.WALL_HEIGHT)<.01 and np.diff(size[base+coating.SPAN[0]:base+coating.RISE[1],1]).min()>=-1e-6
     skin=points(liner);radii=np.hypot(skin[:,0],skin[:,1])
     assert radii.min()>p.s.RO_INNER and radii.max()<p.s.RI_OUTER,"the liner is on the two faces of the gap"
-    assert sum(1 for name in names if re.match(r"^Spray stage \d+$",name))==coating.STAGES==p.cfg.PROJECT["coating"]["stages"]
+    assert not any(name.startswith("Spray stage") for name in names)
+    assert len([name for name in names if name.startswith("IFC study | ")])==4
+    from .. import short_reels,short_art
+    assert doc["extras"]["shortFilmIfcSourceSHA256"]==short_reels.SOURCE
+    for index,group in enumerate(short_reels.selections()):
+        start=base+clock.DETAIL_START+index*clock.DETAIL_LENGTH
+        visible=get(names["IFC study | "+short_reels.TITLES[index]],"scale",[1,1,1])[:,0]
+        assert visible[start-1]<.001 and np.all(visible[start:start+clock.DETAIL_LENGTH]>.999) and visible[start+clock.DETAIL_LENGTH]<.001
+        for tag,*_ in group:
+            ref=doc["nodes"][names["IFC detail | "+tag]]["extras"]
+            assert ref["ifcTag"]==tag and len(ref["ifcGlobalId"])==22
+    antenna=names["STARLINK | labelled roof antenna"]
+    for name in ("core","halo"):
+        ix=names["STARLINK | uplink "+name];assert parents[ix]==antenna
+        lit=get(ix,"scale",[1,1,1])[:,0]
+        assert np.array_equal(np.flatnonzero(lit>.5),np.arange(base+clock.ORBIT,base+clock.ORBIT_DONE))
+    for k in range(1,p.cfg.FRAMES+1):
+        prefix=f"Cooler frame {k:02}"
+        ix=names[prefix+" | discharge separators"]
+        assert parents[ix]==names[next(n for n in names if n.startswith(prefix+" | ") and "pumps and steel" in n)]
+        primitive=doc["meshes"][doc["nodes"][ix]["mesh"]]["primitives"][0]
+        assert primitive["material"]==short_art.SEPARATOR and doc["materials"][short_art.SEPARATOR]["alphaMode"]=="BLEND"
     assert logistics.span("coating")[1]<logistics.span("water")[0],"the store is coated before it is filled"
     assert max(p.liquid_level(f) for f in range(base+coating.CLEAR+1))<1e-6,"no water before the liner is finished"
     # Water arrives over the last two weeks and the store is full at the end.
@@ -74,4 +95,4 @@ def check(p,doc,names,parents,get,points):
     tags=shortfilm.tags(p)
     assert tags[0][0]==0 and all(any(a<=f<b for a,b,*_ in tags) for f in range(0,p.FILLED+closing.PLAN,24))
     assert p.FRAMES==p.FILLED+closing.PLAN+closing.PLAN_FRAMES,"the film ends on the plan and section"
-    print(f"Short film: {top} cage modules built beside the walls, {coating.STAGES} spray stages, open power levels and a control office. {p.FRAMES/p.FPS:.0f} s.")
+    print(f"Short film: {top} cage modules, unoccupied liner cutaway, four IFC assemblies and a single-lane control room. {p.FRAMES/p.FPS:.0f} s.")

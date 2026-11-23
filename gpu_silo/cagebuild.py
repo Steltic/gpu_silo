@@ -131,7 +131,7 @@ def pad_mesh():
 
 def install(scene, node, p):
     fleet = scene.fleet
-    parts = p.cage_parts(); cuts = p.cage_bounds(); top = p.CAGE_TOP
+    parts = p.cage_parts(include_walkways=not scene.short_presentation); cuts = p.cage_bounds(); top = p.CAGE_TOP
     done = swap()
     shapes = {}       # module shape -> (mesh id, sector mesh ids, elevation the mesh is drawn at)
     for kind, k in (("base", 0), ("typical", 1), ("crown", top - 1)):

@@ -613,6 +613,14 @@ def glb_file(scene,path):
             "pbrMetallicRoughness":{"baseColorFactor":[1,1,1,opacity],"metallicFactor":0,"roughnessFactor":.32}})
     doc["materials"].append({"name":"Service coupled | indicator","emissiveFactor":[.08,.36,.19],"doubleSided":True,
         "pbrMetallicRoughness":{"baseColorFactor":[1,1,1,1],"metallicFactor":0,"roughnessFactor":.5}})
+    if getattr(scene,"short_presentation",False):
+        for name,opacity,glow in (("Discharge separators",.14,None),("Control room glazing",.14,None),
+                                  ("Control room displays",1,[.25,.40,.34]),("Satellite uplink core",1,[1,.025,.035]),
+                                  ("Satellite uplink halo",.17,[.75,.012,.024])):
+            mat={"name":name,"doubleSided":True,"pbrMetallicRoughness":{"baseColorFactor":[1,1,1,opacity],"metallicFactor":0,"roughnessFactor":.38}}
+            if opacity<1:mat["alphaMode"]="BLEND"
+            if glow:mat["emissiveFactor"]=glow
+            doc["materials"].append(mat)
     lin=[round(255*((i/255/12.92) if i<=10 else ((i/255+.055)/1.055)**2.4)) for i in range(256)]
     for m in scene.meshes:
         pos=[]; normals=[]; colors=[]
@@ -648,6 +656,7 @@ def glb_file(scene,path):
         t=tracks.get('translation',[(0,item['translation'])])[0][1]
         s=tracks.get('scale',[(0,(1,1,1))])[0][1]
         nd={"name":item['name'],"translation":gl_point(t),"scale":gl_scale(s)}
+        if "extras" in item:nd["extras"]=item["extras"]
         if item['mesh']>=0: nd["mesh"]=item['mesh']
         if a: nd['rotation']=[0,math.sin(a/2),0,math.cos(a/2)]
         idx=gl.node(nd);node_ids.append(idx)

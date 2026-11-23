@@ -231,8 +231,16 @@ def install(scene,node,p):
             "turbine seats":p.FILLED+plant.PICK_STARTS[1]+plant.PICK_LENGTH}
     groups={}
     for part in products():
+        if scene.short_presentation and (part.tag=="PORTAL-HEAD" or part.tag.startswith("CF-D-")):
+            continue
         group=groups.setdefault(part.stage,plant.mesh("Revision J | "+part.stage+" components"))
         group.tris.extend(part.mesh.tris)
+        if scene.short_presentation and part.tag in ("AHU-1","AHU-2"):
+            from . import short_art
+            positions=[v for tri in part.mesh.tris for v in tri[:3]]
+            low=[min(v[i] for v in positions) for i in range(3)]
+            high=[max(v[i] for v in positions) for i in range(3)]
+            short_art.air_handler(group,((low[0]+high[0])/2,(low[1]+high[1])/2,low[2]))
     for stage,m in groups.items():
         f=stages[stage]
         node(m.name,scene.mesh(m),"Permanent services",tracks={"scale":[(0,(0,0,0)),(f-.02,(0,0,0)),(f,(1,1,1))]})

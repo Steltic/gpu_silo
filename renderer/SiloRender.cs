@@ -23,7 +23,20 @@ struct V {
 struct Tri {public V A,B,C,N;public Color Co;}
 class Mesh {public Tri[] Ts;public bool Land;public int Mat;}
 struct Pose {public V T,S;public double A;}
-class Node {public int M,Parent,Kind;public double Sin,Cos;public Pose[] Transform;public Pose WorldPose;}
+class Node {public int M,Parent,Kind;public double Sin,Cos;public Pose[] Transform;public Pose WorldPose,Rest;public ShortKeys[] Keys;}
+class ShortKeys {
+    public int[] Frames;
+    public V[] Values;
+    public V At(int frame){
+        int last=Frames.Length-1;
+        if(frame<=Frames[0])return Values[0];
+        if(frame>=Frames[last])return Values[last];
+        int ix=Array.BinarySearch(Frames,frame);
+        if(ix>=0)return Values[ix];
+        int hi=~ix,lo=hi-1;
+        return Values[lo]+(Values[hi]-Values[lo])*((frame-Frames[lo])/(double)(Frames[hi]-Frames[lo]));
+    }
+}
 class Frame {public V Eye,Target;public double Fov,Height,Plan,U,Theta,Bunch,PodZ,Feed,HookZ,RackZ,Liquid,Dock;
     public int Lift,Pod,Level,Stored,Ports,Online,Fixings;public bool End;public string Phase,LoadPhase;public int[] Loads;}
 class Row {public string Left,Right;}
@@ -77,6 +90,14 @@ class Data {
     }
     static void ReadCurve(BinaryReader r,Node n,int nf,int prop){
         int count=r.ReadInt32();if(count==0)return;
+        if(n.Keys!=null){
+            ShortKeys curve=n.Keys[prop]=new ShortKeys{Frames=new int[count],Values=new V[count]};
+            for(int i=0;i<count;i++){
+                curve.Frames[i]=r.ReadInt32();
+                curve.Values[i]=prop==2?new V(r.ReadSingle(),0,0):Vec(r);
+            }
+            return;
+        }
         int prev=r.ReadInt32();V v=prop==2?new V(r.ReadSingle(),0,0):Vec(r);
         for(int i=0;i<=prev;i++)Set(n,i,prop,v);
         for(int j=1;j<count;j++){
@@ -167,8 +188,8 @@ class Data {
             for(int i=0;i<nn;i++){
                 Node n=Nodes[i]=new Node();n.M=r.ReadInt32();n.Parent=r.ReadInt32();n.Kind=r.ReadInt32();
                 Pose rest=new Pose{T=Vec(r),S=Vec(r),A=r.ReadSingle()};
-                n.Transform=new Pose[nf];
-                for(int j=0;j<nf;j++)n.Transform[j]=rest;
+                if(Short){n.Rest=rest;n.Keys=new ShortKeys[3];}
+                else{n.Transform=new Pose[nf];for(int j=0;j<nf;j++)n.Transform[j]=rest;}
                 for(int p=0;p<3;p++)ReadCurve(r,n,nf,p);
             }
             for(int i=0;i<nf;i++){
@@ -196,6 +217,8 @@ partial class Shot {
     readonly int[] alternate=new int[W*H];
     readonly int[] underEquipment=new int[W*H];
     int alpha=255;
+    bool dusk,studio;
+    int drawMaterial;
     readonly List<int> podNodes=new List<int>();
     readonly List<int> serviceNodes=new List<int>();
     readonly List<int> coolers=new List<int>();
@@ -270,7 +293,14 @@ partial class Shot {
     }
     void UpdateWorld(int frame){
         foreach(Node n in d.Nodes){
-            Pose p=n.Transform[frame];
+            Pose p;
+            if(n.Keys==null)p=n.Transform[frame];
+            else{
+                p=n.Rest;
+                if(n.Keys[0]!=null)p.T=n.Keys[0].At(frame);
+                if(n.Keys[1]!=null)p.S=n.Keys[1].At(frame);
+                if(n.Keys[2]!=null)p.A=n.Keys[2].At(frame).X;
+            }
             if(n.Parent>=0){
                 Node parent=d.Nodes[n.Parent];Pose q=parent.WorldPose;
                 p.T=World(p.T,parent,q);p.A+=q.A;p.S=new V(p.S.X*q.S.X,p.S.Y*q.S.Y,p.S.Z*q.S.Z);
@@ -325,6 +355,17 @@ partial class Shot {
     int Shade(Tri t,Node node,double dist){
         double nx=t.N.X*node.Cos-t.N.Y*node.Sin,ny=t.N.X*node.Sin+t.N.Y*node.Cos,nz=t.N.Z;
         double direct=Math.Max(0,nx*sun.X+ny*sun.Y+nz*sun.Z);
+        if(d.Short){
+            if(drawMaterial==9 || drawMaterial==10 || drawMaterial==11)return Pack(t.Co.R,t.Co.G,t.Co.B);
+            double rim=Math.Max(0,-nx*.32+ny*.65+nz*.33);
+            double level=(studio?.60:.70)+.42*direct+.09*Math.Max(0,nz)+.10*rim;
+            double r=t.Co.R*level*(dusk?.55:1.015),g=t.Co.G*level*(dusk?.69:1.015),b=t.Co.B*level*(dusk?.87:1.01);
+            if(dusk){r+=direct*20;g+=direct*9;b+=8;}
+            int shaded=Pack(Clamp((int)r,0,255),Clamp((int)g,0,255),Clamp((int)b,0,255));
+            if(studio)return shaded;
+            double air=Math.Min(.78,Math.Max(0,(dist-72)/480));
+            return MixColor(shaded,dusk?Pack(83,102,126):Pack(195,212,213),air);
+        }
         double value=.72+.34*direct+.06*Math.Max(0,nz);
         int rr=Clamp((int)(t.Co.R*value*1.017),0,255);
         int gg=Clamp((int)(t.Co.G*value*1.013),0,255);
@@ -335,6 +376,7 @@ partial class Shot {
     }
     void DrawNode(Node n,int frame){
         Pose pose=n.WorldPose;if(n.M<0 || pose.S.X<.0001 || pose.S.Z<.0001)return;
+        drawMaterial=d.Meshes[n.M].Mat;
         foreach(Tri q in d.Meshes[n.M].Ts){
             V a=World(q.A,n,pose),b=World(q.B,n,pose),c=World(q.C,n,pose);
             // Skip camera-backfacing polygons for all opaque closed pieces.
@@ -374,7 +416,7 @@ partial class Shot {
         double horizon=centerY+focal*forward.Z/up.Z;
         for(int y=0;y<H;y++){
             double k=Math.Exp(-Math.Max(0,horizon-y)*11/H);
-            int col=MixColor(Pack(143,177,186),Pack(220,225,211),k);
+            int col=d.Short?(dusk?MixColor(Pack(32,54,83),Pack(144,152,166),k):MixColor(Pack(123,166,191),Pack(218,226,218),k)):MixColor(Pack(143,177,186),Pack(220,225,211),k);
             int start=y*W+Left;
             for(int i=start;i<(y+1)*W;i++)pixels[i]=col;
         }
@@ -1046,6 +1088,20 @@ partial class Shot {
     void WorldFrame(int poseFrame,int wallMode=0){
         UpdateWorld(poseFrame);alpha=255;
         int t=poseFrame-d.Full;
+        studio=d.Short && t>=d.Crew && t<d.SealBegin;
+        dusk=d.Short && t>=d.SealBegin;
+        if(studio){
+            Array.Clear(depth,0,depth.Length);
+            for(int y=0;y<H;y++){
+                double h=y/(double)H;
+                int col=MixColor(Pack(24,44,54),Pack(57,77,81),h);
+                for(int i=y*W+Left;i<(y+1)*W;i++)pixels[i]=col;
+            }
+            StudioGround(d.Frames[poseFrame],(t-d.Crew)/((d.SealBegin-d.Crew)/4));
+            foreach(Node n in d.Nodes)if(n.Kind==19)DrawNode(n,poseFrame);
+            cachedFrame=-2;
+            return;
+        }
         bool access=!d.Short && (t>=d.Crew && t<d.SealEnd || t>=d.Repair && t<d.FinalEnd);
         softShadow=wallMode==2 || (wallMode==0 && Ghosted(poseFrame));
         Frame f=d.Frames[poseFrame];
@@ -1077,7 +1133,7 @@ partial class Shot {
             int mat=d.Meshes[n.M].Mat;
             bool powerDetail=n.Kind==13 && t>=d.Enc0-58 && t<d.Enc3+30;
             if(access && softShadow && powerDetail){nearEquipment.Add(n);continue;}
-            if(n.Kind==16 || n.Kind==17)continue;
+            if(n.Kind==16 || n.Kind==17 || n.Kind==19 || n.Kind==22 || mat==7 || mat==8 || mat==11)continue;
             if(d.Short && softShadow){
                 // In the short film a cutaway clears everything in or on the walls, and the cooler frames facing the camera.
                 if(n.Kind==18)continue;
@@ -1106,7 +1162,20 @@ partial class Shot {
             if(t>=d.Repair && t<d.FinalEnd)n.WorldPose.S=new V(1,1,1);
             if(n.WorldPose.S.X>.5)DrawNode(n,poseFrame);
         }
+        if(d.Short && alpha>0)foreach(Node n in d.Nodes)if(n.Kind==22)DrawNode(n,poseFrame);
         alpha=255;
+        if(d.Short){
+            foreach(Node n in d.Nodes){
+                if(n.M<0)continue;
+                int mat=d.Meshes[n.M].Mat;
+                if(mat!=7 && mat!=8 && mat!=11)continue;
+                if(mat==7 && softShadow && Seated(n,poseFrame) &&
+                   new V(n.Cos,n.Sin,0).Dot(new V(eye.X,eye.Y,0).Unit())>.15)continue;
+                alpha=mat==11?44:35;
+                DrawNode(n,poseFrame);
+            }
+            alpha=255;
+        }
         if(nearEquipment.Count>0){
             // Blend the complete front bank once, retaining the opacity of the unit in transit.
             Array.Copy(pixels,underEquipment,pixels.Length);
@@ -1159,6 +1228,8 @@ partial class Shot {
             double t=(frame-d.Ghost)/34.0;t=t*t*(3-2*t);
             for(int i=0;i<pixels.Length;i++)pixels[i]=MixColor(alternate[i],pixels[i],t);
             UpdateWorld(frame);
+        } else if(d.Short && frame>=d.Full+d.SealBegin && frame<d.Full+d.SealEnd){
+            WorldFrame(frame,1);
         } else if(frame>=d.Full+d.SealBegin && frame<d.Full+d.SealEnd){
             WorldFrame(frame,2);Array.Copy(pixels,alternate,pixels.Length);WorldFrame(frame,1);
             for(int i=0;i<pixels.Length;i++)pixels[i]=MixColor(alternate[i],pixels[i],solid);

@@ -4,6 +4,10 @@ Add a dated entry when a choice changes. Say what the viewer should see, the dim
 
 ## Decisions
 
+### Short build film · 23 November 2026
+
+The owner retained the 26.28 m diameter, 2.00 m raft and selected an industrial daylight build, narrated IFC component studies and a blue-hour exterior orbit. The short film hides the portal head reinforcement and shaft-side walkways, shows the liner without its work stages at 1:56 and uses translucent cooler discharge separators at 2:25. The control consoles, detailed equipment casings and labelled roof terminal are presentation additions. The issued revision K exchange supplies the geometry and product IDs for the four studies.
+
 ### Revision K · 23 November 2026
 
 Checks 7–10 cover the diesel support rig, shaft guide, rig wall mounts and independent turbine floor. The revised anchor bars pass behind the bearing keys, clear the studs and extend below the assumed failure surface. The headed studs reach 400 mm behind the bore. Select either generator storey in the IFC to inspect individual seat reactions and reinforcement. The short film shows the bare support rig at 0:56 and the two power levels landing from 2:12. [Calculations and release assumptions](report.md#75-checks-7-and-10--independent-gravity-floors)

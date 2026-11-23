@@ -12,6 +12,7 @@ from . import film
 from . import logistics
 from . import silo_model as s
 from . import site
+from . import short_reels
 
 LG = logistics.C
 # Panel kinds understood by the renderer.
@@ -70,15 +71,19 @@ def camera(frame, p):
     wall = cam(s.polar(7, fuel.BEARING, 19), bearing + 32, 22, 96)
     top = cam((0, 0, 29.5), bearing + 26, 40, 64)
     entry = math.degrees(s.ENTRY)
-    office = cam(yard.coords(s.ENTRY, (27., 0., 3.)), entry - 34, 21, 62)
-    start = cam(care.EXTERIOR, -62, 15, 92.0)
+    office = cam(yard.coords(s.ENTRY, (30., -4.4, 2.4)), entry - 65, 10, 34)
+    start = cam((0,0,18.6), -62, 8, 105.)
     if after < closing.RUN[1] - 12: return blend(lid, farm, smooth(after, clock.LINES, clock.LINES + 34))
     if after < closing.RISER[1] - 18: return blend(farm, wall, smooth(after, closing.RUN[1] - 12, closing.RISER[0] + 22))
     if after < closing.FUEL_END: return blend(wall, top, smooth(after, closing.RISER[1] - 18, closing.ROOF[1] + 4))
-    if after < clock.OFFICE[1] - 10: return blend(top, office, smooth(after, closing.FUEL_END, clock.OFFICE[0] + 6))
-    if after < clock.ORBIT: return blend(office, start, smooth(after, clock.OFFICE[1] - 10, clock.ORBIT - 4))
+    if clock.DETAIL_START <= after < clock.SOLID_BEGIN: return short_reels.camera(p,frame)
+    if after < clock.DETAIL_START: return blend(top, office, smooth(after, closing.FUEL_END, clock.OFFICE[0] + 8))
+    if after < clock.ORBIT:
+        from . import short_art
+        antenna=cam((*short_art.DISH,plant.LID_Z+1.12),-87,48,3.05)
+        return blend(antenna,start,smooth(after,clock.SOLID_END-4,clock.ORBIT-1))
     u = care.orbit_fraction(after)
-    return cam(care.EXTERIOR, -62 + 360 * u, 15 + 6 * math.sin(math.pi * u)**2, 92.0)
+    return cam((0,0,18.6), -62 + 360 * u, 8 + 3 * math.sin(math.pi * u)**2, 105.)
 
 
 def cards(p):
@@ -94,11 +99,16 @@ def cards(p):
     coating = ("STORE LINER", "Spray coating", "Both faces of the store",
                [("System", "Polyurea liner"), ("Thickness", f"{lc['thickness_mm']:g} mm"), ("Area", f"{LG['coat_m2']:,.0f} m²"),
                 ("Sprayers", f"{lc['sprayers']}"), ("Time", f"{LG['coat_days_needed']:.0f} days"), ("Concrete age", f"{LG['coat_age_min']}+ days")],
-               [(coat[0], "Stages rise up the gap"), (coat[1] - 26, "Liner complete")])
-    office = ("RECEIVING DOCK", "Control office", "Dock roofed and walled",
-              [("Use", "Control office"), ("Gantry", "Kept inside"), ("Pod rail", "Kept for exchanges"), ("Roof", "Flat")],
-              [(full + clock.OFFICE[0], "Stand the wall panels"), (full + clock.OFFICE[0] + 70, "Lay the flat roof"), (full + clock.OFFICE[1] - 14, "Office closed in")])
-    return [fabricate, coating, office]
+               [(coat[0], "Coat both wall faces"), (coat[1] - 26, "Liner complete")])
+    office = ("SITE OPERATIONS", "Control room", "One receiving lane converted",
+              [("Operators", "3 consoles"), ("Frontage", "Glazed"), ("Other lane", "Pod exchange"), ("Gantry", "Retained")],
+              [(full+clock.OFFICE[0],"Fit out the operator lane"), (full+clock.OFFICE[0]+70,"Close in the roof")])
+    cards=[fabricate,coating,office]
+    for i,title in enumerate(short_reels.TITLES):
+        start=full+clock.DETAIL_START+i*clock.DETAIL_LENGTH
+        cards.append(("IFC4  /  COMPONENT DETAIL",title,short_reels.SUBS[i],short_reels.ROWS[i],
+                      list(zip((start,start+58,start+clock.DETAIL_LENGTH-76),short_reels.STEPS[i]))))
+    return cards
 
 
 def scenes(p):
@@ -111,7 +121,8 @@ def scenes(p):
     return [(p.C, yard.INSERT_AT, STEEL, 0), (yard.INSERT_AT, p.FIRST_POD - 8, DOCK, 0), (p.FIRST_POD - 8, full, STORAGE, 0),
             (first[0], first[7], COOLERS, 0), (fuel[0], fuel[1], FUEL, 0), (fab[0], fab[1], CARD, 0), (coat[0], coat[1], CARD, 1),
             (full, full + clock.LINES, POWER, 0), (full + clock.LINES, full + closing.FUEL_END, FUEL, 0),
-            (full + closing.FUEL_END, full + clock.SOLID_BEGIN, CARD, 2), (full + clock.SOLID_BEGIN, p.FRAMES, DESIGN, 0)]
+            (full + closing.FUEL_END, full + clock.DETAIL_START, CARD, 2), (full + clock.SOLID_BEGIN, p.FRAMES, DESIGN, 0)] + [
+            (full+clock.DETAIL_START+i*clock.DETAIL_LENGTH,full+clock.DETAIL_START+(i+1)*clock.DETAIL_LENGTH,12,3+i) for i in range(4)]
 
 
 def tags(p):
@@ -133,11 +144,12 @@ def tags(p):
          f"Pod trucks {{a}} / {LG['pod_trucks']}, coolers {{b}} / {cfg.COOLERS}", ("pod_trucks", "coolers")),
         (fuel[0], fuel[1], days("tanks"), "Fuel tanks set", f"Tanks on the pad {{a}} / {cfg.PROJECT['fuel']['tanks'] + 1}", ("tanks",)),
         (fab[0], fab[1], days("fabricate"), "Prepare the power plant", "Stage the diesels and assemble the turbine level", ()),
-        (coat[0], coat[1], days("coating"), "Spray-coat the inside of the store", f"{LG['coat_m2']:,.0f} m² of liner from {lc['stages']} stages", ()),
+        (coat[0], coat[1], days("coating"), "Line both faces of the store", f"{LG['coat_m2']:,.0f} m² of bonded liner", ()),
         (full, full + clock.LINES, days("power"), "Power levels and lid lifted in. The fill begins.", tankers, ("water",)),
         (full + clock.LINES, full + closing.FUEL_END, days("propane", "lines"), "Propane fill and fuel lines",
          f"Propane loads {{a}} / {LG['propane_loads']}, water tankers {{b}} / {LG['water_loads']}", ("propane", "water")),
-        (full + closing.FUEL_END, full + clock.SOLID_BEGIN, days("office"), "Dock enclosed as the control office", tankers, ("water",)),
+        (full + closing.FUEL_END, full + clock.DETAIL_START, days("office"), "One dock lane becomes the control room", tankers, ("water",)),
+        (full + clock.DETAIL_START, full + clock.SOLID_BEGIN, "IFC4", "Installed component assemblies", "", ()),
         (full + clock.SOLID_BEGIN, full + closing.PLAN, f"DAY {logistics.DAYS}", "Store full, concrete at full strength, handed over", tankers, ("water",)),
     ]
     return [(a, b, day, cfg.display(title), cfg.display(note), tuple(COUNTERS.index(c) for c in which)) for a, b, day, title, note, which in rows]

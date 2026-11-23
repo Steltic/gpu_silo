@@ -646,6 +646,10 @@ def add(scene,node,p):
         "scale":show(p.FILLED+1)+([] if film.SHORT else [(p.FILLED+care.CREW+14.98,ON),(p.FILLED+care.CREW+15,OFF),
                                   (p.RESTORE-.02,OFF),(p.RESTORE,ON),
                                   (p.REGHOST-.02,ON),(p.REGHOST,OFF),(p.RESTORE2-.02,OFF),(p.RESTORE2,ON)])})
+    if scene.short_presentation:
+        from . import short_art
+        short_art.roof(scene,node,cover,p)
+        short_art.wall_finish(scene,node,p)
     node("Silo lid | lifting bridle",addmesh(lid_bridle()),"Lid pick",cover,
          tracks={"scale":hide_after(p.FILLED+LID[0]-4,p.FILLED+LID[1]+5)})
     timber=mesh("Silo lid | ground dunnage")

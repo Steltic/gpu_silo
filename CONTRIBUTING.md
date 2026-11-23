@@ -73,6 +73,8 @@ To add or revise a check, put the calculation and its own verification in its mo
 
 The plan view at 3:44 is narrated. The script is `plan_view` in [design/narration.json](design/narration.json): each line has the words to `say` and the caption to `show`. The recording and its caption timings are committed in [audio/](audio), so building the movie does not need the speech model. The scene is as long as the recording.
 
+The short film has its own timed script in [design/short_narration.json](design/short_narration.json). Run `python -m gpu_silo narrate --film short --models DIRECTORY` to regenerate its recording and captions. Its four component studies use a compact mesh cache from the issued revision K IFC. Run `python -m gpu_silo.short_reels path/to/GPU_Silo.ifc` to reproduce it. Coordinates are rounded to the nearest millimetre. The animated GLB retains IFC product tags and GlobalIds. Cabinet face details and the red satellite-link beam are presentation graphics. Run `python -m gpu_silo.short_reels renders/silo_short.mp4 --clips renders` to export the four captioned studies individually and as a continuous 48-second reel.
+
 After editing the script, record it again and commit the two files in `audio/`:
 
 ```shell
