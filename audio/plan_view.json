@@ -2,7 +2,7 @@
   "voice": "am_eric",
   "model": "Kokoro v1.0",
   "sample_rate": 24000,
-  "duration": 31.436,
+  "duration": 32.219,
   "lines": [
     {
       "start": 0.0,
@@ -21,27 +21,27 @@
     },
     {
       "start": 12.608,
-      "end": 16.157,
-      "text": "64 pods put 50 MW of heat into the store this way."
+      "end": 16.94,
+      "text": "The operator selects the rack mix within the 46 MW IT limit."
     },
     {
-      "start": 16.507,
-      "end": 19.24,
+      "start": 17.29,
+      "end": 20.023,
       "text": "Outside, every dry cooler has a pump of its own."
     },
     {
-      "start": 19.59,
-      "end": 23.291,
+      "start": 20.373,
+      "end": 24.074,
       "text": "The coolers draw from the warm upper layer and return cooled liquid to the bottom."
     },
     {
-      "start": 23.641,
-      "end": 27.005,
+      "start": 24.424,
+      "end": 27.788,
       "text": "Diffuser plates spread the flow sideways to keep the layers apart."
     },
     {
-      "start": 27.355,
-      "end": 31.436,
+      "start": 28.138,
+      "end": 32.219,
       "text": "The store between them lets heat collection and heat rejection run independently."
     }
   ]

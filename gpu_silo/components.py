@@ -2,7 +2,7 @@
 from dataclasses import dataclass
 import math
 
-from . import completion as calc, design as cfg, foundation, plant, services, silo_model as s
+from . import completion as calc, crown_detail, design as cfg, foundation, plant, services, silo_model as s
 
 STEEL, ELECTRIC, COOL, FUEL = "668283", "d69c48", "60999a", "ceae63"
 
@@ -188,18 +188,23 @@ def products():
                        [services.beside(a,frames.PUMP_Y,frames.BACK+.26,z0),services.beside(a,frames.PUMP_Y,frames.BACK+.26,z0-.20)],.065,COOL)
     for level in (0,1):
         lo=plant.power_base(cfg.CROWN,level)+plant.SEAT_Z
-        for j,a in enumerate(plant.mount_angles()):
+        count = plant.TURBINE_MOUNTS if level else plant.RIG["wall_mounts"]
+        for j,a in enumerate(plant.mount_angles(count)):
             a+=plant.POWER_YAW
             closure=plant.mesh("Field-fit bearing and weld closure")
             s.sector(closure,cfg.BORE_R-.076,cfg.BORE_R,lo-.14,lo+.44,a-.028,a+.028,4,[STEEL]*4)
             yield Part(f"CLOSURE-{level+1}-{j+1:02}","IfcDiscreteAccessory",closure.name,"Structural steel",
                        "turbine seats" if level else "rig seats","Turbines" if level else "Diesel",closure,{"Fit":"Install after landing"})
-            m=plant.mesh("Four developed 32 mm anchor hairpins")
-            for y in (-.21,-.07,.07,.21):
-                pts=[services.beside(a,y,cfg.BORE_R+offset,lo+h) for offset,h in ((.085,-1.45),(.085,.26),(.35,.26),(.35,-1.45))]
-                for pa,pb in zip(pts,pts[1:]):services.pipe(m,pa,pb,.016,"8e7769",n=6)
+            m=plant.mesh("Four bent crown anchor hairpins")
+            diameter=calc.D["anchor_rebar_mm"]
+            offsets=calc.D["hairpin_near_leg_offsets_m"]
+            for y in offsets:
+                pts=[services.beside(a,side,cfg.BORE_R+radial,lo+h)
+                     for radial,side,h in crown_detail.hairpin_path(y)]
+                for pa,pb in zip(pts,pts[1:]):services.pipe(m,pa,pb,diameter/2000,"8e7769",n=6)
             yield Part(f"SEAT-BAR-{level+1}-{j+1:02}","IfcElementAssembly",m.name,"Reinforcement","cage",
-                       "Turbines" if level else "Diesel",m,{"NominalDiameterMm":32,"Legs":8})
+                       "Turbines" if level else "Diesel",m,{"NominalDiameterMm":diameter,"Legs":2*len(offsets),
+                       "DesignCheck":10 if level else 9,"TailBelowSeatM":calc.D["hairpin_tail_below_seat_m"]})
     for upper in (False,True):
         m=plant.mesh("Portal hoop bypass")
         for row in range(6):

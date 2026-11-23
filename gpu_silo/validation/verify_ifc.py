@@ -4,11 +4,12 @@ from pathlib import Path
 
 import ifcopenshell
 import ifcopenshell.geom
+import ifcopenshell.util.element
 import ifcopenshell.util.placement
 import ifcopenshell.validate
 import numpy as np
 
-from .. import design as cfg
+from .. import completion, crown_detail, design as cfg, plant
 
 
 def verify(path):
@@ -50,7 +51,25 @@ def verify(path):
     assert len(set(centres))==cfg.TOTAL
     assert len(f.by_type("IfcElectricGenerator"))==cfg.POWER["modules"]+cfg.PROJECT["diesel"]["sets"]
     assert len([k for k in tags if k.startswith("Dry coolers/")])==cfg.COOLERS
-    assert len([k for k in tags if k.startswith("Rig mounts/")])==32
+    basis=ifcopenshell.util.element.get_psets(project)["GPU Silo Basis"]
+    assert basis["Revision"]==cfg.PROJECT["design_checks"]["revision"]
+    assert basis["NormalITLimitMW"]==cfg.CLUSTER["normal_it_limit_mw"] and basis["RackAssignment"]=="Operator selected"
+    for kind,member in ((7,"Diesel/Open ring beam"),(8,"Diesel/Collar drag arm 01"),(10,"Turbines/Open ring beam")):
+        assert ifcopenshell.util.element.get_psets(tags[member])["GPU Silo Design"]["DesignCheck"]==kind
+    for level,prefix in enumerate(("Top rig mount","Turbine level mount")):
+        deck=completion.floor(level)
+        hef=completion.seat(level,deck,completion.lateral())["hef"]
+        for j,v in enumerate(deck["all_mounts"],1):
+            plate=tags[f"Rig mounts/{prefix} {j:02} | cast-in wall plate"]
+            data=ifcopenshell.util.element.get_psets(plate)["GPU Silo Design"]
+            assert data["SeatNumber"]==j and data["DesignCheck"]==(10 if level else 9)
+            assert np.isclose(data["FactoredVerticalKN"],1.6*v)
+            plate_z=ifcopenshell.util.placement.get_local_placement(plate.ObjectPlacement)[2,3]
+            assert min(crown_detail.cone_clearances(plate_z,completion.angles(len(deck["all_mounts"])),hef))>0
+            bars=tags[f"SEAT-BAR-{level+1}-{j:02}"]
+            bar_data=ifcopenshell.util.element.get_psets(bars)["GPU Silo Design"]
+            assert bar_data["Legs"]==2*len(completion.D["hairpin_near_leg_offsets_m"])
+            assert bar_data["TailBelowSeatM"]==completion.D["hairpin_tail_below_seat_m"]
     assert len([k for k in tags if k.startswith("Cooler embeds/")])==160
     assert len([k for k in tags if k.startswith("Fuel storage/Propane tank")])==cfg.PROJECT["fuel"]["tanks"]
     assert len([k for k in tags if k.startswith("TX-")])==cfg.BAYS
@@ -66,6 +85,11 @@ def verify(path):
         coords=np.asarray(shape.geometry.verts).reshape(-1,3)
         assert len(coords)>=3 and np.isfinite(coords).all() and len(shape.geometry.faces)>=3
         name=inventory[shape.id].Tag
+        if name.startswith("SEAT-BAR-"):
+            level=int(name.split("-")[2])-1
+            seat_z=plant.power_base(cfg.CROWN,level)+plant.SEAT_Z
+            assert np.isclose(coords[:,2].min(),seat_z-completion.D["hairpin_tail_below_seat_m"],atol=.001)
+            assert seat_z+completion.D["hairpin_top_m"] <= coords[:,2].max() <= seat_z+completion.D["hairpin_top_m"]+.020
         if name=="RAFT":
             assert np.allclose([coords[:,2].min(),coords[:,2].max()],[-cfg.PROJECT["logistics"]["concrete"]["slab_thickness_m"],0],atol=1e-4)
         if name=="LID":

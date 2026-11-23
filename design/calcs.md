@@ -378,7 +378,7 @@ The walls take 10 days at 1 lift a day and are outside the 28 days. The pod cage
 
 ## 10. Operating limits and coordination decisions
 
-The 50 MW figure is the installed IT load. Two turbines supply 50 MW gross. A 6 MW utility intertie supplies the 4 MW auxiliary allowance at full IT load. Island operation is capped at 46 MW IT. The four diesels support at most 7 MW of priority IT with 3 MW reserved for essential plant. The controller uses the lower of the electrical and thermal limits.
+The plant and thermal store are sized against 50 MW of installed racks. Normal metered IT is capped at 46 MW, subject to available turbine power after auxiliaries and available cooling. The operator chooses the rack mix. For example, 235 full-power racks and 21 spares at 2 kW each draw 45.940 MW. Normal operation requires zero grid import. The four diesels supply the essential bus only during emergencies, with 3 MW reserved for essential plant and up to 7 MW for priority IT.
 
 The [revision J assumption register](assumptions.md) gives the disposition of all 18 questions previously listed here. [Structural checks 7–10](report.md#7-checks-7-to-10-support-rig-shaft-connector-and-wall-mounts-design-loads) include the independent upper floor, the guided shaft collar and the wall seats. The IFC includes the buried fuel crossing, conversion plant and the individual rack positions.
 

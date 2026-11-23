@@ -1,10 +1,20 @@
-# Revision J design assumptions and review register
+# Design assumptions and release evidence
 
-**Issue for owner and independent engineering review · 22 November 2026**
+**Revision K · 23 November 2026 · Issued for owner and independent engineering review**
 
-Revision J is a coordinated design for an unnamed site. The project has supplied no ground investigation, address, utility agreement, machinery submittal or authority approval. The adopted numbers below allow the models and films to be built now. The last column identifies evidence that could change a decision. A contractor needs released construction documents and the applicable approvals before using this model for fabrication, lifting or construction.
+The coordinated design uses the revision J reference loads for an unnamed site. The project has supplied no ground investigation, address, utility agreement, machinery submittal or authority approval. The adopted numbers below allow the models and films to be built now. The last column identifies evidence that could change a decision. A contractor needs released construction documents and the applicable approvals before using this model for fabrication, lifting or construction.
 
 The R numbers refer to the original structural report §13, including its previously closed R17. Q numbers refer to the original design calculations §10. Checks 7–10 and the calculated operating limits are in the [structural report, §7](report.md#7-checks-7-to-10-support-rig-shaft-connector-and-wall-mounts-design-loads). Source dimensions and numerical checks are in [project.json](project.json) and [completion.py](../gpu_silo/completion.py).
+
+## Operating choice after revision J
+
+On 23 November 2026 the owner set a **46 MW normal IT ceiling** for turbine operation. The two turbines are assumed to provide 50 MW together at site conditions, with 4 MW reserved for plant services. Available turbine output and cooling can lower the IT ceiling. Routine operation requires zero grid import and the diesels serve declared emergencies.
+
+All 256 rack positions are installed. At the project's 195.3125 kW full-rack assumption, **235 at full power and 21 spare** draw 45.898 MW before standby loads. At an assumed 2 kW per spare the total is **45.940 MW**. Each operator chooses the number of working racks and their power limits for the workload. All 256 can share that same rack budget at about 179.45 kW each. Include standby and any separately metered IT in the 46 MW limit. Confirm whole-rack AC input and standby draw on the selected hardware. Revision K retains the revision J installed capacity and 6 MW intertie in the physical design. The full-capacity case sizes the equipment.
+
+## Revision J reference assumptions
+
+The ten numbered design checks and their status are in [section 2 of the structural report](report.md#2-register-of-design-checks). The table below preserves the revision J assumptions and release evidence. The operating brief above updates Q3/Q4. Revision K section 7 records the four crown checks and their specific site, equipment and connection assumptions.
 
 | Original items | Adopted design and consequence | Evidence to obtain before release |
 | --- | --- | --- |
@@ -28,4 +38,4 @@ The R numbers refer to the original structural report §13, including its previo
 
 ## Exchange model
 
-Use the **IFC4 STEP** file in the revision J release. Model coordinates are local metres with the origin at the shaft centre on top of the raft. Select a storey or system to isolate equipment. Each 4SU assembly contains four rack objects, a CDU, a pump, its truss and its service fittings. The two generator floors have separate support members and mount groups. Civil and building services are included at coordination detail. The selected bearings, hoses, machinery and power equipment are procurement envelopes. Reinforcement is represented as cages and mats with design dimensions. The supplier internals, bend schedules, fabrication welds, actual survey coordinates and final connection engineering require project-specific submittals. The file follows buildingSMART spatial containment and uses native swept solids and tessellated bodies. [buildingSMART IFC4 geometric and spatial concepts](https://standards.buildingsmart.org/MVD/RELEASE/IFC4/ADD2_TC1/RV1_2/HTML/schema/views/reference-view/index.htm)
+Use the **IFC4 STEP** file in the revision K release. Model coordinates are local metres with the origin at the shaft centre on top of the raft. Select a storey or system to isolate equipment. Each 4SU assembly contains four rack objects, a CDU, a pump, its truss and its service fittings. The two generator floors have separate support members and mount groups. Civil and building services are included at coordination detail. The selected bearings, hoses, machinery and power equipment are procurement envelopes. Reinforcement is represented as cages and mats with design dimensions. The supplier internals, bend schedules, fabrication welds, actual survey coordinates and final connection engineering require project-specific submittals. The file follows buildingSMART spatial containment and uses native swept solids and tessellated bodies. [buildingSMART IFC4 geometric and spatial concepts](https://standards.buildingsmart.org/MVD/RELEASE/IFC4/ADD2_TC1/RV1_2/HTML/schema/views/reference-view/index.htm)

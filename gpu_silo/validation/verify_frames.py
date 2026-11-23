@@ -60,6 +60,7 @@ def check(path):
     assert extras["coolerFrames"]==fr.N and extras["dryCoolers"]==fr.N*fr.ROWS==p.cfg.COOLERS
     assert abs(extras["heatRejection_MW"]-p.cfg.COOLERS*d["cooler_capacity_mw"])<1e-9
     assert abs(extras["liquidHeatLoad_MW"]-calcs.C["heat_mw"])<1e-9 and extras["gpuRacks"]==p.cfg.RACKS
+    assert extras["normalITLimit_MW"]==p.cfg.CLUSTER["normal_it_limit_mw"] and extras["rackAssignment"]=="Operator selected"
     # Geometry of one frame and its equipment.
     steel=points(ids["Cooler frame 01 | steel frame"])
     assert np.allclose(steel.min(axis=0),[0,-fr.WIDTH/2,0],atol=.0002)

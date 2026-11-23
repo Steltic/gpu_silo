@@ -496,7 +496,8 @@ def build():
         nominalDoorSideClearance_m=cfg.POD["intake_clearance_each_side_m"],nominalDoorHeadClearance_m=cfg.POD["intake_clearance_overhead_m"],
         unitName=cfg.NAME,rackHousingLength_m=cfg.BODY_LENGTH,cduPumpSection_m=cfg.SECTION,cduPumpSectionByUnit_m=cfg.SECTIONS,
         application=cfg.PROJECT["project"]["application"],rackModel=cfg.CLUSTER["rack_model"],gpuRacks=cfg.RACKS,
-        liquidHeatLoad_MW=calcs.C["heat_mw"],thermalStore_m3=calcs.C["tank_m3"],thermalStore_USgal=calcs.C["tank_gal"],
+        liquidHeatLoad_MW=calcs.C["heat_mw"],normalITLimit_MW=cfg.CLUSTER["normal_it_limit_mw"],rackAssignment="Operator selected",
+        thermalStore_m3=calcs.C["tank_m3"],thermalStore_USgal=calcs.C["tank_gal"],
         heatRejection_MW=calcs.C["reject_mw"],
         technicalScope="Geometric concept animation; no load or tolerance design.")
     crew.recess_floor(scene)

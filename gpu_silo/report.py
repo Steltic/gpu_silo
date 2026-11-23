@@ -1279,8 +1279,9 @@ def markdown():
 | H | 2026-11-22 | Check 4 corrected. The springs of revision G were values for a small test plate and were about ten times too stiff for soil under a slab this wide. The grounds are now set by modulus: settlement on soil is tens of millimetres, the fill lowers the walls {(fd.C['chosen']['settle']['fill_inner']-fd.C['chosen']['settle']['fill_shaft'])*1000:.0f} mm against the shaft on {fd.F['design_ground']}, and the slab as drawn is not strong enough on dense sand or stiff clay. |
 | I | 2026-11-22 | Decisions of the project adopted: shaft wall {st.inches(st.C['shaft']['chosen']['section']['wall_in'])} in, base slab {fd.C['drawn']:g} m on ground taken as {fd.F['design_ground']}, a flexible section in each wall connection, and the hub arrangement of check 6. The build is not to be constrained: the wall connections are not left until after the fill, and the order of loading stays free. The model draws the hub drum, beam arms at the pod roots and the flexible sections. |
 | J | 2026-11-22 | Crown floor girders, sliding shaft guide, separate anchor groups, reference lateral and services envelopes, recorded owner assumptions and the operating IFC. |
+| K | 2026-11-23 | Checks 7–10 verified on the revision J loading basis. Added erection combinations, directional guide play, individual stud and closure weld checks, and revised the crown anchor bars for clearance and development. |
 
-This report is generated from [project.json](project.json) by `python -m gpu_silo calcs`. Every number in it is calculated from the inputs in that file by [structure.py](../gpu_silo/structure.py), [walls.py](../gpu_silo/walls.py), [thermal.py](../gpu_silo/thermal.py) and [reinforcement.py](../gpu_silo/reinforcement.py). To change a result, change an input and run the command.
+This report is generated from [project.json](project.json) by `python -m gpu_silo calcs`. Section 2 reads the numbered checks from `design_checks.register`. Sections 7.5–7.8 use the [coordination calculations](../gpu_silo/completion.py) and the [crown anchorage detail](../gpu_silo/crown_detail.py).
 
 ## Contents
 
@@ -1788,7 +1789,7 @@ The inertia torque is small. The drive is sized by the friction of the hub beari
 
 ## 7. Checks 7 to 10: support rig, shaft connector and wall mounts, design loads
 
-Checks 7, 8 and 9 were added in revision B and check 10 in revision C. Holding the top of the shaft makes the rig, its connector and its mounts part of the structure that carries the pods. Sections 7.1–7.4 preserve the design brief. Sections 7.5–7.8 give the sized members, mount reactions, spring calculation and site screening used for revision J.
+Checks 7, 8 and 9 were added in revision B and check 10 in revision C. Holding the top of the shaft makes the rig, its connector and its mounts part of the structure that carries the pods. Sections 7.1–7.4 preserve the design brief. Sections 7.5–7.8 give the crown checks and site screening on the revision J reference loads. Revision K verifies the staged floors, shaft guide and two separate groups of wall seats.
 
 ### 7.1 Description
 
@@ -1799,7 +1800,7 @@ Checks 7, 8 and 9 were added in revision B and check 10 in revision C. Holding t
 
 ### 7.2 Loads from the shaft on the rig, its connector and its mounts
 
-| Loading state | Sideways force at the top of the shaft, kN | Factored, kN | Largest force on one mount, kN |
+| Loading state | Shaft service force, kN | Factored shaft force, kN | Ideal full-ring service share per governing mount, kN |
 | --- | ---: | ---: | ---: |
 {rig_rows}
 
