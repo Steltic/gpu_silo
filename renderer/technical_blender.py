@@ -175,9 +175,12 @@ if kind=="studio":
     studio_light("Upper shaft strip",(-3,-9),29,23,7600,9,(1.,.90,.74))
     stage_mat=flat("Slate cyclorama",(.055,.084,.094),.69)
     # A circular cove keeps the floor continuous through each lens movement.
-    profile=[(0.,0.),(37.,0.)]+[(37+13*math.sin(j*math.pi/24),13*(1-math.cos(j*math.pi/24))) for j in range(1,13)]+[(50.,95.)]
-    v=[(600+r*math.cos(j*math.tau/96),600+r*math.sin(j*math.tau/96),z) for r,z in profile for j in range(96)]
-    faces=[(k*96+j,k*96+(j+1)%96,(k+1)*96+(j+1)%96,(k+1)*96+j) for k in range(len(profile)-1) for j in range(96)]
+    radius=max(55.,float(np.linalg.norm(camera["eye"][studio:roof,:2]-(600,600),axis=1).max())+12)
+    profile=[(radius,0.)]+[(radius+13*math.sin(j*math.pi/24),13*(1-math.cos(j*math.pi/24))) for j in range(1,13)]+[(radius+13,95.)]
+    v=[(600.,600.,0.)]+[(600+r*math.cos(j*math.tau/96),600+r*math.sin(j*math.tau/96),z) for r,z in profile for j in range(96)]
+    ix=lambda ring,j:1+ring*96+j%96
+    faces=[(0,ix(0,j),ix(0,j+1)) for j in range(96)]
+    faces.extend((ix(k,j),ix(k+1,j),ix(k+1,j+1),ix(k,j+1)) for k in range(len(profile)-1) for j in range(96))
     mesh=bpy.data.meshes.new("Continuous studio cove");mesh.from_pydata(v,[],faces);mesh.update()
     mesh.materials.append(stage_mat);stage=obj(mesh.name,mesh)
     for face in mesh.polygons:face.use_smooth=True
@@ -203,6 +206,8 @@ else:
             loc=(19*math.cos(r),19*math.sin(r),2)
             light("Architectural uplight","AREA",loc,(14*math.cos(r),14*math.sin(r),10),(1.,.63,.33),2300,4)
         light("Dock task lighting","AREA",(19,-22,4),(23,-17,1),(.78,.92,1.),820,4)
+    if dusk:
+        light("Blue-hour roof fill","AREA",(9,-21,49),(0,0,25),(.65,.81,1.),10500,25)
 camdata=bpy.data.cameras.new("Engineering film camera")
 camdata.sensor_fit="VERTICAL";camdata.sensor_height=32;camdata.clip_start=.07;camdata.clip_end=2600
 cam=obj(camdata.name,camdata);sc.camera=cam

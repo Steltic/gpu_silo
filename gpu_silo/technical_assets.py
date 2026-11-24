@@ -285,6 +285,14 @@ def pump_cabinet(m):
 
 
 def enhance(scene):
+    by_name={n["name"]:n for n in scene.nodes}
+    display=scene.meshes[by_name["Control room | displays and task lighting"]["mesh"]]
+    facade=scene.meshes[by_name["Control office | walls"]["mesh"]]
+    # The white stencil is painted on a lintel that rises during the enclosure shot.
+    # Keep it with that physical surface while the screens switch on independently.
+    lettering=s.rgb("d9e8dd")
+    facade.tris.extend(t for t in display.tris if tuple(t[3])==tuple(lettering))
+    display.tris=[t for t in display.tris if tuple(t[3])!=tuple(lettering)]
     for m in scene.meshes:
         n=m.name
         if n.startswith("Road tractor") or n.startswith("Truck mixer"):
