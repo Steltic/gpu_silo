@@ -37,4 +37,6 @@ def build(blender,work,output,models=None,cpu=False):
     check(cache,output/"silo_short.glb")
     finish.encode(cache,post,frames,output)
     finish.excerpts(cache,post,output)
+    shutil.copyfile(cache/"traffic.json",output/"traffic_schedule.json")
+    shutil.copyfile(root/"design"/"technical_short.md",output/"production_notes.md")
     finish.verify(output,cache)

@@ -12,7 +12,11 @@ The pod scenes show the 0.62 m access space around the shaft, the 7.16 m trussed
 
 ## The build: silo_short
 
-[Play the narrated short film](../../../releases/download/short-film-2026-11-23-v2/silo_short.mp4). The 4:22 cut has 23 chapters and selectable English captions. Day 0 is the last wall pour. The counters track the 28-day programme and scale the sample of truck movements to the full number of loads.
+The 2:11 technical edition has 23 chapters, a newly recorded engineering narration and selectable captions. Its four IFC studies begin at 1:26, 1:32, 1:38 and 1:44. The shaft study shows one empty holder indexing around the fixed tube. [Play the 4K short](../../../releases/download/short-technical-2026-11-24/silo_short.mp4) · [Watch the 24-second IFC reel](../../../releases/download/short-technical-2026-11-24/IFC_highlights.mp4) · [Timed scene guide](../README.md#find-it-in-the-technical-short) · [Production assumptions](../design/technical_short.md)
+
+### Original 4:22 sequence
+
+The original 4:22 cut has 23 chapters and selectable English captions. Day 0 is the last wall pour. Its counters track the 28-day programme and scale the sample of truck movements to the full number of loads. [Play the original build](../../../releases/download/short-film-2026-11-23-v2/silo_short.mp4)
 
 The four narrated IFC studies are also available as a [48-second reel](../../../releases/download/short-film-2026-11-23-v2/IFC_highlights.mp4) and as individual clips in the [short film release](../../../releases/tag/short-film-2026-11-23-v2).
 
