@@ -9,7 +9,6 @@ dark = "29383d"
 rubber = "293033"
 alloy = "c3c9c2"
 amber = "eba84c"
-glass = "3d6772"
 
 
 def pipe(m, a, b, radius, col=steel, n=12):
@@ -37,66 +36,15 @@ def wheel(m, x, y, r, z=None):
         xx,zz=x+.39*r*math.cos(a),z+.39*r*math.sin(a)
         pipe(m,(xx,y+sign*.05,zz),(xx,y+sign*.075,zz),r*.055,dark,6)
 
-
-def cab(m,mixer):
-    front = 6.66 if mixer else 4.76
-    wind = 6.215 if mixer else 3.481
-    side = 1.222 if mixer else 1.254
-    rear = 4.31 if mixer else 1.55
-    box(m,front,-.78,front+.042,.78,1.02,1.71,dark)
-    for i in range(8):
-        z=1.056+i*.084
-        box(m,front+.04,-.73,front+.063,.73,z,z+.027,alloy)
-    for sign in (-1,1):
-        yy=sign*.97
-        box(m,front+.015,yy-.15,front+.068,yy+.15,1.24,1.47,"f3e8bf")
-        box(m,front+.04,yy-.13,front+.077,yy+.13,1.12,1.18,amber)
-        y=sign*(side+.025)
-        box(m,rear+.23,y-.012,wind-.15,y+.012,1.98,2.78,glass)
-        box(m,rear+.38,y-.023,rear+.41,y+.023,1.98,2.78,alloy)
-        box(m,rear+.26,y-.031,rear+.49,y+.031,1.77,1.81,dark)
-        for z in (.72,.94,1.15):
-            box(m,rear-.14,min(y,y+sign*.14),rear+.58,max(y,y+sign*.14),z,z+.045,"a6ada6")
-        arm=(wind-.12,y,2.5)
-        mast=(wind+.05,sign*1.50,2.61)
-        pipe(m,arm,mast,.033,dark)
-        box(m,mast[0]-.10,mast[1]-.052,mast[0]+.10,mast[1]+.052,2.49,2.79,dark)
-        box(m,mast[0]-.107,mast[1]-.044,mast[0]-.10,mast[1]+.044,2.51,2.76,"9eafb0")
-        pipe(m,(wind,sign*.89,2.04),(wind+.014,sign*.25,2.51),.015,dark,6)
-        if not mixer:
-            pipe(m,(.78,sign*.88,.72),(1.43,sign*.88,.72),.27,alloy,24)
-        for x in ((5.3,.65,-.65) if mixer else (3.4,.65,-.65)):
-            wheel(m,x,sign*(1.23 if x>2 else 1.36),.52)
-        box(m,-1.31,sign*1.01-.24,-1.25,sign*1.01+.24,.16,.76,rubber)
-    for i in range(5):
-        y=(i-2)*.42
-        box(m,wind-.20,y-.052,wind-.09,y+.052,2.94 if mixer else 3.105,3.00 if mixer else 3.15,amber)
-    if mixer:
-        # Coloured spiral follows the two tapered drum sections.
-        last=None
-        for i in range(73):
-            u=i/72
-            x=-1.49+5.44*u
-            cy=2.55+(3.05-2.55)*min(1,max(0,(.9-x)/2.4))-.40*max(0,(x-.9)/3.1)
-            radius=(.985 if x<.9 else 1.185)+.018
-            a=math.tau*u*2
-            at=(x,radius*math.cos(a),cy+radius*math.sin(a))
-            if last:pipe(m,last,at,.044,"7d9996",6)
-            last=at
-        for yy in (-.36,.36):
-            pipe(m,(-2.22,yy,1.0),(-2.57,yy,3.45),.035,steel)
-        for i in range(8):
-            z=1.12+.30*i
-            x=-2.22-(z-1)*.143
-            pipe(m,(x,-.36,z),(x,.36,z),.03,alloy,8)
-
-
 def trailer(m):
     bounds=np.asarray([t[:3] for t in m.tris]).reshape(-1,3)
     rear=float(bounds[:,0].min())
     width=1.28
     is_tanker=m.name.startswith(("Water tanker","Propane transport"))
     heavy="Heavy-haul" in m.name
+    if is_tanker:
+        from .technical_vehicles import tanker_shell
+        tanker_shell(m)
     axles=(-20.35,-19,-17.65) if heavy else ((-10.25,-8.95) if is_tanker else (-site.FLAT_AXLE-.65,-site.FLAT_AXLE+.65))
     for sign in (-1,1):
         for x in axles:
@@ -143,14 +91,25 @@ def tracks(m,half,offset,width,r):
 
 
 def machinery(m):
+    from .technical_vehicles import carrier_cab, crane_housing, hull
     name=m.name
     if name=="Crawler undercarriage" or name.startswith("Boom lift | four-wheel"):
         picker=name.startswith("Boom")
         if picker:
             m.tris.clear()
-            box(m,-2.39,-1.02,2.37,1.02,.64,1.16,"cb833e")
-            box(m,-2.13,-.94,-.56,.94,1.16,1.85,dark)
-            box(m,-.56,-.95,1.34,.95,1.15,2.05,"c77a36")
+            hull(m,[(.63,-2.18,2.22,-.94,.94,.22),(.82,-2.38,2.37,-1.02,1.02,.26),
+                    (1.15,-2.27,2.19,-.98,.98,.23)],"b17a47")
+            pipe(m,(0,0,1.14),(0,0,1.27),.95,"566567",36)
+            hull(m,[(1.25,-1.99,1.49,-.95,.95,.27),(1.61,-2.10,1.4,-.91,.91,.26),
+                    (1.97,-1.65,.82,-.77,.77,.18),(2.07,-1.21,.60,-.67,.67,.12)],"cc823e")
+            for sign in (-1,1):
+                for j in range(10):
+                    x=-1.78+j*.105
+                    box(m,x,sign*.922-.02,x+.047,sign*.922+.02,1.34,1.60,dark)
+                box(m,.05,sign*.90-.012,.59,sign*.90+.012,1.37,1.55,"d6bf87")
+                pipe(m,(.82,sign*.42,1.35),(.29,sign*.42,2.13),.12,"7a8480")
+                pipe(m,(.26,sign*.52,2.02),(.26,sign*.63,2.02),.12,alloy,16)
+            pipe(m,(-1.18,-.22,2.01),(-1.18,-.22,2.13),.125,dark,20)
             m.name="Boom lift | tracked chassis and hydraulic power pack"
         tracks(m,1.86 if picker else 2.48,1.18 if picker else 1.43,.53 if picker else .74,.42 if picker else .38)
         if picker:
@@ -161,22 +120,9 @@ def machinery(m):
                 pipe(m,(-.45,y,1.68),(.64,y,1.95),.063,dark,12)
     elif name in ("Crawler counterweight and cab","Assist crane | operator cab and counterweight"):
         crawler=name.startswith("Crawler")
-        y=-1.56 if crawler else 1.26
-        z=1.55 if crawler else 0.
-        for i in range(14):
-            x=-1.65+i*.094
-            box(m,x,-1.154,x+.041,-1.14,z+.22,z+.64,dark)
-        for x in (-2.51,-1.75,-1.,-.36):
-            pipe(m,(x,1.22,z+.69),(x,1.22,z+1.29),.035,alloy)
-        pipe(m,(-2.55,1.22,z+1.29),(-.35,1.22,z+1.29),.035,alloy)
-        for j in range(3):
-            box(m,.2+j*.38,y-.016,.22+j*.38,y+.016,z+.85,z+1.53,dark)
-        for side in (-1,1):
-            pipe(m,(-1.50,side*.63,z+.78),(-.82,side*.63,z+1.18),.21,rubber,20)
-            for j in range(8):
-                x=-1.50+j*.078
-                pipe(m,(x,side*.63,z+.79+j*.039),(x+.026,side*.63,z+.81+j*.039),.224,steel,16)
+        crane_housing(m,crawler)
     elif name.startswith("Assist crane | all-terrain"):
+        carrier_cab(m)
         for sign in (-1,1):
             for x in (-3.9,-2.4,1.6,3.2):wheel(m,x,sign*1.36,.62)
             for x in (-4.6,.2):
@@ -230,9 +176,6 @@ def turbine_detail(side):
         for x in (-4.5,-3.76,-2.95):
             pipe(m,(x,yy,.55),(x,yy,1.24),.027,alloy,8)
             pipe(m,(x,yy,1.24),(x+.17,yy*.85+y*.15,1.50),.027,alloy,8)
-        for j in range(4):
-            xx=1.29+j*.144
-            ring(m,xx,y,z,.373,.026,amber,20)
         for x in (-6.21,-4.05,-1.83,2.20,5.80):
             for dy in (-.09,.09):
                 pipe(m,(x+dy,yy,.30),(x+dy,yy,.368),.057,alloy,6)
@@ -243,6 +186,32 @@ def turbine_detail(side):
             box(m,xx,y-1.137,xx+.112,y-1.124,zz,zz+.122,"667d83")
     for xx in (.22,.48,.74,1.):
         box(m,xx,y-.99,xx+.036,y+.93,3.67,3.705,alloy)
+    for j in range(4):
+        ring(m,1.29+j*.144,y,z,.373,.026,amber,20)
+    # Removable duplex oil filters, gauge faces and isolated pipework beside the core.
+    yy=y-.86
+    box(m,-3.96,yy-.22,-2.74,yy+.22,.31,.49,"526365")
+    for x in (-3.67,-3.05):
+        pipe(m,(x,yy,.49),(x,yy,1.11),.176,"c6cccc",28)
+        pipe(m,(x,yy,1.08),(x,yy,1.18),.206,steel,28)
+        pipe(m,(x,yy,1.18),(x,yy,1.31),.11,dark,20)
+        pipe(m,(x,yy-.04,1.23),(x,yy-.23,1.23),.076,"c7d0c6",20)
+        s.bar(m,(x-.035,yy-.236,1.19),(x+.014,yy-.236,1.26),.015,"37484c")
+    pipe(m,(-3.67,yy,1.24),(-3.05,yy,1.24),.046,"af8c57")
+    # A ladder-type cable tray follows the generator up to its terminal box.
+    for off in (.70,.93):
+        box(m,2.18,y+off-.018,6.14,y+off+.018,2.54,2.65,"89999a")
+    for j in range(21):
+        xx=2.22+j*.189
+        box(m,xx,y+.70,xx+.035,y+.93,2.54,2.57,steel)
+    box(m,5.56,y-.36,6.38,y+.44,2.45,2.74,"4d6675")
+    for yy in (y-.19,y+.055,y+.29):
+        pipe(m,(6.31,yy,2.60),(6.50,yy,2.60),.072,alloy,12)
+    for radius,dx,col in ((.81,.08,"71868b"),(.61,.15,"939fa0"),(.32,.21,"5a6e75"),(.18,.26,"929c9b")):
+        pipe(m,(6.595,y,z),(6.60+dx,y,z),radius,col,32)
+    for j in range(16):
+        a=j*math.tau/16;yy=y+.728*math.cos(a);zz=z+.728*math.sin(a)
+        pipe(m,(6.67,yy,zz),(6.707,yy,zz),.042,alloy,6)
     return m
 
 
@@ -285,6 +254,7 @@ def pump_cabinet(m):
 
 
 def enhance(scene):
+    from .technical_vehicles import truck
     by_name={n["name"]:n for n in scene.nodes}
     display=scene.meshes[by_name["Control room | displays and task lighting"]["mesh"]]
     facade=scene.meshes[by_name["Control office | walls"]["mesh"]]
@@ -296,7 +266,7 @@ def enhance(scene):
     for m in scene.meshes:
         n=m.name
         if n.startswith("Road tractor") or n.startswith("Truck mixer"):
-            cab(m,n.startswith("Truck mixer"))
+            truck(m,n.startswith("Truck mixer"),wheel)
         elif n.startswith(("Flatbed semi","Heavy-haul","Water tanker","Propane transport")):
             trailer(m)
         elif "aeroderivative gas turbine" in n or n.startswith("Power modules/Turbine set"):
