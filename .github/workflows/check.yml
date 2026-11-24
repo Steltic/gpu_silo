@@ -36,6 +36,11 @@ jobs:
         run: |
           python -m gpu_silo build --scene-only --film short
           python -m gpu_silo check --film short
+      - name: Verify the double-speed technical cut, IFC carrier and truck clearances
+        run: |
+          python -m gpu_silo.technical_scene "$RUNNER_TEMP/technical-bake"
+          python -m gpu_silo.technical_model "$RUNNER_TEMP/technical-bake" "$RUNNER_TEMP/technical.glb"
+          python -m gpu_silo.validation.verify_technical "$RUNNER_TEMP/technical-bake" --model "$RUNNER_TEMP/technical.glb"
       - name: Install the renderer toolchain and panel typefaces
         run: |
           sudo apt-get update

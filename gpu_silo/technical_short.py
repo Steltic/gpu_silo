@@ -23,14 +23,15 @@ def build(blender,work,output,models=None,cpu=False):
     env=os.environ.copy()
     profile=work/"blender-profile";profile.mkdir(exist_ok=True)
     env["BLENDER_USER_RESOURCES"]=str(profile)
-    stop=[0,m["office"],m["studio"],m["roof"],m["drawing"]]
-    samples=(6,6,8,8)
-    for i,(first,end) in enumerate(zip(stop,stop[1:])):
-        if all((frames/f"f_{f:04}.jpg").is_file() for f in range(first,end)):continue
-        call=[str(blender),"-b","--python-exit-code","9","-P",str(root/"renderer"/"technical_blender.py"),"--",
-              str(cache),str(frames),str(first),str(end-1),"--samples",str(samples[i])]
-        if cpu:call.append("--cpu")
-        subprocess.run(call,check=True,env=env)
+    kernels=work/"cycles-device-cache";kernels.mkdir(exist_ok=True)
+    env.update(SYCL_CACHE_PERSISTENT="1",SYCL_CACHE_DIR=str(kernels))
+    head=[str(blender),"-b","--python-exit-code","9","-P"]
+    if not all((frames/f"f_{f:04}.jpg").is_file() for f in range(m["office"])):
+        subprocess.run([*head,str(root/"renderer"/"technical_blender.py"),"--",str(cache),str(frames),
+                        "0",str(m["office"]-1),"--samples","6"],check=True,env=env)
+    call=[*head,str(root/"renderer"/"technical_cycles.py"),"--",str(cache),str(frames)]
+    if cpu:call.append("--cpu")
+    subprocess.run(call,check=True,env=env)
     technical_model.export(cache,output/"silo_short.glb")
     from .validation.verify_technical import check
     check(cache,output/"silo_short.glb")

@@ -61,10 +61,19 @@ if sc.render.engine=="CYCLES":
     if not a.cpu:
         try:
             pref=bpy.context.preferences.addons["cycles"].preferences
-            pref.compute_device_type="ONEAPI";pref.refresh_devices()
-            devices=[d for d in pref.devices if d.type=="ONEAPI"]
-            for d in pref.devices:d.use=d.type=="ONEAPI"
-            if devices:sc.cycles.device="GPU"
+            devices=[]
+            for backend in ("ONEAPI","OPTIX","METAL","HIP","CUDA"):
+                try:
+                    pref.compute_device_type=backend
+                    pref.refresh_devices()
+                except (TypeError,RuntimeError):
+                    continue
+                devices=[d for d in pref.devices if d.type==backend]
+                if devices:
+                    for d in pref.devices:d.use=d.type==backend
+                    sc.cycles.device="GPU"
+                    break
+            sc.cycles.denoising_use_gpu=bool(devices)
             print("Cycles compute",sc.cycles.device,[d.name for d in devices],flush=True)
         except (TypeError,RuntimeError) as err:print("Cycles CPU",err,flush=True)
 else:
@@ -142,6 +151,10 @@ def read_mesh(i,mtype):
     mesh.polygons.add(len(f))
     mesh.polygons.foreach_set("loop_start",np.arange(0,f.size,3,dtype=np.int32))
     mesh.update(calc_edges=True)
+    if mtype in ("land","concrete") or len(f)<10:
+        mesh.shade_flat()
+    else:
+        mesh.set_sharp_from_angle(angle=math.radians(32))
     attr=mesh.color_attributes.new(name="Finish",type="BYTE_COLOR",domain="CORNER")
     rgba=np.ones((len(col),4),np.float32);rgba[:,:3]=col/255.
     attr.data.foreach_set("color_srgb",np.repeat(rgba,3,axis=0).ravel())
@@ -203,7 +216,7 @@ for i,n in enumerate(manifest["nodes"]):
     group=n["group"]
     if kind=="studio":typ="studio"
     elif group in ("Foundation","Inner concrete wall","Outer concrete wall","Control office","Architectural finish"):typ="concrete"
-    elif group=="Landscape":typ="land"
+    elif group in ("Landscape","Site works","Frame laydown","Power laydown"):typ="land"
     elif mesh_meta[idx]["mat"]==3:typ="machine"
     else:typ="other"
     o=obj(n["name"],read_mesh(idx,typ))
@@ -245,3 +258,4 @@ sc.render.use_overwrite=False
 sc.render.use_placeholder=False
 print("READY",len(objects),"objects",len(meshes),"meshes",sc.render.engine,flush=True)
 bpy.ops.render.render(animation=True)
+bpy.app.handlers.frame_change_pre.remove(update)

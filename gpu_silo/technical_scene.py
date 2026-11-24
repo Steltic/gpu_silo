@@ -25,7 +25,7 @@ def prepare(out):
     pose=np.empty((count,len(frames),7),np.float32)
     eye=np.array([scene.camera[f]["eye"] for f in frames])
     target=np.array([scene.camera[f]["target"] for f in frames])
-    physical=pose.copy()
+    physical=np.empty_like(pose)
     inside=(frames>=p.PORTAL_VIEW+17)&(frames<p.RESTORE)
     wall={"Cast-in conduits","Door blockout","Cooler embeds","Cooler conduits","Frame anchors"}
     installed={"Dry coolers","Cooler frames","Cooler screens","Pump units","Discharge separators","Frame pipework"}

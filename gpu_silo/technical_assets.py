@@ -272,6 +272,18 @@ def cooler_guard(m):
             pipe(m,(x+.035,y+cy*.22,z+sz*.22),(x,y+cy,z+sz),.014,steel,6)
 
 
+def pump_cabinet(m):
+    lo,hi=extents(m)
+    x=hi[0]+.016;y=(lo[1]+hi[1])*.5;z=(lo[2]+hi[2])*.5
+    height=min(1.72,hi[2]-lo[2]-.09);width=min(.74,hi[1]-lo[1]-.10)
+    box(m,x-.018,y-width/2,x+.022,y+width/2,z-height/2,z+height/2,"738688")
+    for j in range(10):
+        h=z+.07+j*.055
+        box(m,x+.023,y-width*.38,x+.052,y+width*.38,h,h+.025,"3a4e54")
+    pipe(m,(x+.07,y+width*.33,z-.48),(x+.07,y+width*.33,z-.22),.025,alloy)
+    box(m,x+.024,y-width*.36,x+.034,y-width*.02,z-.40,z-.27,alloy)
+
+
 def enhance(scene):
     for m in scene.meshes:
         n=m.name
@@ -290,5 +302,7 @@ def enhance(scene):
             overlay(m,turbine_detail(side),shift)
         elif n.startswith(("Dry coolers/Cooler frame","Dry cooler | ")):
             cooler_guard(m)
+        elif n.startswith("Pump units/Cooler frame"):
+            pump_cabinet(m)
         else:
             machinery(m)

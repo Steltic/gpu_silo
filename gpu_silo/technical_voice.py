@@ -1,8 +1,10 @@
 """Record the 2× cut from its own technical script, with captions on the recorded syllables."""
 import argparse
 import json
+import re
 import subprocess
 import tempfile
+import textwrap
 from pathlib import Path
 
 from . import narrate
@@ -13,6 +15,43 @@ SCRIPT = narrate.ROOT / "design" / "technical_short.json"
 def stamp(t):
     ms = round(t * 1000)
     return f"{ms//3600000:02}:{ms//60000%60:02}:{ms//1000%60:02},{ms%1000:03}"
+
+
+def caption_parts(text):
+    pieces=[]
+    for sentence in re.split(r"(?<=[.!?])\s+",text):
+        if len(sentence)<=82:
+            pieces.append(sentence)
+            continue
+        words=sentence.split()
+        allowed=[i for i in range(1,len(words)) if words[i] not in ("MW","MW.","kW","m³","K","Hz","mm","m","°C.")]
+        def penalty(i):
+            left=" ".join(words[:i]);right=" ".join(words[i:])
+            boundary=8 if words[i] in ("with","at","and","after","on","for","in") or left.endswith(",") else 0
+            return abs(len(left)-len(right))-boundary
+        split=min(allowed,key=penalty)
+        pieces.extend((" ".join(words[:split])," ".join(words[split:])))
+    return pieces
+
+
+def captions(out,lines,samples,rate):
+    import numpy as np
+    entries=[]
+    for line in lines:
+        parts=caption_parts(line["text"])
+        total=sum(len(t) for t in parts)
+        elapsed=0;bounds=[line["start"]]
+        for part in parts[:-1]:
+            elapsed+=len(part)
+            expected=line["start"]+(line["end"]-line["start"])*elapsed/total
+            # Prefer a real gap close to the written clause boundary.
+            nearby=np.arange(expected-.22,expected+.221,.01)
+            quiet=[float(np.mean(abs(samples[round((t-.015)*rate):round((t+.015)*rate)])))+.007*abs(t-expected) for t in nearby]
+            bounds.append(float(nearby[int(np.argmin(quiet))]))
+        bounds.append(line["end"])
+        for start,end,part in zip(bounds,bounds[1:],parts):
+            entries.append((start,end,"\n".join(textwrap.wrap(part,width=44,break_long_words=False))))
+    out.write_text("\n\n".join(f"{i}\n{stamp(start)} --> {stamp(end)}\n{text}" for i,(start,end,text) in enumerate(entries,1))+"\n",encoding="utf-8")
 
 
 def record(models, out):
@@ -51,7 +90,7 @@ def record(models, out):
     film *= .87 / max(.001, np.abs(film).max())
     sf.write(out / "technical_voice.flac", film, rate, subtype="PCM_16")
     (out / "technical_voice.json").write_text(json.dumps(lines, indent=2, ensure_ascii=False), encoding="utf-8")
-    (out / "technical_short.srt").write_text("\n\n".join(f"{i}\n{stamp(r['start'])} --> {stamp(r['end'])}\n{r['text']}" for i,r in enumerate(lines,1)) + "\n", encoding="utf-8")
+    captions(out/"technical_short.srt",lines,film,rate)
 
 
 if __name__ == "__main__":

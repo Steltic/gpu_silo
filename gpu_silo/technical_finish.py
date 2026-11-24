@@ -63,7 +63,14 @@ def encode(bake,work,framesdir,out):
 
 def excerpts(bake,work,out):
     m=json.loads((bake/"scene.json").read_text(encoding="utf-8"))
-    lines=json.loads((out/"technical_voice.json").read_text(encoding="utf-8"))
+    lines=[]
+    def seconds(stamp):
+        h,minute,last=stamp.replace(",",".").split(":")
+        return int(h)*3600+int(minute)*60+float(last)
+    for block in (out/"technical_short.srt").read_text(encoding="utf-8-sig").strip().split("\n\n"):
+        _,clock,*text=block.splitlines()
+        first,last=(seconds(t) for t in clock.split(" --> "))
+        lines.append(dict(start=first,end=last,text="\n".join(text)))
     for name,first,last in (("shaft",0,1),("pod",1,2),("cooler",2,3),("turbines",3,4),("highlights",0,4)):
         start=(m["studio"]+first*144)/24
         end=(m["studio"]+last*144)/24
@@ -74,6 +81,7 @@ def excerpts(bake,work,out):
                                    for i,c in enumerate(active,1))+"\n",encoding="utf-8")
         run(["ffmpeg","-hide_banner","-loglevel","error","-y","-ss",f"{start:.9f}","-i",out/"silo_short.mp4",
              "-ss",f"{start:.9f}","-i",out/"technical_voice.flac","-i",sub,"-t",f"{end-start:.9f}",
+             "-frames:v",str((last-first)*144),
              "-map","0:v:0","-map","1:a:0","-map","2:s:0","-map_metadata","-1","-map_chapters","-1","-c:v","copy",
              "-af","loudnorm=I=-16:TP=-1.5:LRA=8","-ar","48000","-c:a","aac","-b:a","160k","-c:s","mov_text",
              "-metadata:s:s:0","language=eng","-disposition:s:0","0","-movflags","+faststart",out/f"IFC_{name}.mp4"])
@@ -87,6 +95,10 @@ def verify(out,bake):
     m=json.loads((bake/"scene.json").read_text(encoding="utf-8"))
     lines=json.loads((out/"technical_voice.json").read_text(encoding="utf-8"))
     if len(lines)!=20 or any(a["end"]>b["start"] for a,b in zip(lines,lines[1:])):raise ValueError("Voice cue overlap")
+    for name,frames in (("shaft",144),("pod",144),("cooler",144),("turbines",144),("highlights",576)):
+        clip=probe(out/f"IFC_{name}.mp4")
+        if int(clip["streams"][0]["nb_frames"])!=frames:raise ValueError(f"Wrong length for {name} study")
+        if abs(float(clip["streams"][0]["duration"])-frames/24)>.001:raise ValueError(f"Wrong video duration for {name}")
     for file,expected in (("silo_short.mp4",{"video","audio","subtitle","data"}),("silo_short_clean.mp4",{"video"})):
         p=probe(out/file);v=p["streams"][0]
         if (v["width"],v["height"],v["avg_frame_rate"],int(v["nb_frames"]))!=(3840,2160,"24/1",m["frames"]):
