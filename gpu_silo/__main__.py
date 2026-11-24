@@ -13,6 +13,12 @@ def main():
     build.add_argument("--output", type=Path, default=Path("renders"))
     build.add_argument("--scene-only", action="store_true", help="export the GLB only (needs Python and NumPy)")
     build.add_argument("--jobs", type=int, help="parallel render processes (default: one per CPU)")
+    technical=commands.add_parser("technical-short",help="render the 4K double-speed short with Blender 4.5 and FFmpeg")
+    technical.add_argument("--blender",default="blender",help="Blender executable")
+    technical.add_argument("--work",type=Path,default=Path("renders/technical-work"),help="resumable frame cache for this source revision")
+    technical.add_argument("--output",type=Path,default=Path("renders/technical-short"))
+    technical.add_argument("--models",type=Path,help="record fresh Kokoro narration from these models")
+    technical.add_argument("--cpu",action="store_true",help="render Cycles shots on the CPU")
     check = commands.add_parser("check", help="check an exported GLB against the working design")
     check.add_argument("model", nargs="?", type=Path, default=Path("renders/GPU_Silo.glb"))
     calc = commands.add_parser("calcs", help="rewrite design/calcs.md, design/report.md and its figures from design/project.json")
@@ -26,6 +32,10 @@ def main():
         command.add_argument("--film", choices=("long", "short"), default="long",
                              help="long is the full presentation, short is the build only (silo_short)")
     args = parser.parse_args()
+    if args.command=="technical-short":
+        from . import technical_short
+        technical_short.build(args.blender,args.work,args.output,args.models,args.cpu)
+        return
     if args.command == "ifc":
         import os
         os.environ["GPU_SILO_FILM"] = "short"

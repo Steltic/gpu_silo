@@ -2,11 +2,11 @@
 
 [![The finished GPU Silo with its roof stacks, ten screened dry cooler frames, the haul ring and the fuel farm](docs/animation.jpg)](../../releases/latest/download/GPU_Silo.mp4)
 
-**[Watch the build · silo_short.mp4](../../releases/download/short-film-2026-11-23-v2/silo_short.mp4)** (4:22, narrated) · **[Watch the full presentation · GPU_Silo.mp4](../../releases/latest/download/GPU_Silo.mp4)** (5:43) · Animated 3D models: [silo_short.glb](../../releases/download/short-film-2026-11-23-v2/silo_short.glb), [GPU_Silo.glb](../../releases/latest/download/GPU_Silo.glb) · **[Complete BIM model · GPU_Silo.ifc](../../releases/latest/download/GPU_Silo.ifc)** · [All versions](../../releases)
+**[Watch the 4K technical short · silo_short.mp4](../../releases/download/short-technical-2026-11-24/silo_short.mp4)** (2:11, narrated) · **[Watch the full presentation · GPU_Silo.mp4](../../releases/latest/download/GPU_Silo.mp4)** (5:43) · Animated 3D models: [silo_short.glb](../../releases/download/short-technical-2026-11-24/silo_short.glb), [GPU_Silo.glb](../../releases/latest/download/GPU_Silo.glb) · **[Complete BIM model · GPU_Silo.ifc](../../releases/latest/download/GPU_Silo.ifc)** · [All versions](../../releases)
 
 A 32 m concrete silo that houses, powers and liquid-cools 256 NVIDIA Vera Rubin GPU racks with 50 MW of installed rack capacity. The racks sit four to a pod in 64 **4SU** pods on eight levels around a central shaft. Each pod carries its own CDU and pump and plugs into a water-glycol store held between the silo's two concrete walls. Thirty 2 MW dry coolers on ten screened steel frames hang on the outside of the wall and reject the heat. Two in-line 25 MW gas turbine sets sit side by side above the pods under the lid, burn propane from eight tanks beside the silo and feed the grade-level transformers down the central shaft. Fixed bay risers supply each docked pod. Four backup diesel sets sit on the level below them. Everything arrives by truck on a one-way haul ring, and the build is laid out to finish 28 days after the last concrete is poured.
 
-**silo_short** follows the build from jumpforming to the conversion of one receiving lane into a control room. Four narrated IFC cutaways isolate the shaft, a four-rack pod, a dry cooler and the turbine deck before a blue-hour orbit. **GPU_Silo** is the longer presentation, with the narrated cooling loop, personnel access and the pod and cooler replacement. It shows the earlier build order with the store filled before the pods.
+**silo_short** uses Blender and a double-speed edit to follow the build from jumpforming to the conversion of one receiving lane into a control room. Four narrated IFC cutaways isolate the shaft and its indexing pod holder, a four-rack pod, a dry cooler and the turbine deck before a blue-hour orbit. **GPU_Silo** is the longer presentation, with the narrated cooling loop, personnel access and the pod and cooler replacement. It shows the earlier build order with the store filled before the pods.
 
 The animation is the working drawing for this project. Design decisions are made by looking at it, and every dimension in it comes from one file, [design/project.json](design/project.json). The repository holds that file, the [calculations](design/calcs.md) generated from it, the [decisions](design/README.md) and the code that turns them into the film. Anyone can propose a design idea and see it rendered.
 
@@ -33,24 +33,28 @@ The normal operating brief is 46 MW IT on the turbines, with diesels reserved fo
 
 Section 2 of the design report lists each numbered check and its status. Revision K checks the support rig, sliding shaft guide and both sets of wall mounts, including the revised anchor bars in the IFC. Edit `design_checks.register` in the project inputs to add a check or change its status, then regenerate the report. [Register of design checks](design/report.md#2-register-of-design-checks) · [Project inputs](design/project.json) · [Assumptions and release evidence](design/assumptions.md)
 
-### Find it in the short film (silo_short)
+### Find it in the technical short
 
 | Scene | Programme | Time |
 | --- | --- | ---: |
-| Jumpform the walls with a crew of 22. The pod cage is built beside the silo: each day three trucks bring a level, it is welded on the pad, lifted onto the stack and welded on. | Days -9 to 0 | 0:00 |
-| Two crawlers lift the finished cage into the silo | Day 3 | 0:42 |
-| Bare support rig lowered onto its wall mounts to brace the shaft | Days 4 to 5 | 0:56 |
-| Receiving dock: two pods a truck, lifted onto the rail by the gantry | Day 6 | 1:07 |
-| Pods load and the cooler frames are hung. Everything in or on the walls is cleared from the cutaway. | Days 6 to 17 | 1:21 |
-| Fuel tanks arrive and are set on the pad | Days 8 to 11 | 1:37 |
-| A tinted liner rises along both faces of the store | Days 11 to 14 | 1:52 |
-| Diesel sets staged and the turbine deck welded and fitted out on site | Days 9 to 18 | 2:00 |
-| Diesel sets and day tanks land on the rig, then the turbine level and the lid are lifted in. Water tankers start and the store begins to fill. | Days 19 to 21 | 2:12 |
-| Propane transports fill the tanks and the fuel lines run to the power levels | Days 16 to 26 | 2:38 |
-| A glazed control room occupies one dock lane. The adjacent lane and the pod rail remain available for exchanges. | Days 24 to 27 | 2:46 |
-| IFC studies of the shaft, four-rack pod, dry cooler and turbine deck | | 2:53 / 3:05 / 3:17 / 3:29 |
-| Roof antenna and complete blue-hour orbit | Day 28 | 3:41 |
-| Narrated cooling plan and section | | 4:03 |
+| Jumpforming and cage fabrication | Days −9 to 0 | 0:00 |
+| Closed concrete shell during construction | | 0:05 |
+| Tandem cage lift | Day 3 | 0:21 |
+| Support rig and sliding shaft guide | Days 4 to 5 | 0:28 |
+| Two-pod delivery to the receiving dock | Day 6 | 0:33 |
+| Pod loading and cooler-frame lifts | Days 6 to 17 | 0:41 |
+| Fuel tanks on the pad | Days 8 to 11 | 0:49 |
+| Annular store liner | Days 11 to 14 | 0:56 |
+| Generator deck fabrication | Days 9 to 18 | 1:00 |
+| Emergency diesel deck and start of store fill | Days 19 to 21 | 1:06 |
+| Twin gas turbine packages | Days 19 to 21 | 1:12 |
+| Lid, roof stacks and fuel lines | Days 16 to 26 | 1:16 |
+| Glazed control room | Days 24 to 27 | 1:23 |
+| IFC studies of the rotating holder, four-rack pod, dry cooler and turbine deck | | 1:26 / 1:32 / 1:38 / 1:44 |
+| Roof antenna and blue-hour orbit | Day 28 | 1:50 |
+| Cooling plan and section | | 2:02 |
+
+The release includes the clean picture, voice stem, selectable captions and individual IFC studies. [Technical short release](../../releases/tag/short-technical-2026-11-24) · [Assumptions and equipment references](design/technical_short.md) · [Original 4:22 cut](../../releases/tag/short-film-2026-11-23-v2)
 
 ### Find it in the long film (GPU_Silo)
 

@@ -1,0 +1,290 @@
+{
+  "sourceFrames": 6289,
+  "fps": 24,
+  "step": 2,
+  "voice": "am_eric",
+  "sources": {
+    "project": "https://github.com/Steltic/gpu_silo/blob/5756d310f38c1e95e3247139ee9fc79b9a42265a/design/report.md",
+    "basis": "https://github.com/Steltic/gpu_silo/blob/5756d310f38c1e95e3247139ee9fc79b9a42265a/design/project.json",
+    "gas": "https://www.gevernova.com/content/dam/gepower/global/en_US/documents/gas/gas-turbines/aero-products-specs/lm2500-60hz-fact-sheet-product-specifications.pdf",
+    "diesel": "https://www.cat.com/en_US/products/new/power-systems/electric-power/diesel-generator-sets/1000028912.html",
+    "gpu": "https://www.nvidia.com/en-gb/data-center/vera-rubin-nvl72/",
+    "crane": "https://www.liebherr.com/en-int/p/lr1300-5387355",
+    "cooler": "https://guntner.com/products/dry-coolers/v-shape-vario-dc-nla",
+    "cdu": "https://www.vertiv.com/4908a3/globalassets/products/thermal-management/high-density-solutions/liebert-xdu-coolant-distribution-units/vertiv-liebert-xdu1350-coolant-distribution-unit-application-and-planning-guide-xdu1350b-sl-71309.pdf",
+    "lift": "https://www.palazzani.it/piattaforme-serie-xtj/",
+    "truck": "https://www.kenworth.com/media/3oxf4lky/t880-brochure-01-29-2019.pdf"
+  },
+  "equipmentReferences": [
+    {
+      "start": 33.4,
+      "end": 40.58,
+      "label": "Haulage reference   ·   Kenworth T880",
+      "detail": "Project flatbed   ·   14.6 m deck   ·   21.8 t payload",
+      "source": "truck"
+    },
+    {
+      "start": 44.54,
+      "end": 48.5,
+      "label": "Tracked access reference",
+      "detail": "Palazzani XTJ 37+   ·   37 m working height",
+      "source": "lift"
+    },
+    {
+      "start": 72.25,
+      "end": 79.16,
+      "label": "GE LM2500 DLE   ·   60 Hz",
+      "detail": "22.7 MW net on natural gas at ISO conditions",
+      "source": "gas"
+    },
+    {
+      "start": 92.292,
+      "end": 98.292,
+      "label": "Coolant distribution reference",
+      "detail": "Vertiv XDU1350   ·   1,368 kW at 4 K approach",
+      "source": "cdu"
+    }
+  ],
+  "cues": [
+    {
+      "start": 0,
+      "end": 5,
+      "title": "GPU SILO",
+      "spec": "25 m outer diameter   /   17 m clear bore",
+      "say": "Twenty-five metres across, the silo encloses a seventeen-metre bore.",
+      "caption": "25 m across, the silo encloses a 17 m bore.",
+      "sources": [
+        "project",
+        "basis"
+      ]
+    },
+    {
+      "start": 5,
+      "end": 12,
+      "title": "Concrete shell",
+      "spec": "10 lifts × 3.2 m   /   32 m high",
+      "say": "Ten jumpform lifts take the shell to thirty-two metres. The circular raft is two metres thick.",
+      "caption": "Ten jumpform lifts take the shell to 32 m. The circular raft is 2 m thick.",
+      "sources": [
+        "project",
+        "basis"
+      ]
+    },
+    {
+      "start": 12,
+      "end": 20.92,
+      "title": "Liquid containment",
+      "spec": "400 mm outer wall   /   duplex stainless hoops",
+      "say": "Duplex stainless hoop bars carry tension in the outer wall. A bonded liner accommodates the design crack opening of roughly four tenths of a millimetre.",
+      "caption": "Duplex stainless hoop bars carry tension in the outer wall. A bonded liner accommodates the design crack opening of roughly 0.4 mm.",
+      "sources": [
+        "project",
+        "basis"
+      ]
+    },
+    {
+      "start": 20.92,
+      "end": 28.25,
+      "title": "Tandem cage lift",
+      "spec": "62 m modelled booms   /   LR 1300.1 SX class",
+      "say": "The tandem lift uses sixty-two-metre booms. Liebherr’s L R thirteen hundred is a three-hundred-tonne class reference. Capacity depends on radius.",
+      "caption": "The tandem lift uses 62 m booms. Liebherr’s LR 1300 is a 300 t class reference. Capacity depends on radius.",
+      "sources": [
+        "project",
+        "crane"
+      ]
+    },
+    {
+      "start": 28.25,
+      "end": 33.4,
+      "title": "Top guide",
+      "spec": "Sliding collar   /   4 radial arms",
+      "say": "Four radial arms restrain the shaft laterally. The collar allows vertical movement.",
+      "caption": "Four radial arms restrain the shaft laterally. The collar allows vertical movement.",
+      "sources": [
+        "project",
+        "basis"
+      ]
+    },
+    {
+      "start": 33.4,
+      "end": 40.58,
+      "title": "Pod receiving",
+      "spec": "2 pods per delivery   /   7.16 m cantilever",
+      "say": "Each four-rack pod spans seven point one six metres. The receiving lane handles two pods per delivery.",
+      "caption": "Each four-rack pod spans 7.16 m. The receiving lane handles two pods per delivery.",
+      "sources": [
+        "project",
+        "basis"
+      ]
+    },
+    {
+      "start": 40.58,
+      "end": 44.54,
+      "title": "Radial store",
+      "spec": "8 levels × 8 pods   /   2.77 m tier pitch",
+      "say": "Eight levels accommodate sixty-four pods and two hundred fifty-six racks.",
+      "caption": "Eight levels accommodate 64 pods and 256 racks.",
+      "sources": [
+        "project",
+        "basis"
+      ]
+    },
+    {
+      "start": 44.54,
+      "end": 48.5,
+      "title": "Heat rejection",
+      "spec": "30 × 2 MW thermal   /   10 frames",
+      "say": "Thirty dry coolers provide sixty megawatts of nominal heat rejection.",
+      "caption": "Thirty dry coolers provide 60 MW of nominal heat rejection.",
+      "sources": [
+        "project",
+        "basis"
+      ]
+    },
+    {
+      "start": 48.5,
+      "end": 56.1,
+      "title": "Fuel supply",
+      "spec": "Propane for normal generation   /   separate emergency diesel",
+      "say": "Bulk propane supplies both gas turbines. Diesel has a separate storage and transfer system, reserved for declared emergencies.",
+      "caption": "Bulk propane supplies both gas turbines. Diesel has a separate storage and transfer system, reserved for declared emergencies.",
+      "sources": [
+        "project",
+        "basis"
+      ]
+    },
+    {
+      "start": 56.1,
+      "end": 60.08,
+      "title": "Annular store",
+      "spec": "6,524 m³   /   25% propylene glycol",
+      "say": "The annulus holds over sixty-five hundred cubic metres of glycol solution.",
+      "caption": "The annulus holds over 6,500 m³ of glycol solution.",
+      "sources": [
+        "project",
+        "basis"
+      ]
+    },
+    {
+      "start": 60.08,
+      "end": 66.21,
+      "title": "Generator support",
+      "spec": "94.5 t per assumed turbine set   /   independent support ring",
+      "say": "Each turbine package has an assumed mass of ninety-four and a half tonnes, carried on independent rail girders.",
+      "caption": "Each turbine package has an assumed mass of 94.5 t, carried on independent rail girders.",
+      "sources": [
+        "project",
+        "basis"
+      ]
+    },
+    {
+      "start": 66.21,
+      "end": 72.25,
+      "title": "Emergency generation",
+      "spec": "4 × 2.5 MW   /   Cat 3516C class",
+      "say": "Four diesels cover seven megawatts of priority computing. Cat’s thirty-five sixteen C is a standby reference.",
+      "caption": "Four diesels cover 7 MW of priority computing. Cat’s 3516C is a standby reference.",
+      "sources": [
+        "project",
+        "diesel"
+      ]
+    },
+    {
+      "start": 72.25,
+      "end": 83.042,
+      "title": "Propane turbine generators",
+      "spec": "Design 2 × 25 MW   /   GE LM2500 DLE reference",
+      "say": "The design assumes two twenty-five-megawatt propane turbines. For comparison, G E’s L M twenty-five hundred D L E delivers twenty-two point seven megawatts net on natural gas at I S O conditions.",
+      "caption": "The design assumes two 25 MW propane turbines. For comparison, GE’s LM2500 DLE delivers 22.7 MW net on natural gas at ISO conditions.",
+      "sources": [
+        "project",
+        "gas"
+      ]
+    },
+    {
+      "start": 83.042,
+      "end": 86.292,
+      "title": "Control room",
+      "spec": "3 operator consoles   /   1 receiving lane retained",
+      "say": "Three operator consoles share the building with the receiving lane.",
+      "caption": "Three operator consoles share the building with the receiving lane.",
+      "sources": [
+        "project",
+        "basis"
+      ]
+    },
+    {
+      "start": 86.292,
+      "end": 92.292,
+      "title": "Steel shaft",
+      "spec": "Fixed Ø1.16 m   /   24 × M56 base anchors   /   carrier indexes 45°",
+      "say": "The shaft stays fixed. Its fifty-point-eight-millimetre wall supports a carrier indexing in forty-five-degree steps.",
+      "caption": "The shaft stays fixed. Its 50.8 mm wall supports a carrier indexing in 45° steps.",
+      "sources": [
+        "project",
+        "basis"
+      ]
+    },
+    {
+      "start": 92.292,
+      "end": 98.292,
+      "title": "Four-rack pod",
+      "spec": "NVIDIA Vera Rubin NVL72   /   195 kW design allowance per rack",
+      "say": "Four Vera Rubin racks, seventy-two GPUs apiece, have a combined design allowance of seven hundred eighty kilowatts.",
+      "caption": "Four Vera Rubin racks, 72 GPUs apiece, have a combined design allowance of 780 kW.",
+      "sources": [
+        "project",
+        "gpu"
+      ]
+    },
+    {
+      "start": 98.292,
+      "end": 104.292,
+      "title": "Dry cooler",
+      "spec": "2 MW thermal each   /   26 duty units at rating   /   Güntner V-shape VARIO class",
+      "say": "The coolers are rated at two megawatts each. Güntner’s V-shape Vario reaches that capacity class.",
+      "caption": "The coolers are rated at 2 MW each. Güntner’s V-shape VARIO reaches that capacity class.",
+      "sources": [
+        "project",
+        "cooler"
+      ]
+    },
+    {
+      "start": 104.292,
+      "end": 110.292,
+      "title": "Turbine deck",
+      "spec": "4 box girders   /   70.3 kg/s exhaust at 566 °C",
+      "say": "The exhaust basis per turbine is seventy kilograms per second at five hundred sixty-six degrees Celsius.",
+      "caption": "The exhaust basis per turbine is 70 kg/s at 566 °C.",
+      "sources": [
+        "project",
+        "basis"
+      ]
+    },
+    {
+      "start": 110.292,
+      "end": 121.52,
+      "title": "Normal operating envelope",
+      "spec": "50 MW gross   /   4 MW auxiliaries   /   46 MW IT ceiling",
+      "say": "Four megawatts of auxiliaries leave forty-six for computing. One dispatch runs two hundred thirty-five racks at full power with twenty-one spare. Operators can distribute that load across more racks.",
+      "caption": "Four megawatts of auxiliaries leave 46 MW for computing. One dispatch runs 235 racks at full power with 21 spare. Operators can distribute that load across more racks.",
+      "sources": [
+        "project",
+        "basis"
+      ]
+    },
+    {
+      "start": 121.52,
+      "end": 131.04,
+      "title": "Thermal ride-through",
+      "spec": "10 K usable swing   /   76 min modelled at 51.25 MW",
+      "say": "With circulation available, a ten-kelvin swing in the stratified store gives seventy-six minutes of modelled cooling ride-through at full design heat load.",
+      "caption": "With circulation available, a 10 K swing in the stratified store gives 76 minutes of modelled cooling ride-through at full design heat load.",
+      "sources": [
+        "project",
+        "basis"
+      ]
+    }
+  ]
+}

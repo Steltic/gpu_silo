@@ -1,0 +1,122 @@
+[
+  {
+    "start": 0.13,
+    "end": 3.907,
+    "text": "25 m across, the silo encloses a 17 m bore.",
+    "tempo": 1.0
+  },
+  {
+    "start": 5.13,
+    "end": 9.981708333333334,
+    "text": "Ten jumpform lifts take the shell to 32 m. The circular raft is 2 m thick.",
+    "tempo": 1.0
+  },
+  {
+    "start": 12.13,
+    "end": 20.148583333333335,
+    "text": "Duplex stainless hoop bars carry tension in the outer wall. A bonded liner accommodates the design crack opening of roughly 0.4 mm.",
+    "tempo": 1.0
+  },
+  {
+    "start": 21.046666666666667,
+    "end": 28.073458333333335,
+    "text": "The tandem lift uses 62 m booms. Liebherr’s LR 1300 is a 300 t class reference. Capacity depends on radius.",
+    "tempo": 1.137
+  },
+  {
+    "start": 28.38,
+    "end": 32.97325,
+    "text": "Four radial arms restrain the shaft laterally. The collar allows vertical movement.",
+    "tempo": 1.0
+  },
+  {
+    "start": 33.54666666666667,
+    "end": 39.235375,
+    "text": "Each four-rack pod spans 7.16 m. The receiving lane handles two pods per delivery.",
+    "tempo": 1.0
+  },
+  {
+    "start": 40.71333333333334,
+    "end": 44.37404166666666,
+    "text": "Eight levels accommodate 64 pods and 256 racks.",
+    "tempo": 1.007
+  },
+  {
+    "start": 44.67166666666667,
+    "end": 48.34695833333333,
+    "text": "Thirty dry coolers provide 60 MW of nominal heat rejection.",
+    "tempo": 1.039
+  },
+  {
+    "start": 48.63,
+    "end": 55.612458333333336,
+    "text": "Bulk propane supplies both gas turbines. Diesel has a separate storage and transfer system, reserved for declared emergencies.",
+    "tempo": 1.0
+  },
+  {
+    "start": 56.21333333333334,
+    "end": 59.92633333333333,
+    "text": "The annulus holds over 6,500 m³ of glycol solution.",
+    "tempo": 1.077
+  },
+  {
+    "start": 60.21333333333334,
+    "end": 65.87233333333333,
+    "text": "Each turbine package has an assumed mass of 94.5 t, carried on independent rail girders.",
+    "tempo": 1.0
+  },
+  {
+    "start": 66.33833333333332,
+    "end": 72.07854166666667,
+    "text": "Four diesels cover 7 MW of priority computing. Cat’s 3516C is a standby reference.",
+    "tempo": 1.074
+  },
+  {
+    "start": 72.38,
+    "end": 82.82916666666667,
+    "text": "The design assumes two 25 MW propane turbines. For comparison, GE’s LM2500 DLE delivers 22.7 MW net on natural gas at ISO conditions.",
+    "tempo": 1.062
+  },
+  {
+    "start": 83.17166666666667,
+    "end": 86.14216666666667,
+    "text": "Three operator consoles share the building with the receiving lane.",
+    "tempo": 1.06
+  },
+  {
+    "start": 86.42166666666667,
+    "end": 92.12679166666666,
+    "text": "The shaft stays fixed. Its 50.8 mm wall supports a carrier indexing in 45° steps.",
+    "tempo": 1.038
+  },
+  {
+    "start": 92.42166666666667,
+    "end": 98.125875,
+    "text": "Four Vera Rubin racks, 72 GPUs apiece, have a combined design allowance of 780 kW.",
+    "tempo": 1.114
+  },
+  {
+    "start": 98.42166666666667,
+    "end": 103.93908333333333,
+    "text": "The coolers are rated at 2 MW each. Güntner’s V-shape VARIO reaches that capacity class.",
+    "tempo": 1.0
+  },
+  {
+    "start": 104.42166666666667,
+    "end": 110.11729166666667,
+    "text": "The exhaust basis per turbine is 70 kg/s at 566 °C.",
+    "tempo": 1.003
+  },
+  {
+    "start": 110.42166666666667,
+    "end": 120.90916666666666,
+    "text": "Four megawatts of auxiliaries leave 46 MW for computing. One dispatch runs 235 racks at full power with 21 spare. Operators can distribute that load across more racks.",
+    "tempo": 1.0
+  },
+  {
+    "start": 121.63,
+    "end": 129.47620833333335,
+    "text": "With circulation available, a 10 K swing in the stratified store gives 76 minutes of modelled cooling ride-through at full design heat load.",
+    "tempo": 1.0
+  }
+]
