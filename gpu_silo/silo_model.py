@@ -598,7 +598,7 @@ class Glb:
             out.write(struct.pack('<I4s',len(self.bin),b'BIN\0'));out.write(self.bin)
 
 
-def glb_file(scene,path):
+def glb_file(scene,path,*,aspect_ratio=1034/720):
     gl=Glb(); doc=gl.doc; roots=doc['scenes'][0]['nodes']
     doc["extras"]={"outsideDiameter_m":OUTSIDE_DIAMETER,"height_m":WALL_HEIGHT,"clearGap_m":CLEAR_GAP,
                    "outerWall_m":OUTER_THICKNESS,"innerWall_m":INNER_THICKNESS,"lift_m":LIFT,
@@ -713,7 +713,7 @@ def glb_file(scene,path):
                 values=[(f,((on if ghost else 1-on),)*3) for f,on in finish_keys[finish]]
                 if len(values)>1:channel(child,"scale",values,gl_scale,"VEC3")
     doc["cameras"]=[{"type":"perspective","name":"Construction camera","perspective":{
-        "yfov":math.radians(scene.camera[0]['fov']),"aspectRatio":1034/720,"znear":.1,"zfar":1400}}]
+        "yfov":math.radians(scene.camera[0]['fov']),"aspectRatio":aspect_ratio,"znear":.1,"zfar":1400}}]
     cams=scene.camera; first=cams[0]
     ci=gl.node({"name":"Construction camera","camera":0,"translation":gl_point(first['eye']),
                 "rotation":camera_quat(first['eye'],first['target'])});roots.append(ci)
@@ -732,7 +732,7 @@ def glb_file(scene,path):
         roots.append(gl.node({"name":name,"rotation":camera_quat(direction,(0,0,0)),
                               "extensions":{"KHR_lights_punctual":{"light":i}}}))
     doc["scenes"][0]["name"]=cfg.display(cfg.TITLE+" | construction, dry cooler frames, pod loading and service")
-    doc["animations"].append({"name":cfg.display("Construction, cooler frames, pod loading, crew access, pod exchange and exterior orbit"),"samplers":samplers,"channels":channels})
+    doc["animations"].append({"name":getattr(scene,"animation_title",cfg.display("Construction, cooler frames, pod loading, crew access, pod exchange and exterior orbit")),"samplers":samplers,"channels":channels})
     gl.save(path)
 
 
