@@ -12,9 +12,17 @@
     "crane": "https://www.liebherr.com/en-int/p/lr1300-5387355",
     "cooler": "https://guntner.com/products/dry-coolers/v-shape-vario-dc-nla",
     "cdu": "https://www.vertiv.com/4908a3/globalassets/products/thermal-management/high-density-solutions/liebert-xdu-coolant-distribution-units/vertiv-liebert-xdu1350-coolant-distribution-unit-application-and-planning-guide-xdu1350b-sl-71309.pdf",
-    "lift": "https://www.palazzani.it/piattaforme-serie-xtj/"
+    "lift": "https://www.palazzani.it/piattaforme-serie-xtj/",
+    "truck": "https://www.kenworth.com/media/3oxf4lky/t880-brochure-01-29-2019.pdf"
   },
   "equipmentReferences": [
+    {
+      "start": 33.4,
+      "end": 40.58,
+      "label": "Haulage reference   ·   Kenworth T880",
+      "detail": "Project flatbed   ·   14.6 m deck   ·   21.8 t payload",
+      "source": "truck"
+    },
     {
       "start": 44.54,
       "end": 48.5,
@@ -210,7 +218,7 @@
       "start": 86.292,
       "end": 92.292,
       "title": "Steel shaft",
-      "spec": "Fixed Ø1.16 m   /   carrier indexes 45°",
+      "spec": "Fixed Ø1.16 m   /   24 × M56 base anchors   /   carrier indexes 45°",
       "say": "The shaft stays fixed. Its fifty-point-eight-millimetre wall supports a carrier indexing in forty-five-degree steps.",
       "caption": "The shaft stays fixed. Its 50.8 mm wall supports a carrier indexing in 45° steps.",
       "sources": [
@@ -246,7 +254,7 @@
       "start": 104.292,
       "end": 110.292,
       "title": "Turbine deck",
-      "spec": "4 box girders   /   566 °C assumed exhaust",
+      "spec": "4 box girders   /   70.3 kg/s exhaust at 566 °C",
       "say": "The exhaust basis per turbine is seventy kilograms per second at five hundred sixty-six degrees Celsius.",
       "caption": "The exhaust basis per turbine is 70 kg/s at 566 °C.",
       "sources": [

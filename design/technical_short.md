@@ -26,6 +26,7 @@ The approved facility exchange has SHA-256 `891dac77a0a1de577bf8da9c6e3301cef85e
 
 | System | Manufacturer reference |
 | --- | --- |
+| Road haulage | Kenworth lists the standard-hood T880 for heavy haul and offers T880 configurations for tankers and ready-mix bodies. The 14.6 m deck and 21.8 t payload are project trailer inputs. [Kenworth T880 brochure](https://www.kenworth.com/media/3oxf4lky/t880-brochure-01-29-2019.pdf) |
 | Gas turbine | GE Vernova lists the LM2500 DLE at 22.7 MW net in 60 Hz simple-cycle ISO natural-gas service. The catalogue rating gives the audience a commercial comparison for the project’s assumed propane machines. [GE Vernova 60 Hz factsheet](https://www.gevernova.com/content/dam/gepower/global/en_US/documents/gas/gas-turbines/aero-products-specs/lm2500-60hz-fact-sheet-product-specifications.pdf) |
 | Emergency generator | Cat offers 3516C 60 Hz configurations up to 2,500 ekW standby. [Cat 3516C](https://www.cat.com/en_US/products/new/power-systems/electric-power/diesel-generator-sets/1000028912.html) |
 | GPU rack | The Vera Rubin NVL72 configuration has 72 Rubin GPUs and 36 Vera CPUs. Electrical provision comes from the project. [NVIDIA Vera Rubin NVL72](https://www.nvidia.com/en-gb/data-center/vera-rubin-nvl72/) |
