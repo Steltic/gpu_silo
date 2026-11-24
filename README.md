@@ -54,6 +54,8 @@ Section 2 of the design report lists each numbered check and its status. Revisio
 | Roof antenna and blue-hour orbit | Day 28 | 1:50 |
 | Cooling plan and section | | 2:02 |
 
+**I Want a GPU Tower** is the 4K song edition (2:01.542). An English tenor and chorus sing the engineering specs over accordion and mandolin. Brass and strings take over for the final 360° orbit. [Watch short_song.mp4](../../releases/download/short-technical-2026-11-24/short_song.mp4) · [Lyrics and score](audio/short_song/score.txt) · [Music and edit notes](audio/short_song/README.md)
+
 The release includes the clean picture, voice stem, selectable captions and individual IFC studies. [Technical short release](../../releases/tag/short-technical-2026-11-24) · [Assumptions and equipment references](design/technical_short.md) · [Original 4:22 cut](../../releases/tag/short-film-2026-11-23-v2)
 
 ### Find it in the long film (GPU_Silo)
