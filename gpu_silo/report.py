@@ -1732,7 +1732,7 @@ The shaft would not collapse, but the pods would be {free['movement']['lean_drop
 
 The programme was changed in revision C to prevent this. The steel of the support rig is fabricated on site on days {logistics.span('rigfab')[0]} to {logistics.span('rigfab')[1]}, the cage is lifted in on day {logistics.span('cage')[0]}, and the rig is set on its wall mounts and connected to the shaft on days {logistics.span('rig')[0]} to {logistics.span('rig')[1]}. The first pod is hung on day {logistics.span('pods')[0]}. The generator sets are landed on the rig on days {logistics.span('power')[0]} to {logistics.span('power')[1]}, with the turbine level and the lid. The programme check in [logistics.py](../gpu_silo/logistics.py) fails if the rig is not in before the pods.
 
-Both films show the bare rig seated on its wall mounts before pod loading. The diesel sets and day tanks are lifted onto the rig after the pods.
+The construction sequence seats the bare rig on its wall mounts before pod loading. The diesel sets and day tanks are lifted onto the rig after the pods.
 
 ### 5.11 Verification
 

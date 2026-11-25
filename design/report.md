@@ -528,7 +528,7 @@ The shaft would not collapse, but the pods would be 50 mm out of level at their 
 
 The programme was changed in revision C to prevent this. The steel of the support rig is fabricated on site on days -3 to 3, the cage is lifted in on day 3, and the rig is set on its wall mounts and connected to the shaft on days 4 to 5. The first pod is hung on day 6. The generator sets are landed on the rig on days 19 to 21, with the turbine level and the lid. The programme check in [logistics.py](../gpu_silo/logistics.py) fails if the rig is not in before the pods.
 
-Both films show the bare rig seated on its wall mounts before pod loading. The diesel sets and day tanks are lifted onto the rig after the pods.
+The construction sequence seats the bare rig on its wall mounts before pod loading. The diesel sets and day tanks are lifted onto the rig after the pods.
 
 ### 5.11 Verification
 
@@ -677,7 +677,7 @@ The stud tips now reach 400 mm behind the bore surface. Subtracting the recessed
 
 The revision J bar paths passed through the bearing key and two stud lines. The revised four U-bars per seat bend above the anchor group and run behind the key. The minimum calculated clearances are 39 mm to the key, 32 mm to a conservative stud-head envelope, and 64 mm to the wall face. The inside bend diameter is 274 mm for a minimum 8 bar diameters.
 
-For a conservative length check, measure the straight tail below the lowest stud and a further 1.5 times the full stud tip depth. This gives **880 mm available against 693 mm required** for a straight Grade 420 bar. The calculation uses ACI 318M-19 §25.4.2.4, normal-weight concrete, uncoated vertical bars, no confinement credit, and the lesser of centre cover and half the leg spacing (80 mm). The IFC and both films use the same bar layout. [ACI 318-19, chapters 17 and 25](https://www.concrete.org/Portals/0/Files/PDF/Previews/318-19_preview.pdf)
+For a conservative length check, measure the straight tail below the lowest stud and a further 1.5 times the full stud tip depth. This gives **880 mm available against 693 mm required** for a straight Grade 420 bar. The calculation uses ACI 318M-19 §25.4.2.4, normal-weight concrete, uncoated vertical bars, no confinement credit, and the lesser of centre cover and half the leg spacing (80 mm). The IFC contains the same bar layout. [ACI 318-19, chapters 17 and 25](https://www.concrete.org/Portals/0/Files/PDF/Previews/318-19_preview.pdf)
 
 The wall detail relies on anchor reinforcement that intercepts the actual cracking surface and develops on both sides. The tail check covers the outside length. The lower bar tails cross a nominal construction joint and need continuity into the preceding lift. Verify the local compression strut and splitting resistance around the key, steel engagement inside the failure surface, actual edge distances, lift-joint transfer, connections into both wall mats, plate prying and weld access. Any shear assigned to the studs requires a corresponding concrete shear breakout, pryout and combined-load check. Survey fit after landing and before welding the closure. These conditions apply separately to the lower and upper groups.
 
