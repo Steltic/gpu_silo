@@ -1,146 +1,37 @@
-name: Render the animation
+name: Export design models
 
-# The films are rendered on request, not for every change: run this workflow by hand,
-# or put [render] in the message of a commit pushed to main. Every change is still
-# checked by check.yml.
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
 
 permissions:
   contents: read
 
-concurrency:
-  group: render-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true
-
 jobs:
-  source:
-    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[render]')
+  models:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      pull-requests: read
-      actions: read
-    outputs:
-      tree: ${{ steps.tree.outputs.sha }}
-      preview: ${{ steps.preview.outputs.run }}
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
-      - id: tree
-        run: echo "sha=$(git rev-parse 'HEAD^{tree}')" >> "$GITHUB_OUTPUT"
-      - name: Find the verified preview for this exact source tree
-        id: preview
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        env:
-          GH_TOKEN: ${{ github.token }}
-          TREE: ${{ steps.tree.outputs.sha }}
-        shell: bash
-        run: |
-          # An ordinary push or an expired preview takes the full render path.
-          api="repos/$GITHUB_REPOSITORY"
-          prs=$(gh api "$api/commits/$GITHUB_SHA/pulls") || exit 0
-          head=$(jq -r --arg sha "$GITHUB_SHA" --arg repo "$GITHUB_REPOSITORY" 'first(.[] | select(.merged_at and .merge_commit_sha == $sha and .base.ref == "main" and .head.repo.full_name == $repo) | .head.sha) // empty' <<< "$prs")
-          if [[ -z "$head" ]]; then exit 0; fi
-          runs=$(gh api --method GET "$api/actions/workflows/render.yml/runs" -f event=pull_request -f head_sha="$head" -f status=success -f per_page=10) || exit 0
-          for id in $(jq -r '.workflow_runs[].id' <<< "$runs"); do
-            assets=$(gh api "$api/actions/runs/$id/artifacts") || continue
-            if jq -e --arg name "gpu-silo-animation-$TREE" 'any(.artifacts[]; .name == $name and .expired == false)' <<< "$assets" >/dev/null; then
-              echo "run=$id" >> "$GITHUB_OUTPUT"
-              echo "Publishing the validated pull request preview from run $id."
-              exit 0
-            fi
-          done
-
-  render:
-    needs: source
-    if: needs.source.outputs.preview == ''
-    runs-on: ubuntu-latest
-    timeout-minutes: 120
-    steps:
-      - uses: actions/checkout@v4
-      - name: Check the source before rendering
-        env:
-          EXPECTED_TREE: ${{ needs.source.outputs.tree }}
-        run: test "$(git rev-parse 'HEAD^{tree}')" = "$EXPECTED_TREE"
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
       - run: python -m pip install -r requirements.txt
-      - name: Install the renderer toolchain, encoder and panel typefaces
+      - name: Check the calculations and export the validated IFC4 model
         run: |
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends mono-mcs libmono-system-drawing4.0-cil libgdiplus ffmpeg \
-            fonts-liberation fonts-inter fonts-dejavu-core
-          ffmpeg -version | head -n 1
-          mono --version | head -n 1
-      - name: Check that the calculations match the design file
-        run: python -m gpu_silo calcs --check
-      - name: Export and validate the operating-state IFC4 deliverable
-        run: python -m gpu_silo ifc
-      - name: Render the long film and its animated GLB
-        run: python -m gpu_silo build
-      - name: Verify the long film
+          python -m gpu_silo calcs --check
+          python -m gpu_silo ifc
+      - name: Export and check the editable scene models
         run: |
+          python -m gpu_silo build --scene-only
           python -m gpu_silo check
-          python -m gpu_silo.validation.verify_movie renders/GPU_Silo.mp4
-      - name: Render the short film of the build and its animated GLB
-        run: python -m gpu_silo build --film short
-      - name: Verify the short film
-        env:
-          GPU_SILO_FILM: short
-        run: |
+          python -m gpu_silo build --scene-only --film short
           python -m gpu_silo check --film short
-          python -m gpu_silo.validation.verify_movie renders/silo_short.mp4
       - uses: actions/upload-artifact@v4
         with:
-          name: gpu-silo-animation-${{ needs.source.outputs.tree }}
+          name: gpu-silo-models
           path: |
             renders/GPU_Silo.ifc
-            renders/GPU_Silo.mp4
             renders/GPU_Silo.glb
-            renders/silo_short.mp4
             renders/silo_short.glb
           if-no-files-found: error
-          compression-level: 0
           retention-days: 14
-
-  publish:
-    needs: [source, render]
-    if: >-
-      always() && github.event_name != 'pull_request' && github.ref == 'refs/heads/main' &&
-      needs.source.result == 'success' &&
-      (needs.render.result == 'success' || (needs.render.result == 'skipped' && needs.source.outputs.preview != ''))
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      actions: read
-    steps:
-      - uses: actions/download-artifact@v4
-        with:
-          name: gpu-silo-animation-${{ needs.source.outputs.tree }}
-          path: renders
-          run-id: ${{ needs.source.outputs.preview || github.run_id }}
-          github-token: ${{ github.token }}
-      - name: Publish the tested animation for this commit
-        env:
-          GH_TOKEN: ${{ github.token }}
-        shell: bash
-        run: |
-          set -euo pipefail
-          current=$(gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/main" --jq '.object.sha')
-          if [[ "$current" != "$GITHUB_SHA" ]]; then exit 0; fi
-          tag="render-$GITHUB_SHA"
-          args=(--repo "$GITHUB_REPOSITORY")
-          files=(renders/GPU_Silo.ifc renders/GPU_Silo.mp4 renders/GPU_Silo.glb renders/silo_short.mp4 renders/silo_short.glb)
-          if gh release view "$tag" "${args[@]}" >/dev/null 2>&1; then
-            if [[ "$(gh release view "$tag" "${args[@]}" --json isDraft --jq .isDraft)" == true ]]; then
-              gh release upload "$tag" "${files[@]}" "${args[@]}" --clobber
-              gh release edit "$tag" "${args[@]}" --draft=false --latest
-            fi
-          else
-            gh release create "$tag" "${files[@]}" "${args[@]}" \
-              --target "$GITHUB_SHA" --title "GPU Silo · ${GITHUB_SHA:0:7}" \
-              --notes "Watch silo_short.mp4 for the 28-day build and GPU_Silo.mp4 for the full presentation. GPU_Silo.ifc contains the complete installed facility. The editable GLBs, IFC and source snapshot belong to commit $GITHUB_SHA." --latest
-          fi

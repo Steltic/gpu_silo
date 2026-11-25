@@ -8,7 +8,7 @@ import subprocess
 from . import narrate, review_editorial, technical_voice
 from .final_voice import FPS, body_cues, read_json
 from .review_overlays import SIZE
-from .short_song import optional_lyrics, probe
+from .mp4 import optional_captions, probe
 
 
 def ffmpeg(*args):
@@ -107,7 +107,7 @@ def mux(picture, sound, captions, out, frames, title, chapter_file=None):
            "-metadata:s:a:0", "language=eng", "-metadata:s:a:0", "title=Technical narration",
            "-metadata:s:s:0", "language=eng", "-metadata:s:s:0", "title=English captions",
            "-metadata", f"title={title}", "-movie_timescale", 6000000, "-movflags", "+faststart", out)
-    optional_lyrics(out)
+    optional_captions(out)
     picture_info(out, frames)
 
 

@@ -6,7 +6,7 @@ import subprocess
 import numpy as np
 import soundfile as sf
 from . import review_editorial, technical_voice
-from .short_song import optional_lyrics
+from .mp4 import optional_captions
 
 FPS=24
 RANGES=((802,974),(1337,2215))
@@ -80,7 +80,7 @@ def render(source,voice,office,out):
           "-r","24","-color_primaries","bt709","-color_trc","bt709","-colorspace","bt709",
           "-c:a","aac","-b:a","128k","-c:s","mov_text","-metadata:s:s:0","language=eng",
           "-metadata","title=Technical short | Revised narration and sign","-movflags","+faststart",str((out/"VO_edit_review.mp4").resolve())]
-    subprocess.run(cmd,cwd=voice,check=True);optional_lyrics(out/"VO_edit_review.mp4")
+    subprocess.run(cmd,cwd=voice,check=True);optional_captions(out/"VO_edit_review.mp4")
 
 if __name__=="__main__":
     ap=argparse.ArgumentParser(description=__doc__)

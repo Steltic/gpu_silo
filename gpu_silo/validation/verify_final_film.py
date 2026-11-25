@@ -10,7 +10,7 @@ import numpy as np
 from .. import narrate
 from ..final_film import assembly, picture_info
 from ..final_voice import FPS, read_json
-from ..short_song import probe
+from ..mp4 import probe
 
 
 def frame_hashes(path):
