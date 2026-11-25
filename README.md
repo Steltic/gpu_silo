@@ -40,3 +40,9 @@ Section 2 of the design report lists each numbered check and its status. Revisio
 The [project inputs](design/project.json) drive the [calculations](design/calcs.md), [design report](design/report.md), IFC export and parametric model. The [design index](design/README.md) points to each subsystem, and the [decision log](design/history.md) records changes and their reasons. The report identifies the site and vendor data needed for engineering review.
 
 To propose a change, open a [design idea](https://github.com/Steltic/gpu_silo/issues/new/choose) or follow the [contributor guide](CONTRIBUTING.md). The [film production notes](design/technical_short.md) cover the component cutaways, equipment references and how to reproduce the final edit.
+
+## Reuse
+
+The project’s original code, engineering inputs, calculations, drawings, IFC and 3D models, documentation, film, captions and artwork are dedicated to the public domain under **CC0 1.0 Universal**, to the fullest extent permitted by law. You can copy the design, adapt it, build from it, use it commercially and keep your changes private. You owe no attribution, royalties or share-back under CC0. [Full dedication](LICENSE) · [CC0 summary](https://creativecommons.org/publicdomain/zero/1.0/)
+
+Third-party software, equipment documentation and other third-party material retain their own terms. Patent and trademark rights fall outside CC0. The [design report](design/report.md) identifies the engineering checks and assumptions that still need site or supplier verification.

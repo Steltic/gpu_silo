@@ -2,6 +2,8 @@
 
 Start with the [design index](design/README.md) to find the input and subsystem you want to change. To propose an idea, open a [design issue](https://github.com/Steltic/gpu_silo/issues/new/choose). An IFC element, a report section or a timestamp from the [film guide](docs/sequence.md) helps other contributors find the same detail.
 
+Submit original contributions under the same CC0 1.0 dedication as the project. Identify any third-party material and its terms in your pull request. [Project dedication](LICENSE)
+
 ## Change and check the model
 
 1. Edit [design/project.json](design/project.json) or the subsystem it controls on a new branch.
