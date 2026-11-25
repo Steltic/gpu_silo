@@ -1,25 +1,37 @@
 {
   "picture_fps": 24,
+  "intro_narration": [
+    {
+      "caption": "The GPU silo, a data centre for regional and rural locations.",
+      "say": "The G P U silo, a data centre for regional and rural locations."
+    },
+    {
+      "caption": "More than 18,000 GPUs powered by 50MW of gas turbine power, contained within a 100 foot tall concrete silo with a footprint of just 0.2 acres.",
+      "say": "More than eighteen thousand GPUs powered by fifty megawatts of gas turbine power, contained within a hundred-foot-tall concrete silo with a footprint of just zero point two acres."
+    },
+    {
+      "caption": "The closed loop cooling system requires no mains water.",
+      "say": "The closed-loop cooling system requires no mains water."
+    },
+    {
+      "caption": "Full designs are Open Sourced on GitHub.",
+      "say": "Full designs are open sourced on Git Hub."
+    }
+  ],
   "shaft_entry_frame": 2071,
   "picture_order_after_turbine_ifc": ["IFC_vid_thermal", "final_360"],
   "silent_closing_source_frames": [5294, 5834],
   "closing_overlay": {
-    "headline": "The GPU Silo - github.com/Steltic/gpu_silo",
+    "headline": ["The GPU silo, a data centre", "for regional and rural locations"],
     "fade_start_frame": 48,
     "fade_frames": 12,
-    "columns": [
-      [
-        ["**25 metre** diameter, **32 metre** high,", "double walled concrete silo"],
-        ["**6.5 million litres** of water-glycol coolant", "between the walls, **30 dry coolers**"],
-        ["Closed loop cooling system requires **no water utilities**"]
-      ],
-      [
-        ["**2 x 25MW** gas turbines, **4 x** diesel backup generators"],
-        ["On-site power generation requires **no electricity grid**", "(up to **15 propane trucks/day**)"],
-        ["**256** Vera Rubin NVL72 racks, **18,432 GPUs**"],
-        ["Silo footprint = **0.2 acres**"]
-      ]
-    ]
+    "specs": [
+      "50MW of gas turbine power",
+      "18,000+ GPUs",
+      "100 foot tall concrete silo on 0.2 acres",
+      "No water or electricity mains connection"
+    ],
+    "credit": "OPEN SOURCE: github.com/Steltic/gpu_silo"
   },
   "remove_narration_start": 83.042,
   "move_narration_start": 110.292,

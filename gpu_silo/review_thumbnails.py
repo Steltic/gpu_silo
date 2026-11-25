@@ -1,4 +1,4 @@
-"""Make five YouTube thumbnail proofs from exact frames of the graded closing orbit."""
+"""Make YouTube thumbnail proofs and the selected cover from the graded closing orbit."""
 import argparse
 from functools import lru_cache
 from io import BytesIO
@@ -98,13 +98,25 @@ def cover(still, number):
     return image
 
 
-def extract(master, folder):
+def selected_cover(still):
+    if still.size != SIZE:
+        raise ValueError("Use the uncropped 4K closing frame")
+    image = still.convert("RGB")
+    draw = ImageDraw.Draw(image)
+    ink = (18, 43, 52)
+    text(draw, (49, 103), "NO WATER MAINS", "poster", 55, ink, anchor="ls")
+    text(draw, (640, 103), "GPU data centre", "poster", 60, (90, 43, 27), anchor="ms")
+    text(draw, (1231, 103), "NO GRID POWER", "poster", 55, ink, anchor="rs")
+    return image
+
+
+def extract(master, folder, frames=FRAMES, pattern="orbit-%02d.png"):
     folder.mkdir(parents=True, exist_ok=True)
-    select = "+".join(f"eq(n,{frame})" for frame in FRAMES)
+    select = "+".join(f"eq(n,{frame})" for frame in frames)
     filters = f"select='{select}',scale=in_range=limited:in_color_matrix=bt709:out_range=full,format=rgb24"
     subprocess.run(["ffmpeg","-hide_banner","-v","error","-y","-threads","4","-i",str(master),
-                    "-vf",filters,"-frames:v",str(len(FRAMES)),"-fps_mode","passthrough",
-                    "-compression_level","2","-threads","2",str(folder/"orbit-%02d.png")],check=True)
+                    "-vf",filters,"-frames:v",str(len(frames)),"-fps_mode","passthrough",
+                    "-compression_level","2","-threads","2",str(folder / pattern)],check=True)
 
 
 def save_jpg(image, path):
@@ -150,9 +162,21 @@ def present(master, work, out):
             archive.write(file, file.relative_to(out).as_posix())
 
 
+def make_selected(master, work, out):
+    # Proof 04 was selected for its camera angle. Decode the master before adding type.
+    extract(master, work, (FRAMES[3],), pattern="selected-%02d.png")
+    out.mkdir(parents=True, exist_ok=True)
+    with Image.open(work / "selected-01.png") as still:
+        save_jpg(selected_cover(still), out / "final_thumbnail.jpg")
+
+
 if __name__ == "__main__":
     p = argparse.ArgumentParser(description=__doc__)
     for name in ("master","work","out"):
         p.add_argument(name,type=Path)
+    p.add_argument("--final-only", action="store_true", help="Build the selected frame 04 cover")
     args=p.parse_args()
-    present(args.master,args.work,args.out)
+    if args.final_only:
+        make_selected(args.master, args.work, args.out)
+    else:
+        present(args.master, args.work, args.out)

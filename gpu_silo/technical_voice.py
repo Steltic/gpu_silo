@@ -38,7 +38,7 @@ def captions(out,lines,samples,rate):
     import numpy as np
     entries=[]
     for line in lines:
-        parts=caption_parts(line["text"])
+        parts=line.get("parts") or caption_parts(line["text"])
         total=sum(len(t) for t in parts)
         elapsed=0;bounds=[line["start"]]
         for part in parts[:-1]:
