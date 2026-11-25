@@ -7,6 +7,7 @@ import subprocess
 
 import numpy as np
 
+from .. import narrate
 from ..final_film import assembly, picture_info
 from ..final_voice import FPS, read_json
 from ..short_song import probe
@@ -19,6 +20,32 @@ def frame_hashes(path):
         "-fps_mode", "passthrough", "-f", "framemd5", "-"
     ], text=True)
     return [line.rsplit(",", 1)[1].strip() for line in checks.splitlines() if line.strip() and not line.startswith("#")]
+
+
+def small_frames(path):
+    raw = subprocess.check_output([
+        "ffmpeg", "-v", "error", "-xerror", "-threads", "4", "-i", str(path), "-map", "0:v:0",
+        "-vf", "scale=160:90:flags=area,format=gray", "-threads", "2", "-fps_mode", "passthrough",
+        "-f", "rawvideo", "-"
+    ])
+    return np.frombuffer(raw, dtype=np.uint8).reshape(-1, 90, 160)
+
+
+def check_wide_excerpt(opening, orbit, first, stop):
+    old = small_frames(orbit).astype(np.int16)
+    new = small_frames(opening).astype(np.int16)
+    if not 0 < first < stop <= len(old) or len(new) != stop-first:
+        raise ValueError("The opening must use the selected wide orbit frames")
+    error = np.abs(new - old[first:stop])
+    # The upper half is clear of both graphics throughout the orbit. The lower half
+    # should match too once the opening's independently timed title has faded in.
+    config = read_json(narrate.ROOT / "design" / "technical_review.json")["closing_overlay"]
+    visible = config["fade_start_frame"] + config["fade_frames"]
+    held = error[visible:]
+    if error[:, :45].mean(axis=(1, 2)).max() > 1.5 or (len(held) and held.mean(axis=(1, 2)).max() > 1.5):
+        raise ValueError("The wide opening differs from its source camera frames")
+    if first >= visible and error[0, 65:, :60].mean() < 5:
+        raise ValueError("The opening should begin on the clean silo, before its title appears")
 
 
 def check_sound_and_captions(path, frames, captions):
@@ -59,8 +86,12 @@ def verify(work, out, thermal, orbit):
 
     orbit_hashes = frame_hashes(orbit)
     intro_hashes = frame_hashes(opening)
-    if intro_hashes != orbit_hashes[:timing["intro"]]:
-        raise ValueError("Opening pictures differ from the closing orbit")
+    if "intro_orbit_frames" in timing:
+        check_wide_excerpt(opening, orbit, *timing["intro_orbit_frames"])
+        if intro_hashes != frame_hashes(orbit.with_name("wide_intro_picture.mp4")):
+            raise ValueError("Standalone introduction differs from its wide picture master")
+    elif intro_hashes != orbit_hashes[:timing["intro"]]:
+        raise ValueError("Opening pictures differ from the original orbit prefix")
     pictures = intro_hashes.copy()
     for name in assembly()[1]:
         pictures.extend(frame_hashes(work / f"{name}.mp4"))
@@ -80,6 +111,7 @@ def verify(work, out, thermal, orbit):
     if np.abs(sound[closing_start*2000:]).max() > .0001:
         raise ValueError("Unexpected sound in the closing orbit")
     print(json.dumps(dict(frames=len(actual), seconds=len(actual)/FPS, matchingIntroFrames=len(intro_hashes),
+                          introOrbitFrames=timing.get("intro_orbit_frames", [0, timing["intro"]]),
                           closingSilentFrames=len(orbit_hashes), chapters=len(chapter_list),
                           dialogueCues=len(timing["dialogue"])), indent=2))
 

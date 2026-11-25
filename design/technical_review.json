@@ -1,5 +1,7 @@
 {
   "picture_fps": 24,
+  "intro_orbit_frames": [63, 471],
+  "intro_voice_speed": 1.26,
   "intro_narration": [
     {
       "caption": "The GPU silo, a data centre for regional and rural locations.",

@@ -1,26 +1,30 @@
 {
   "voice": "am_eric",
-  "frames": 471,
+  "frames": 408,
   "fps": 24,
+  "sourceFrames": [
+    63,
+    471
+  ],
   "lines": [
     {
-      "start": 0.15,
-      "end": 3.966833333333333,
+      "start": 0.12,
+      "end": 3.4303333333333335,
       "text": "The GPU silo, a data centre for regional and rural locations."
     },
     {
-      "start": 4.156833333333333,
-      "end": 13.697208333333334,
+      "start": 3.5603333333333333,
+      "end": 11.968958333333333,
       "text": "More than 18,000 GPUs powered by 50MW of gas turbine power, contained within a 100 foot tall concrete silo with a footprint of just 0.2 acres."
     },
     {
-      "start": 13.887208333333334,
-      "end": 16.913,
+      "start": 12.098958333333334,
+      "end": 14.736541666666668,
       "text": "The closed loop cooling system requires no mains water."
     },
     {
-      "start": 17.103,
-      "end": 19.504083333333334,
+      "start": 14.866541666666667,
+      "end": 16.885375,
       "text": "Full designs are Open Sourced on GitHub."
     }
   ]

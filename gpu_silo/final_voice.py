@@ -1,7 +1,6 @@
 """Record the opening and conform the technical short's dialogue to its final picture."""
 import argparse
 import json
-import math
 from pathlib import Path
 import re
 
@@ -31,30 +30,32 @@ def record_intro(models, out):
     import soundfile as sf
     from kokoro_onnx import Kokoro
 
-    cues = read_json(narrate.ROOT / "design" / "technical_review.json")["intro_narration"]
+    review = read_json(narrate.ROOT / "design" / "technical_review.json")
+    cues = review["intro_narration"]
+    first, stop = review["intro_orbit_frames"]
+    frames = stop - first
     voice = read_json(technical_voice.SCRIPT)["voice"]
     speaker = Kokoro(str(models / narrate.MODEL), str(models / narrate.VOICES))
     pieces = []
     timed = []
     cursor = 0
     for index, cue in enumerate(cues):
-        raw, rate = speaker.create(cue["say"], voice=voice, speed=1.08, lang="en-us")
+        raw, rate = speaker.create(cue["say"], voice=voice, speed=review["intro_voice_speed"], lang="en-us")
         if rate != RATE:
             raise ValueError(f"Unexpected speech sample rate {rate}")
         take = narrate.trim(np.asarray(raw, dtype=np.float32), rate, keep=.04)
-        pause = round((.15 if index == 0 else .19) * rate)
+        pause = round((.12 if index == 0 else .13) * rate)
         pieces.extend((np.zeros(pause, dtype=np.float32), take))
         cursor += pause
         timed.append(dict(start=cursor / rate, end=(cursor + len(take)) / rate, text=cue["caption"]))
         cursor += len(take)
-    frames = math.ceil((cursor + .10 * RATE) / SAMPLES_PER_FRAME)
-    if frames >= 540:
-        raise ValueError(f"The {frames}-frame reading exceeds the closing orbit")
+    if cursor + round(.08 * RATE) > frames * SAMPLES_PER_FRAME:
+        raise ValueError(f"The opening narration needs more than {frames/FPS:.3f} s at the selected pace")
     wave = np.concatenate([*pieces, np.zeros(frames * SAMPLES_PER_FRAME - cursor, dtype=np.float32)])
     wave *= .87 / np.abs(wave).max()
     out.mkdir(parents=True, exist_ok=True)
     sf.write(out / "gpu_silo_intro.flac", wave, RATE, subtype="PCM_16")
-    timing = dict(voice=voice, frames=frames, fps=FPS, lines=timed)
+    timing = dict(voice=voice, frames=frames, fps=FPS, sourceFrames=[first, stop], lines=timed)
     (out / "gpu_silo_intro.json").write_text(json.dumps(timing, indent=2) + "\n", encoding="utf-8")
     print(f"Opening orbit: {frames} frames, {frames/FPS:.3f} s; last word ends at {timed[-1]['end']:.3f} s.")
 
@@ -99,6 +100,10 @@ def conform(source, reviewed, intro, out):
     thermal = read_take(reviewed / "thermal.flac")
     shots = read_json(reviewed / "thermal.json")
     closing_frames = config["silent_closing_source_frames"][1] - config["silent_closing_source_frames"][0]
+    first, stop = config["intro_orbit_frames"]
+    if (not 0 <= first < stop <= closing_frames or opening_times["frames"] != stop-first
+            or opening_times.get("sourceFrames") != [first, stop]):
+        raise ValueError("Opening voice and selected orbit excerpt disagree")
     if len(opening) != opening_times["frames"] * SAMPLES_PER_FRAME or len(thermal) != shots[-1]["last"] * SAMPLES_PER_FRAME:
         raise ValueError("Picture and dialogue frame counts disagree")
     thermal_at = len(opening) + len(body)
@@ -120,7 +125,7 @@ def conform(source, reviewed, intro, out):
     sf.write(out / "dialogue.flac", whole, RATE, subtype="PCM_16")
     technical_voice.captions(out / "gpu_silo.srt", timeline, whole, RATE)
     technical_voice.captions(out / "intro.srt", intro_lines, opening, RATE)
-    manifest = dict(intro=opening_times["frames"], body=body_frames, thermal=shots[-1]["last"],
+    manifest = dict(intro=opening_times["frames"], intro_orbit_frames=[first, stop], body=body_frames, thermal=shots[-1]["last"],
                     closing=closing_frames, total=len(whole)//SAMPLES_PER_FRAME, dialogue=timeline)
     (out / "timeline.json").write_text(json.dumps(manifest, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     print(f"Dialogue and captions: {len(timeline)} cues across {manifest['total']} frames.")

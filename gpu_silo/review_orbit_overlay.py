@@ -1,4 +1,4 @@
-"""Composite the owner's closing specification card over the silent, graded Cycles master."""
+"""Composite the specification card over the full rural orbit and its wide opening excerpt."""
 import argparse
 import json
 from pathlib import Path
@@ -48,7 +48,7 @@ def artwork(config):
     return layer
 
 
-def encode(master, image, out, fade_start, fade_length, intro_frames=None):
+def encode(master, image, out, fade_start, fade_length, intro_frames=None, source_span=None):
     streams = json.loads(subprocess.check_output([
         "ffprobe", "-v", "error", "-show_streams", "-of", "json", str(master)
     ]))["streams"]
@@ -57,23 +57,29 @@ def encode(master, image, out, fade_start, fade_length, intro_frames=None):
     video = streams[0]
     if video["avg_frame_rate"] != "24/1" or int(video["nb_frames"]) != 540:
         raise ValueError("Use the 540-frame, full-rate orbit")
+    count = int(video["nb_frames"])
+    first, stop = source_span if source_span is not None else (0, count)
+    if not 0 <= first < stop <= count:
+        raise ValueError(f"Orbit source frames must be inside [0, {count})")
+    seek = ["-ss", f"{first/24:.9f}"] if first else []
+    title = "Wide opening" if source_span is not None else "Closing orbit with specifications"
     keyframe = []
     if intro_frames is not None:
-        if not 0 < intro_frames < int(video["nb_frames"]):
+        if not 0 < intro_frames < stop - first:
             raise ValueError("The opening must end inside the closing orbit")
-        # A closed GOP at the voice cut lets both appearances use identical encoded pictures.
+        # Older full-orbit editions used a closed GOP at the end of their opening.
         keyframe = ["-force_key_frames", f"expr:eq(n,{intro_frames})", "-x264-params", "open-gop=0"]
     filters = (f"[1:v]format=rgba,fade=t=in:s={fade_start}:n={fade_length}:alpha=1,"
                "scale=in_range=full:out_range=limited:out_color_matrix=bt709,format=yuva420p[ink];"
                "[0:v][ink]overlay=shortest=1:format=yuv420,setsar=1[v]")
     subprocess.run([
-        "ffmpeg", "-hide_banner", "-loglevel", "error", "-y", "-threads", "4", "-i", str(master),
+        "ffmpeg", "-hide_banner", "-loglevel", "error", "-y", "-threads", "4", *seek, "-i", str(master),
         "-framerate", "24", "-loop", "1", "-i", str(image), "-filter_complex_threads", "4",
         "-filter_complex", filters, "-map", "[v]", "-map_metadata", "-1", "-map_chapters", "-1",
-        "-an", "-frames:v", video["nb_frames"], "-c:v", "libx264", "-threads", "6",
+        "-an", "-frames:v", str(stop - first), "-c:v", "libx264", "-threads", "6",
         "-preset", "medium", "-crf", "16", *keyframe, "-pix_fmt", "yuv420p", "-color_range", "tv",
         "-color_primaries", "bt709", "-colorspace", "bt709", "-color_trc", "bt709",
-        "-metadata", "title=The GPU Silo | Closing orbit with specifications", "-movflags", "+faststart", str(out)
+        "-metadata", f"title=The GPU Silo | {title}", "-movflags", "+faststart", str(out)
     ], check=True)
 
 
@@ -81,17 +87,24 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("master", type=Path)
     parser.add_argument("out", type=Path)
-    parser.add_argument("--art-only", action="store_true")
-    parser.add_argument("--intro-frames", type=int, help="Place a closed keyframe at the end of the narrated opening")
+    mode = parser.add_mutually_exclusive_group()
+    mode.add_argument("--art-only", action="store_true")
+    mode.add_argument("--intro-only", action="store_true", help="Create only the wide opening from the clean orbit")
+    parser.add_argument("--intro-frames", type=int, help="Place a closed keyframe for an earlier prefix edit")
     args = parser.parse_args()
     args.out.mkdir(parents=True, exist_ok=True)
     config_path = Path(__file__).resolve().parents[1] / "design" / "technical_review.json"
-    config = json.loads(config_path.read_text(encoding="utf-8"))["closing_overlay"]
+    review = json.loads(config_path.read_text(encoding="utf-8"))
+    config = review["closing_overlay"]
     card = args.out / "final_360_overlay.png"
     artwork(config).save(card, optimize=True)
-    if not args.art_only:
+    if args.art_only:
+        return
+    if not args.intro_only:
         encode(args.master, card, args.out / "final_360_overlay.mp4",
                config["fade_start_frame"], config["fade_frames"], args.intro_frames)
+    encode(args.master, card, args.out / "wide_intro_picture.mp4", config["fade_start_frame"],
+           config["fade_frames"], source_span=review["intro_orbit_frames"])
 
 
 if __name__ == "__main__":
