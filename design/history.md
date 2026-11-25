@@ -4,6 +4,10 @@ Add a dated entry when a choice changes. Say what the viewer should see, the dim
 
 ## Decisions
 
+### Electrical packaging · 25 November 2026
+
+The owner reserved the existing grey 4SU service section for rack-power equipment. The reference rack accepts 415–480 V AC and the existing dock supplies 1 kV. A 1 MVA local conversion package and protected rack branches are the quotation basis. Its footprint, cooling and operating mass require a supplier layout alongside the CDU and pump. Fixed-support conversion with a higher-current dock remains available. This decision is recorded at documentation stage. [Electrical design and site operating limits](electrical.md)
+
 ### Short build film · 23 November 2026
 
 At the owner's request the opening inspection view ends at 0:10. From frame 240 the inner and outer walls, form gangs and jumpform decks show the full circumference at the current pour height. The open top and ground-level receiving doorway follow the construction sequence. The cage lift brings back the interior view.
