@@ -28,7 +28,7 @@ body:
     attributes:
       label: Where would we see it in the film?
       description: A scene or timestamp from docs/sequence.md.
-      placeholder: "Cooler frames, 0:40 to 1:12"
+      placeholder: "Dry cooler IFC study, 1:55"
   - type: dropdown
     id: area
     attributes:

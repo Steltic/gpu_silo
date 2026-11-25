@@ -14,15 +14,11 @@
 
 The thumbnail uses the uncropped clean orbit frame at 19.750 seconds, frame 474 with zero-based numbering. Only the letters in the sky change. The compact editorial graphics continue through the technical sequence. The opening figures refer to the 256-rack installed capacity, gross generation and the silo footprint. The operating-envelope cue gives the 46 MW computing ceiling.
 
-## Original technical cut
-
-The 4K edition follows the 4:22 construction cut at double speed. At 24 frames per second, 3,145 picture frames run for 2:11.042. The original has an odd number of frames. Sampling frames 0, 2, …, 6,288 retains both endpoints and adds half a delivery frame to the exact half-duration. The silo closes at 0:05. The original 23 chapter boundaries move to the first corresponding delivery frame.
-
 ## Picture and sound
 
 The model supplies the construction stages and camera path. Blender EEVEE renders the daylight construction. Cycles supplies the control-room scene, the four IFC studies and the closing blue-hour orbit. The camera moves nearer the carrier and turbine components within their six-second studies. The trucks have individually modelled day cabs, wheel arches and suspension. The mixer carries a tapered drum, discharge chute and access ladder. The crane houses have stacked ballast, wraparound cab glazing and twin winches. The turbine close-up shows the compressor flanges, combustor, oil filters, coupling, alternator and cable tray. Equipment nameplates and the roof antenna’s lettering belong to the scene. Technical cards, equipment references and drawing labels enter in postproduction.
 
-Kokoro v1.0 records each passage independently in the `am_eric` voice. Cue windows follow the shortened picture. Pronunciation text, display text, caption timing and published product references accompany the recordings. The release includes a narrated film with selectable English captions, a clean silent picture master, the separate voice recording, the animated short model and the four component excerpts.
+Kokoro v1.0 records each passage independently in the `am_eric` voice. Cue windows follow the shortened picture. Pronunciation text, display text, caption timing and published product references accompany the recordings. The film has selectable English captions. Its release also supplies an SRT, the cover image and the complete facility IFC.
 
 ## Assumptions for review
 
@@ -36,7 +32,7 @@ Kokoro v1.0 records each passage independently in the `am_eric` voice. Cue windo
 | Cooling | Each cooler has a 2 MW design rating. At rating, 26 units provide 52 MW against 51.25 MW of design heat rejection. The thermal calculation uses 6,524 m³ of 25% propylene-glycol solution, a 10 K swing, maintained circulation and stratification for the modelled 76-minute ride-through. |
 | Power and emergencies | Normal operation uses the turbines. The 4 MW auxiliary allowance leaves 46 MW for IT at nameplate output. Site conditions can lower available output. Four 2.5 MW emergency diesels support up to 7 MW of priority IT after essential services. |
 
-The approved facility exchange has SHA-256 `891dac77a0a1de577bf8da9c6e3301cef85eed5dc9f379a6a4a01bbb74bb7764`. It provides the registration datum for all four IFC studies. The moving carrier is part of the film and its companion GLB. [Project design](report.md) · [Inputs](project.json) · [Timed script and references](technical_short.json)
+The approved facility exchange has SHA-256 `891dac77a0a1de577bf8da9c6e3301cef85eed5dc9f379a6a4a01bbb74bb7764`. It provides the registration datum for all four IFC studies. The moving carrier is animated in the film. [Project design](report.md) · [Inputs](project.json) · [Timed script and references](technical_short.json)
 
 ## Equipment references
 

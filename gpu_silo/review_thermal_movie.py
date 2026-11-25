@@ -7,7 +7,7 @@ import subprocess
 import numpy as np
 from PIL import Image, ImageDraw, ImageFilter
 from .review_overlays import font
-from .short_song import optional_lyrics
+from .mp4 import optional_captions
 
 HOT=(255,158,90); COLD=(73,219,238); SECONDARY=(218,208,252)
 WHITE=(239,242,232); MUTED=(181,202,204); DARK=(12,25,31)
@@ -279,7 +279,7 @@ def build(plates,voice,out,width,stills):
         if process.wait():raise RuntimeError("FFmpeg did not finish the thermal film")
     except BaseException:
         process.kill();process.wait();raise
-    optional_lyrics(out)
+    optional_captions(out)
 
 if __name__=="__main__":
     p=argparse.ArgumentParser(description=__doc__)

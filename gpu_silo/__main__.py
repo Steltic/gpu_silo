@@ -19,10 +19,6 @@ def main():
     technical.add_argument("--output",type=Path,default=Path("renders/technical-short"))
     technical.add_argument("--models",type=Path,help="record fresh Kokoro narration from these models")
     technical.add_argument("--cpu",action="store_true",help="render Cycles shots on the CPU")
-    song = commands.add_parser("short-song", help="make the English song edition ending on the blue-hour orbit")
-    song.add_argument("--picture", type=Path, default=Path("renders/technical-short/silo_short.mp4"),
-                      help="the narrated 4K technical short with its chapter track")
-    song.add_argument("--output", type=Path, default=Path("renders/short_song.mp4"))
     check = commands.add_parser("check", help="check an exported GLB against the working design")
     check.add_argument("model", nargs="?", type=Path, default=Path("renders/GPU_Silo.glb"))
     calc = commands.add_parser("calcs", help="rewrite design/calcs.md, design/report.md and its figures from design/project.json")
@@ -36,10 +32,6 @@ def main():
         command.add_argument("--film", choices=("long", "short"), default="long",
                              help="long is the full presentation, short is the build only (silo_short)")
     args = parser.parse_args()
-    if args.command == "short-song":
-        from . import short_song
-        print(short_song.build(args.picture, args.output))
-        return
     if args.command=="technical-short":
         from . import technical_short
         technical_short.build(args.blender,args.work,args.output,args.models,args.cpu)

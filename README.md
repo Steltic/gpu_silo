@@ -1,16 +1,18 @@
 # GPU Silo
 
-[![The finished GPU Silo with its roof stacks, ten screened dry cooler frames, the haul ring and the fuel farm](docs/animation.jpg)](../../releases/latest/download/GPU_Silo.mp4)
+[![The GPU Silo above its rural site, with “NO WATER MAINS”, “GPU data centre” and “NO GRID POWER” in the sky](docs/gpu_silo_thumbnail.jpg)](https://github.com/Steltic/gpu_silo/releases/download/gpu-silo-2026-11-25/gpu_silo.mp4)
 
-**[Watch the 4K technical short · silo_short.mp4](../../releases/download/short-technical-2026-11-24/silo_short.mp4)** (2:11, narrated) · **[Watch the full presentation · GPU_Silo.mp4](../../releases/latest/download/GPU_Silo.mp4)** (5:43) · Animated 3D models: [silo_short.glb](../../releases/download/short-technical-2026-11-24/silo_short.glb), [GPU_Silo.glb](../../releases/latest/download/GPU_Silo.glb) · **[Complete BIM model · GPU_Silo.ifc](../../releases/latest/download/GPU_Silo.ifc)** · [All versions](../../releases)
+**[Watch or download the 4K film](https://github.com/Steltic/gpu_silo/releases/download/gpu-silo-2026-11-25/gpu_silo.mp4)** · 3 min 00.5 s · [English captions](https://github.com/Steltic/gpu_silo/releases/download/gpu-silo-2026-11-25/gpu_silo.srt) · [Chapter guide](docs/sequence.md)
 
-A 32 m concrete silo that houses, powers and liquid-cools 256 NVIDIA Vera Rubin GPU racks with 50 MW of installed rack capacity. The racks sit four to a pod in 64 **4SU** pods on eight levels around a central shaft. Each pod carries its own CDU and pump and plugs into a water-glycol store held between the silo's two concrete walls. Thirty 2 MW dry coolers on ten screened steel frames hang on the outside of the wall and reject the heat. Two in-line 25 MW gas turbine sets sit side by side above the pods under the lid, burn propane from eight tanks beside the silo and feed the grade-level transformers down the central shaft. Fixed bay risers supply each docked pod. Four backup diesel sets sit on the level below them. Everything arrives by truck on a one-way haul ring, and the build is laid out to finish 28 days after the last concrete is poured.
+**[Download the complete IFC4 model](https://github.com/Steltic/gpu_silo/releases/download/gpu-silo-2026-11-25/GPU_Silo.ifc)** · [Design report and check register](design/report.md#2-register-of-design-checks) · [Electrical design](design/electrical.md)
 
-**silo_short** uses Blender and a double-speed edit to follow the build from jumpforming to the conversion of one receiving lane into a control room. Four narrated IFC cutaways isolate the shaft and its indexing pod holder, a four-rack pod, a dry cooler and the turbine deck before a blue-hour orbit. **GPU_Silo** is the longer presentation, with the narrated cooling loop, personnel access and the pod and cooler replacement. It shows the earlier build order with the store filled before the pods.
+The GPU Silo is a concept for a data centre on a rural or regional site without mains water or a grid connection. A 32 m double-walled concrete tower holds 256 NVIDIA Vera Rubin NVL72 racks, or 18,432 installed GPUs. The design assigns about 0.2 acres to the silo footprint. The fuel tanks, roads and service areas require additional land.
 
-The animation is the working drawing for this project. Design decisions are made by looking at it, and every dimension in it comes from one file, [design/project.json](design/project.json). The repository holds that file, the [calculations](design/calcs.md) generated from it, the [decisions](design/README.md) and the code that turns them into the film. Anyone can propose a design idea and see it rendered.
+Two 25 MW propane turbines supply the site. At rated output, a 4 MW allowance for plant leaves 46 MW for computing. One operating case runs 235 racks at full power and holds 21 spare. Operators can choose another mix within the available power and cooling. Four diesel generators cover emergencies. [Operating assumptions](design/assumptions.md#operating-choice-after-revision-j)
 
-The normal operating brief is 46 MW IT on the turbines, with diesels reserved for emergencies. One reference case runs 235 racks at full power and holds 21 spare. Operators can choose another mix within the available power and cooling. Revision K uses the 50 MW installed capacity to size the physical cooling plant. [Operating choice](design/assumptions.md#operating-choice-after-revision-j)
+The 64 four-rack pods draw coolant from the lower layer of a 6.52 million litre store between the walls and return heat to the upper layer. Thirty dry coolers reject that heat to air. The store uses water with 25% propylene glycol by volume. The programme allows 278 tanker deliveries for the initial fill. [Cooling and tanker calculations](design/calcs.md)
+
+## Design at a glance
 
 | Revision K design basis | Value |
 | --- | ---: |
@@ -33,78 +35,8 @@ The normal operating brief is 46 MW IT on the turbines, with diesels reserved fo
 
 Section 2 of the design report lists each numbered check and its status. Revision K checks the support rig, sliding shaft guide and both sets of wall mounts, including the revised anchor bars in the IFC. Edit `design_checks.register` in the project inputs to add a check or change its status, then regenerate the report. [Register of design checks](design/report.md#2-register-of-design-checks) · [Project inputs](design/project.json) · [Assumptions and release evidence](design/assumptions.md)
 
-### Find it in the technical short
+## Explore or contribute
 
-| Scene | Programme | Time |
-| --- | --- | ---: |
-| Jumpforming and cage fabrication | Days −9 to 0 | 0:00 |
-| Closed concrete shell during construction | | 0:05 |
-| Tandem cage lift | Day 3 | 0:21 |
-| Support rig and sliding shaft guide | Days 4 to 5 | 0:28 |
-| Two-pod delivery to the receiving dock | Day 6 | 0:33 |
-| Pod loading and cooler-frame lifts | Days 6 to 17 | 0:41 |
-| Fuel tanks on the pad | Days 8 to 11 | 0:49 |
-| Annular store liner | Days 11 to 14 | 0:56 |
-| Generator deck fabrication | Days 9 to 18 | 1:00 |
-| Emergency diesel deck and start of store fill | Days 19 to 21 | 1:06 |
-| Twin gas turbine packages | Days 19 to 21 | 1:12 |
-| Lid, roof stacks and fuel lines | Days 16 to 26 | 1:16 |
-| Glazed control room | Days 24 to 27 | 1:23 |
-| IFC studies of the rotating holder, four-rack pod, dry cooler and turbine deck | | 1:26 / 1:32 / 1:38 / 1:44 |
-| Roof antenna and blue-hour orbit | Day 28 | 1:50 |
-| Cooling plan and section | | 2:02 |
+The [project inputs](design/project.json) drive the [calculations](design/calcs.md), [design report](design/report.md), IFC export and parametric model. The [design index](design/README.md) points to each subsystem, and the [decision log](design/history.md) records changes and their reasons. The report identifies the site and vendor data needed for engineering review.
 
-**I Want a GPU Tower** is the 4K song edition (2:01.542). An English tenor and chorus sing the engineering specs over accordion and mandolin. Brass and strings take over for the final 360° orbit. [Watch short_song.mp4](../../releases/download/short-technical-2026-11-24/short_song.mp4) · [Lyrics and score](audio/short_song/score.txt) · [Music and edit notes](audio/short_song/README.md)
-
-The release includes the clean picture, voice stem, selectable captions and individual IFC studies. [Technical short release](../../releases/tag/short-technical-2026-11-24) · [Assumptions and equipment references](design/technical_short.md) · [Original 4:22 cut](../../releases/tag/short-film-2026-11-23-v2)
-
-### Find it in the long film (GPU_Silo)
-
-| Scene | Time |
-| --- | ---: |
-| Jumpform the double-wall shell: the form system, a crew of 22 and truck mixers at the pump | 0:00 |
-| Two crawlers lower the steel pod cage while water tankers and cooler trucks start arriving | 0:25 |
-| Bare support rig lowered onto its wall mounts to brace the shaft | 0:40 |
-| Water-glycol fills the wall gap to the top from three tanker bays | 0:49 |
-| Receiving dock: trucks back in with two 4SU pods each and the gantry lifts them onto the rail | 0:55 |
-| Lift the first 4SU | 1:09 |
-| The retained crawler hangs the ten screened cooler frames while the pods load and the trucks keep coming | 1:17 |
-| Run the lower six levels at 3× | 1:38 |
-| Land the diesel sets and day tanks on the support rig | 2:01 |
-| Lower the turbine level: two in-line 25 MW sets side by side | 2:13 |
-| Close the lid with its exhaust stacks and air inlet houses | 2:21 |
-| Crews ride the wedge platforms to the pods | 2:27 |
-| The side of turbine set A folds down to show its 25 MW gas turbine | 2:44 |
-| Finished silo on day 28, design basis, the 28-day programme and a full exterior orbit | 2:58 |
-| Trucks bring eight propane tanks and the diesel tank | 3:21 |
-| Propane transports fill the tanks and the fuel lines run to the power levels | 3:36 |
-| Plan view of the cooling loop, with narration | 3:44 |
-| Section showing power, water-glycol, gas and diesel | 4:20 |
-| Replace a faulty 4SU on Level 6 | 4:46 |
-| Wide shot: the crawler lowers cooler frame 09, swaps one cooler and hangs it back | 5:00 |
-
-[Scene guide](docs/sequence.md)
-
-### Propose a design idea
-
-1. **Describe it.** Open a [design idea](../../issues/new/choose) and say what a viewer should see and why.
-2. **Or try it.** Edit a value in [design/project.json](design/project.json), run `python -m gpu_silo calcs` and open a pull request. The design check verifies the calculations, the report and both models, and renders stills for review. The films are rendered on request, so they can be a few changes behind the design.
-3. **Record it.** An accepted change adds a line to the [decision log](design/history.md).
-
-[Contributor quick start](CONTRIBUTING.md) · [Design decisions](design/README.md) · [Design calculations](design/calcs.md) · [Structural design report](design/report.md) · [Decision log](design/history.md)
-
-### What is in the repository
-
-| Path | Contents |
-| --- | --- |
-| [design/project.json](design/project.json) | Every design input: cluster, silo, pod, store, coolers, power, diesel, fuel, installation, trucking, site roads, jumpform crew, programme and film |
-| [design/calcs.md](design/calcs.md) | Heat load, store, flows, coolers and spares, the fit of the power levels, roof vents, propane line size, fuel run times, truck loads, the store liner, the roads and staging areas, and the 28-day programme. Generated from the inputs. |
-| [design/report.md](design/report.md) | Ten design checks, the site screening envelope, thermal limits and owner review assumptions. |
-| [design/narration.json](design/narration.json) · [audio/](audio) | The narration script and its recording |
-| [design/README.md](design/README.md) | The current decision for each part of the design and where to change it |
-| [design/history.md](design/history.md) | Dated decision log, including what each decision replaced |
-| [gpu_silo/](gpu_silo) | Parametric model, animation and checks |
-| [renderer/](renderer) | Film renderer and the on-screen design panels |
-| [docs/sequence.md](docs/sequence.md) | Scene-by-scene guides to both films |
-
-This is a concept study. The model checks geometry and motion. It is not a structural, hydraulic, thermal or electrical design.
+To propose a change, open a [design idea](https://github.com/Steltic/gpu_silo/issues/new/choose) or follow the [contributor guide](CONTRIBUTING.md). The [film production notes](design/technical_short.md) cover the component cutaways, equipment references and how to reproduce the final edit.

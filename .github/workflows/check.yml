@@ -1,6 +1,6 @@
 name: Check the design
 
-# Runs for every change. It does not render the films: see render.yml for that.
+# Check the design and export stills for review on every change.
 on:
   pull_request:
     branches: [main]
@@ -28,11 +28,11 @@ jobs:
         run: python -m gpu_silo calcs --check
       - name: Export, reopen and geometrically validate the complete IFC4 facility
         run: python -m gpu_silo ifc
-      - name: Export and check the model of the long film
+      - name: Export and check the service and maintenance model
         run: |
           python -m gpu_silo build --scene-only
           python -m gpu_silo check
-      - name: Export and check the model of the short film
+      - name: Export and check the construction model
         run: |
           python -m gpu_silo build --scene-only --film short
           python -m gpu_silo check --film short
@@ -46,7 +46,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends mono-mcs libmono-system-drawing4.0-cil libgdiplus \
             fonts-liberation fonts-inter fonts-dejavu-core
-      - name: Render review stills from both films
+      - name: Render construction and servicing stills for review
         run: |
           python -m gpu_silo stills 700 1040 1900 3500 5720 6380 8100 --output renders/stills/long
           python -m gpu_silo stills --film short 640 1460 2100 3000 3450 4100 4935 --output renders/stills/short
