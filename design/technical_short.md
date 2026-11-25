@@ -1,5 +1,21 @@
 # Technical short film
 
+## GPU Silo final cut
+
+`gpu_silo.mp4` runs 3:03.125 in 3840 × 2160 at 24 fps. The introduction uses the first 471 pictures of the closing orbit and a 19.625-second recording of the owner's script. The final 22.50 seconds show the entire orbit in silence. Both appearances use the same encoded pictures and the same six-line end card. The gold heading and condensed lettering follow the selected thumbnail. [Intro script and closing copy](technical_review.json) · [Opening voice recording](../audio/gpu_silo_intro.flac)
+
+| Starts | Sequence | Frames |
+| --- | --- | ---: |
+| 0:00.000 | Narrated rural orbit | 471 |
+| 0:19.625 | Construction, services and control room | 2,071 |
+| 1:45.917 | Four IFC studies covering the shaft, pod, cooler and turbine deck | 576 |
+| 2:09.917 | Vertical IFC thermal section and cooling ride-through | 737 |
+| 2:40.625 | Silent rural orbit and project credit | 540 |
+
+The thumbnail uses the uncropped clean orbit frame at 19.750 seconds, frame 474 with zero-based numbering. Only the letters in the sky change. The compact editorial graphics continue through the technical sequence. The opening figures refer to the 256-rack installed capacity, gross generation and the silo footprint. The operating-envelope cue gives the 46 MW computing ceiling.
+
+## Original technical cut
+
 The 4K edition follows the 4:22 construction cut at double speed. At 24 frames per second, 3,145 picture frames run for 2:11.042. The original has an odd number of frames. Sampling frames 0, 2, …, 6,288 retains both endpoints and adds half a delivery frame to the exact half-duration. The silo closes at 0:05. The original 23 chapter boundaries move to the first corresponding delivery frame.
 
 ## Picture and sound
@@ -43,3 +59,21 @@ python -m gpu_silo technical-short --blender blender --work renders/technical-wo
 ```
 
 To regenerate the recording, pass `--models` pointing at Kokoro’s `kokoro-v1.0.onnx` and `voices-v1.0.bin` with `kokoro-onnx` and `soundfile` installed. Regenerate the shaft excerpt from the issued file with `python -m gpu_silo.technical_shaft path/to/GPU_Silo.ifc`.
+
+### Assemble the final cut
+
+The commands below use the technical cut's native 4K construction frames in `frames`, its recording and timings in `technical`, the revised takes from `gpu_silo.review_voice` in `voice`, the graded rural orbit in `final_360.mp4` and the four-shot `IFC_vid_thermal.mp4`. Render the 78 control-room frames at full size using the revised facade from `gpu_silo.review_orbit_source`. Install Pillow and SoundFile for compositing and audio. Impact and Franklin Gothic Medium Condensed reproduce the selected display lettering.
+
+```console
+blender -b --python-exit-code 9 -P renderer/technical_blender.py -- bake office-4k 1993 2070 --facade review-inputs/facade.npz --percent 100 --samples 8
+python -m gpu_silo.final_voice conform technical voice audio work
+python -m gpu_silo.review_orbit_overlay final_360.mp4 orbit --intro-frames 471
+python -m gpu_silo.review_thumbnails final_360.mp4 work/cover delivery --final-only
+python -m gpu_silo.final_film body construction frames work
+python -m gpu_silo.final_film body office office-4k work
+python -m gpu_silo.final_film body studies frames work
+python -m gpu_silo.final_film assemble orbit/final_360_overlay.mp4 IFC_vid_thermal.mp4 voice work delivery
+python -m gpu_silo.validation.verify_final_film work delivery IFC_vid_thermal.mp4 orbit/final_360_overlay.mp4
+```
+
+The assembly also writes the standalone narrated `gpu_silo_intro.mp4`. The full film carries English captions and chapters. To record a changed opening, run `python -m gpu_silo.final_voice record models audio` and use the resulting frame count for the orbit keyframe.

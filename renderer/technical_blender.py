@@ -19,6 +19,10 @@ args.add_argument("last",type=int)
 args.add_argument("--percent",type=int,default=100)
 args.add_argument("--samples",type=int,default=0)
 args.add_argument("--cpu",action="store_true")
+args.add_argument("--threads",type=int,default=10,help="CPU thread limit for scene preparation and rendering")
+args.add_argument("--rural-review",type=Path,help="full-rate camera and revised facade for the standalone orbit")
+args.add_argument("--facade",type=Path,help="revised physical office facade for a technical review shot")
+args.add_argument("--stills",type=int,nargs="+",help="render only these frames for review")
 a=args.parse_args(sys.argv[sys.argv.index("--")+1:])
 a.out.mkdir(parents=True,exist_ok=True)
 manifest=json.loads((a.bake/"scene.json").read_text(encoding="utf-8"))
@@ -31,8 +35,14 @@ def mode(f):
     if f<roof:return "studio"
     if f<manifest["drawing"]:return "dusk"
     return "drawing"
-kind=mode(a.first)
-if mode(a.last)!=kind or kind=="drawing":raise ValueError("Select one photographic lighting setup")
+review=a.rural_review is not None
+kind="dusk" if review else mode(a.first)
+if not review and (mode(a.last)!=kind or kind=="drawing"):raise ValueError("Select one photographic lighting setup")
+if review:
+    native=np.load(a.rural_review/"orbit-camera.npz")
+    if not (0<=a.first<=a.last<len(native["eye"])):raise ValueError("Invalid full-rate orbit frame range")
+    camera=native
+source_first,source_last=(roof,manifest["drawing"]-1) if review else (a.first,a.last)
 print("PHOTOGRAPHY",kind,a.first,a.last,flush=True)
 bpy.ops.wm.read_factory_settings(use_empty=True)
 sc=bpy.context.scene
@@ -42,18 +52,22 @@ sc.render.resolution_percentage=a.percent
 sc.render.image_settings.file_format="JPEG"
 sc.render.image_settings.quality=95
 sc.render.image_settings.color_mode="RGB"
-sc.render.threads_mode="FIXED";sc.render.threads=10
+sc.render.threads_mode="FIXED";sc.render.threads=a.threads
 sc.render.fps=24;sc.render.film_transparent=False
 sc.render.use_persistent_data=True
 sc.view_settings.view_transform="AgX"
 sc.view_settings.look="AgX - Medium High Contrast"
 if sc.render.engine=="CYCLES":
-    sc.cycles.samples=a.samples or 10
+    sc.cycles.samples=a.samples or (32 if review else 10)
+    if review:
+        sc.cycles.use_adaptive_sampling=True
+        sc.cycles.adaptive_min_samples=min(5,sc.cycles.samples)
+        sc.cycles.adaptive_threshold=.070
     sc.cycles.use_denoising=True
     sc.cycles.use_auto_tile=False
     sc.cycles.denoising_use_gpu=not a.cpu
-    sc.cycles.denoising_quality="FAST"
-    sc.cycles.denoising_prefilter="FAST"
+    sc.cycles.denoising_quality="HIGH" if review else "FAST"
+    sc.cycles.denoising_prefilter="ACCURATE" if review else "FAST"
     sc.cycles.max_bounces=4
     sc.cycles.diffuse_bounces=2
     sc.cycles.glossy_bounces=2
@@ -143,8 +157,20 @@ mesh_meta={m["id"]:m for m in manifest["meshes"]}
 meshes={}
 def read_mesh(i,mtype):
     if (i,mtype) in meshes:return meshes[i,mtype]
-    record=mesh_meta[i];src=np.load(a.bake/f"mesh_{i}.npz")
+    record=mesh_meta[i]
+    name=record["name"]
+    path=a.bake/f"mesh_{i}.npz"
+    if (review or a.facade) and any(n["mesh"]==i and n["name"]=="Control office | walls" for n in manifest["nodes"]):
+        path=a.facade or a.rural_review/"facade.npz"
+    elif review and i==1:
+        path=a.rural_review/"farm-furniture.npz"
+    src=np.load(path)
     v,f,col=(src[k] for k in ("v","f","c"))
+    if (review or a.facade) and any(n["mesh"]==i and n["name"]=="Control room | displays and task lighting" for n in manifest["nodes"]):
+        # The replacement lettering is part of the lintel. Preserve the screens
+        # and task lights in the old bake while removing the former lettering.
+        keep=~np.all(col==[217,232,221],axis=1)
+        f,col=f[keep],col[keep]
     mesh=bpy.data.meshes.new(record["name"])
     mesh.vertices.add(len(v));mesh.vertices.foreach_set("co",np.ascontiguousarray(v).ravel())
     mesh.loops.add(f.size);mesh.loops.foreach_set("vertex_index",f.ravel())
@@ -208,6 +234,28 @@ else:
         light("Dock task lighting","AREA",(19,-22,4),(23,-17,1),(.78,.92,1.),820,4)
     if dusk:
         light("Blue-hour roof fill","AREA",(9,-21,49),(0,0,25),(.65,.81,1.),10500,25)
+    if review:
+        sys.path.insert(0,str(Path(__file__).resolve().parent))
+        from review_farmland import landscape
+        landscape()
+        # Blue-hour skylight preserves field detail under a low raking sun.
+        bg.inputs["Strength"].default_value=.82
+        ramp.color_ramp.elements[0].color=(.70,.52,.43,1)
+        ramp.color_ramp.elements[1].color=(.27,.39,.57,1)
+        ramp.color_ramp.elements[2].color=(.040,.087,.19,1)
+        late=bpy.data.lights.get("Late sun");late.energy=1.65;late.angle=math.radians(3.2)
+        stretch=nt.nodes.new("ShaderNodeVectorMath");stretch.operation="MULTIPLY"
+        stretch.inputs[1].default_value=(2.5,2.5,14)
+        nt.links.new(tex.outputs["Generated"],stretch.inputs[0])
+        cloud=nt.nodes.new("ShaderNodeTexNoise");cloud.inputs["Scale"].default_value=2.6;cloud.inputs["Detail"].default_value=4
+        nt.links.new(stretch.outputs[0],cloud.inputs["Vector"])
+        veil=nt.nodes.new("ShaderNodeValToRGB")
+        for el,pos,col in zip(veil.color_ramp.elements,(.49,.73),((0,0,0,1),(.24,.24,.24,1))):
+            el.position=pos;el.color=col
+        nt.links.new(cloud.outputs["Fac"],veil.inputs[0])
+        sky_mix=nt.nodes.new("ShaderNodeMixRGB");sky_mix.inputs[2].default_value=(.72,.68,.66,1)
+        nt.links.new(veil.outputs[0],sky_mix.inputs[0]);nt.links.new(ramp.outputs[0],sky_mix.inputs[1]);nt.links.new(sky_mix.outputs[0],bg.inputs["Color"])
+        sc.render.image_settings.quality=96
 camdata=bpy.data.cameras.new("Engineering film camera")
 camdata.sensor_fit="VERTICAL";camdata.sensor_height=32;camdata.clip_start=.07;camdata.clip_end=2600
 cam=obj(camdata.name,camdata);sc.camera=cam
@@ -216,7 +264,7 @@ for i,n in enumerate(manifest["nodes"]):
     idx=n["mesh"]
     if idx<0 or idx not in mesh_meta or mesh_meta[idx]["mat"]==1:continue
     if (kind=="studio")!=(n["group"]=="IFC studio"):continue
-    local=pose[i,a.first:a.last+1]
+    local=pose[i,source_first:source_last+1]
     if not np.any(np.all(np.abs(local[:,3:6])>1.e-6,axis=1)):continue
     group=n["group"]
     if kind=="studio":typ="studio"
@@ -232,8 +280,15 @@ previous={}
 def update(_,depsgraph=None):
     t=sc.frame_current
     if t<a.first or t>a.last:return
+    source_t=min(source_last,roof+t//2) if review else t
     for idx,o in objects:
-        q=pose[idx,t];show=bool(np.all(abs(q[3:6])>.000001))
+        q=pose[idx,source_t];show=bool(np.all(abs(q[3:6])>.000001))
+        if review and t%2 and show and source_t<source_last:
+            next_q=pose[idx,source_t+1]
+            if np.all(abs(next_q[3:6])>.000001) and not np.array_equal(q,next_q):
+                mid=(q+next_q)*.5
+                mid[6]=q[6]+.5*((next_q[6]-q[6]+math.pi)%(2*math.pi)-math.pi)
+                q=mid
         old=previous.get(idx)
         if old is not None and old[0]==show and (not show or np.array_equal(q,old[1])):continue
         o.hide_render=not show
@@ -262,5 +317,11 @@ sc.render.use_file_extension=True
 sc.render.use_overwrite=False
 sc.render.use_placeholder=False
 print("READY",len(objects),"objects",len(meshes),"meshes",sc.render.engine,flush=True)
-bpy.ops.render.render(animation=True)
+if a.stills:
+    for frame in a.stills:
+        sc.frame_set(frame);update(sc)
+        sc.render.filepath=str((a.out/f"f_{frame:04}.jpg").resolve())
+        bpy.ops.render.render(write_still=True)
+else:
+    bpy.ops.render.render(animation=True)
 bpy.app.handlers.frame_change_pre.remove(update)

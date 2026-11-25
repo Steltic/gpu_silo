@@ -1,0 +1,52 @@
+{
+  "picture_fps": 24,
+  "intro_narration": [
+    {
+      "caption": "The GPU silo, a data centre for regional and rural locations.",
+      "say": "The G P U silo, a data centre for regional and rural locations."
+    },
+    {
+      "caption": "More than 18,000 GPUs powered by 50MW of gas turbine power, contained within a 100 foot tall concrete silo with a footprint of just 0.2 acres.",
+      "say": "More than eighteen thousand GPUs powered by fifty megawatts of gas turbine power, contained within a hundred-foot-tall concrete silo with a footprint of just zero point two acres."
+    },
+    {
+      "caption": "The closed loop cooling system requires no mains water.",
+      "say": "The closed-loop cooling system requires no mains water."
+    },
+    {
+      "caption": "Full designs are Open Sourced on GitHub.",
+      "say": "Full designs are open sourced on Git Hub."
+    }
+  ],
+  "shaft_entry_frame": 2071,
+  "picture_order_after_turbine_ifc": ["IFC_vid_thermal", "final_360"],
+  "silent_closing_source_frames": [5294, 5834],
+  "closing_overlay": {
+    "headline": ["The GPU silo, a data centre", "for regional and rural locations"],
+    "fade_start_frame": 48,
+    "fade_frames": 12,
+    "specs": [
+      "50MW of gas turbine power",
+      "18,000+ GPUs",
+      "100 foot tall concrete silo on 0.2 acres",
+      "No water or electricity mains connection"
+    ],
+    "credit": "OPEN SOURCE: github.com/Steltic/gpu_silo"
+  },
+  "remove_narration_start": 83.042,
+  "move_narration_start": 110.292,
+  "revised_cues": [
+    {"original": 33.4, "start": 33.4, "end": 40.58, "title": "Pod receiving", "spec": "4 Vera Rubin racks per pod   /2 pods per delivery   /   7.16 m cantilever", "say": "Each pod of four Vera Rubin racks spans seven point one six metres. The receiving lane handles two pods per delivery.", "caption": "Each pod of four Vera Rubin racks spans 7.16 metres. The receiving lane handles two pods per delivery."},
+    {"original": 56.1, "start": 56.1, "end": 60.08, "voiceWindow": [55.75,60.52], "title": "Annular store", "spec": "6,524 m³   /   water with 25% propylene glycol by volume", "say": "The annulus holds over sixty-five hundred cubic metres of water with twenty-five percent propylene glycol.", "caption": "The annulus holds over 6,500 m³ of water with 25% propylene glycol."},
+    {"original": 60.08, "start": 60.08, "end": 66.21, "voiceWindow": [60.58,66.21], "title": "Generator support", "spec": "94.5 t per assumed turbine set   /   independent support ring", "say": "Each turbine package has an assumed mass of ninety-four and a half tonnes, carried on independent rail girders.", "caption": "Each turbine package has an assumed mass of 94.5 t, carried on independent rail girders."},
+    {"original": 66.21, "start": 66.21, "end": 72.25, "title": "Emergency generation", "spec": "4 × 2.5 MW   /   Cat 3516C class", "say": "Four standby diesels cover seven megawatts of priority computing. Cat’s thirty-five sixteen C is the reference.", "caption": "Four standby diesels cover 7 MW of priority computing. Cat’s 3516C is the reference."},
+    {"original": 72.25, "start": 72.25, "end": 79.18, "title": "Propane turbine generators", "spec": "Design 2 × 25 MW   /   GE LM2500 DLE reference", "say": "Two propane turbines, twenty-five megawatts each. G E’s L M twenty-five hundred D L E rates twenty-two point seven on natural gas.", "caption": "Two propane turbines, 25 MW each by design. GE’s LM2500 DLE reference rates 22.7 MW net on natural gas at ISO conditions."},
+    {"original": 110.292, "start": 79.18, "end": 86.17, "title": "Normal operating envelope", "spec": "50 MW gross   /   4 MW auxiliaries   /   46 MW IT ceiling", "say": "Four megawatts for auxiliaries leave forty-six for computing. One option runs two hundred thirty-five racks flat out, twenty-one spare.", "caption": "4 MW for auxiliaries leave 46 MW for computing. One option runs 235 racks flat out, 21 spare."}
+  ],
+  "thermal": [
+    {"id": "store", "title": "Inside the thermal store", "spec": "6,524 m³   /   Water with 25% propylene glycol", "say": "Between the silo walls, cool water and glycol sit below a warmer layer of the same mixture.", "caption": "Between the silo walls, cool water and glycol sit below a warmer layer of the same mixture."},
+    {"id": "pods", "title": "Rack heat enters the store", "spec": "Lower intake   /   Upper return", "say": "Each pod draws cool liquid from the bottom. Its C D U takes heat from the separate rack loop. Warm liquid returns at the top.", "caption": "Each pod draws cool liquid from the bottom. Its CDU takes heat from the separate rack loop. Warm liquid returns at the top."},
+    {"id": "coolers", "title": "Dry coolers recharge the store", "spec": "Upper intake   /   Lower return", "say": "The dry coolers draw from the warm upper layer, reject heat to the outside air, and send cooled liquid back near the floor.", "caption": "The dry coolers draw from the warm upper layer, reject heat to the outside air, and send cooled liquid back near the floor."},
+    {"id": "reserve", "title": "Thermal ride-through", "spec": "10 K usable swing   /   51.25 MW design heat load", "say": "With circulation available, a ten-kelvin swing in the stratified store gives seventy-six minutes of modelled cooling ride-through at full design heat load.", "caption": "With circulation available, a 10 K swing in the stratified store gives 76 minutes of modelled cooling ride-through at full design heat load."}
+  ]
+}
