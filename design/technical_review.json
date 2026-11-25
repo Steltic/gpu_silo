@@ -3,6 +3,24 @@
   "shaft_entry_frame": 2071,
   "picture_order_after_turbine_ifc": ["IFC_vid_thermal", "final_360"],
   "silent_closing_source_frames": [5294, 5834],
+  "closing_overlay": {
+    "headline": "The GPU Silo - github.com/Steltic/gpu_silo",
+    "fade_start_frame": 48,
+    "fade_frames": 12,
+    "columns": [
+      [
+        ["**25 metre** diameter, **32 metre** high,", "double walled concrete silo"],
+        ["**6.5 million litres** of water-glycol coolant", "between the walls, **30 dry coolers**"],
+        ["Closed loop cooling system requires **no water utilities**"]
+      ],
+      [
+        ["**2 x 25MW** gas turbines, **4 x** diesel backup generators"],
+        ["On-site power generation requires **no electricity grid**", "(up to **15 propane trucks/day**)"],
+        ["**256** Vera Rubin NVL72 racks, **18,432 GPUs**"],
+        ["Silo footprint = **0.2 acres**"]
+      ]
+    ]
+  },
   "remove_narration_start": 83.042,
   "move_narration_start": 110.292,
   "revised_cues": [
