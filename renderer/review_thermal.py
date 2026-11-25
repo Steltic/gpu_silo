@@ -12,7 +12,7 @@ from bpy_extras.object_utils import world_to_camera_view
 parser=argparse.ArgumentParser()
 parser.add_argument("source",type=Path);parser.add_argument("out",type=Path)
 parser.add_argument("--percent",type=int,default=100);parser.add_argument("--samples",type=int,default=96)
-parser.add_argument("--shots",nargs="+",default=["store","store_inset","pods","coolers","risers","diffuser","reserve_cold","reserve_warm","reserve_z"])
+parser.add_argument("--shots",nargs="+",default=["store","store_inset","pods","coolers","reserve_cold","reserve_warm","reserve_z"])
 parser.add_argument("--cpu",action="store_true")
 args=parser.parse_args(sys.argv[sys.argv.index("--")+1:])
 args.out.mkdir(exist_ok=True,parents=True)
