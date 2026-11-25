@@ -85,7 +85,7 @@ def meshes(extent,y,lanes,h,box):
     # Signage is physical lettering on the concrete lintel.
     mid=(x0+x1)/2
     box(m,mid-3.54,-y-.26,mid+3.54,-y-.21,4.62,5.69,metal)
-    art.label(screens,"CONTROL ROOM",lambda x,z:(mid+x,-y-.275,4.79+z),6.3,"d9e8dd")
+    art.label(screens,"STELTICAI.COM",lambda x,z:(mid+x,-y-.275,4.79+z),6.3,"d9e8dd")
     for ya in (-y+.6,partition-.48):
         box(screens,x0+.5,ya,x1-.5,ya+.065,3.86,3.93,"e3dcb9")
     for k in range(6):
