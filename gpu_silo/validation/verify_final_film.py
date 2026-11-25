@@ -47,8 +47,12 @@ def verify(work, out, thermal, orbit):
     picture_info(opening, timing["intro"])
     chapter_list = check_sound_and_captions(film, timing["total"], work / "gpu_silo.srt")
     check_sound_and_captions(opening, timing["intro"], work / "intro.srt")
-    if len(chapter_list) != len(assembly()[0]) + 6:
-        raise ValueError("Missing film chapters")
+    expected = probe(work / "chapters.ffmetadata", "-f", "ffmetadata", "-show_chapters")["chapters"]
+    def marks(chapters):
+        return [(c["tags"]["title"], round(float(c["start_time"]) * FPS), round(float(c["end_time"]) * FPS))
+                for c in chapters]
+    if len(chapter_list) != len(assembly()[0]) + 6 or marks(chapter_list) != marks(expected):
+        raise ValueError("Film chapter titles or boundaries differ from the edit")
     closing_start = timing["total"] - timing["closing"]
     if chapter_list[-1]["tags"]["title"] != "Closing orbit" or round(float(chapter_list[-1]["start_time"]) * FPS) != closing_start:
         raise ValueError("The closing chapter must start on the first silent orbit frame")

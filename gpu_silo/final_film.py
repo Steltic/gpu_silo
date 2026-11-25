@@ -101,7 +101,7 @@ def mux(picture, sound, captions, out, frames, title, chapter_file=None):
     args = ["-i", picture, "-i", sound, "-i", captions]
     if chapter_file:
         args.extend(("-f", "ffmetadata", "-i", chapter_file))
-    ffmpeg(*args, "-map", "0:v:0", "-map", "1:a:0", "-map", "2:s:0", "-map_metadata", "-1",
+    ffmpeg(*args, "-map", "0:v:0", "-map", "1:a:0", "-map", "2:s:0", "-map_metadata", 3 if chapter_file else -1,
            "-map_chapters", 3 if chapter_file else -1, "-c:v", "copy", "-af", f"atrim=end_sample={frames*2000}",
            "-c:a", "aac", "-ar", 48000, "-b:a", "160k", "-c:s", "mov_text", "-disposition:s:0", "0",
            "-metadata:s:a:0", "language=eng", "-metadata:s:a:0", "title=Technical narration",
