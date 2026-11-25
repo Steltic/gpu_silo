@@ -24,7 +24,7 @@ SHOTS={
  "diffuser": dict(kicker="Pipe mouth detail",title=("The diffuser",),size=59,
                   value="Ø1.20 m",detail=("A circular plate spreads","the discharge sideways.")),
  "reserve": dict(kicker="Loss of heat rejection",title=("Thermal","ride-through"),size=61,
-                 value="76 minutes",detail=("10 K usable temperature swing","51.25 MW design heat load")),
+                 value="76 minutes",detail=("10 K usable temperature swing","51.25 MW design heat load","90% usable store volume")),
 }
 # Label anchors in the Cycles camera view, line position and two lines of copy.
 LABELS={
@@ -193,7 +193,9 @@ class Study:
             zoom+=(.74 if self.id=="pods" else .58)*close
         if self.id=="reserve":
             elapsed=smooth((u-.06)/.85)
-            boundary=29.-26.*elapsed
+            # In this straight annulus, a front traversing 90% of the liquid depth
+            # represents the report's 90% usable-volume allowance at constant load.
+            boundary=31.75*(.95-.90*elapsed)
             values=np.arange(256)
             z=(values/255-.05)*32/.9
             w=np.clip((z-boundary+1.0)/2.,0,1);w=w*w*(3-2*w)
