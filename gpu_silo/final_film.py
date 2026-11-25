@@ -116,16 +116,19 @@ def assemble(orbit, thermal, reviewed, work, out):
     picture_info(orbit, timing["closing"])
     picture_info(thermal, timing["thermal"])
     out.mkdir(parents=True, exist_ok=True)
-    opening = work / "intro-picture.mp4"
-    # The isolated first N decode packets must cover exactly the first N presentation frames.
-    stream = probe(orbit, "-select_streams", "v:0", "-show_streams", "-show_packets")
-    packets = stream["packets"]
-    base = Fraction(stream["streams"][0]["time_base"]) * FPS
     cut = timing["intro"]
-    if ("K" not in packets[cut]["flags"] or
-            sorted(int(p["pts"]) * base for p in packets[:cut]) != list(range(cut))):
-        raise ValueError(f"Encode the closing overlay with --intro-frames {cut} before assembling")
-    ffmpeg("-i", orbit, "-map", "0:v:0", "-frames:v", cut, "-c:v", "copy", "-map_chapters", -1, opening)
+    if "intro_orbit_frames" in timing:
+        opening = orbit.with_name("wide_intro_picture.mp4")
+    else:
+        # Earlier edit manifests used the first closed GOPs of the closing orbit.
+        opening = work / "intro-picture.mp4"
+        stream = probe(orbit, "-select_streams", "v:0", "-show_streams", "-show_packets")
+        packets = stream["packets"]
+        base = Fraction(stream["streams"][0]["time_base"]) * FPS
+        if ("K" not in packets[cut]["flags"] or
+                sorted(int(p["pts"]) * base for p in packets[:cut]) != list(range(cut))):
+            raise ValueError(f"Encode the closing overlay with --intro-frames {cut} before assembling")
+        ffmpeg("-i", orbit, "-map", "0:v:0", "-frames:v", cut, "-c:v", "copy", "-map_chapters", -1, opening)
     picture_info(opening, cut)
     thermal_picture = work / "thermal-picture.mp4"
     ffmpeg("-i", thermal, "-map", "0:v:0", "-map_metadata", -1, "-map_chapters", -1, "-c:v", "copy", thermal_picture)
