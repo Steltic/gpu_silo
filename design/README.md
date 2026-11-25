@@ -14,6 +14,8 @@ The silo accommodates 256 NVIDIA Vera Rubin NVL72 racks in 64 pods of four, with
 
 Central control manages CDU pump speed, dry cooler fan speed and staging, and cooler pump staging against store temperature and total heat load.
 
+The electrical design follows the two 13.8 kV buses down the fixed shaft, through eight grade transformers and 64 de-energised pod docks, to the rack power shelves. The grey service section is the preferred location for pod-level conversion and distribution. [Electrical equipment, preliminary ratings and fit checks](electrical.md)
+
 Section 2 of the structural report lists the design checks and their status. Revision K verifies checks 7–10 against the revision J loads and carries the revised anchor detailing into both films and the IFC. The assumption register records the evidence still needed from designers, suppliers and the site team. [Register of design checks](report.md#2-register-of-design-checks) · [Assumptions and release evidence](assumptions.md)
 
 ## Current decisions
